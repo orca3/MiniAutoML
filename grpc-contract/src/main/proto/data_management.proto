@@ -4,14 +4,13 @@ option java_multiple_files = true;
 option java_package = "org.orca3.miniAutoML";
 option java_outer_classname = "DataManagementProto";
 
-import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 package data_management;
 
 service DataManagementService {
   rpc ListDatasetCommits (DatasetPointer) returns (DatasetSummary);
-  rpc ListDatasets (DatasetFilter) returns (stream DatasetPointer);
+  rpc ListDatasets (ListQueryOptions) returns (stream DatasetPointer);
   rpc CreateDataset (CreateDatasetRequest) returns (DatasetVersionPointer);
   rpc UpdateDataset (CreateCommitRequest) returns (DatasetVersionPointer);
   rpc RollbackDataset (DatasetVersionPointer) returns (DatasetVersionPointer);
@@ -27,8 +26,9 @@ message CreateDatasetRequest {
   string uri = 4;
 }
 
-message DatasetFilter {
-  string dataset_type = 1;
+message ListQueryOptions {
+  int32 limit = 1;
+  int32 index = 2;
 }
 
 message CreateCommitRequest {
@@ -52,7 +52,7 @@ message DatasetSummary {
   string name = 2;
   string description = 3;
   string dataset_type = 4;
-  google.protobuf.Timestamp last_updated_at = 5;
+  string last_updated_at = 5;
   repeated CommitInfo commits = 6;
 
 }
@@ -62,18 +62,18 @@ message DatasetDetails {
   string name = 2;
   string description = 3;
   string dataset_type = 4;
-  google.protobuf.Timestamp last_updated_at = 5;
+  string last_updated_at = 5;
   repeated DatasetPart parts = 6;
 }
 
 message DatasetPart {
-  DatasetPointer pointer = 1;
+  DatasetVersionPointer pointer = 1;
   string uri = 2;
 }
 
 message CommitInfo {
   DatasetPointer pointer = 1;
-  google.protobuf.Timestamp created_at = 2;
+  string created_at = 2;
 }
 
 enum CommitType {
