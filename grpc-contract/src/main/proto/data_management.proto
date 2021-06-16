@@ -14,7 +14,6 @@ service DataManagementService {
   rpc CreateDataset (CreateDatasetRequest) returns (DatasetVersionPointer);
   rpc UpdateDataset (CreateCommitRequest) returns (DatasetVersionPointer);
   rpc RollbackDataset (DatasetVersionPointer) returns (DatasetVersionPointer);
-  rpc FetchLatestDataset (DatasetPointer) returns (DatasetDetails);
   rpc FetchVersionedDataset (DatasetVersionPointer) returns (DatasetDetails);
   rpc DeleteDataset (DatasetPointer) returns (google.protobuf.Empty);
 }
@@ -32,10 +31,11 @@ message ListQueryOptions {
 }
 
 message CreateCommitRequest {
-  DatasetVersionPointer parent = 1;
-  string commit_message = 2;
-  CommitType commit_type = 3;
-  string uri = 4;
+  string dataset_id = 1;
+  string parent_commit_id = 2;
+  string commit_message = 3;
+  CommitType commit_type = 4;
+  string uri = 5;
 }
 
 message DatasetVersionPointer {
@@ -58,7 +58,7 @@ message DatasetSummary {
 }
 
 message DatasetDetails {
-  DatasetPointer pointer = 1;
+  string dataset_id = 1;
   string name = 2;
   string description = 3;
   string dataset_type = 4;
@@ -67,13 +67,16 @@ message DatasetDetails {
 }
 
 message DatasetPart {
-  DatasetVersionPointer pointer = 1;
-  string uri = 2;
+  string dataset_id = 1;
+  string commit_id = 2;
+  string uri = 3;
 }
 
 message CommitInfo {
-  DatasetPointer pointer = 1;
-  string created_at = 2;
+  string dataset_id = 1;
+  string commit_id = 2;
+  string created_at = 3;
+  CommitType commit_type = 4;
 }
 
 enum CommitType {
