@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.orca3.miniAutoML";
+option java_outer_classname = "DataManagementProto";
+
+import "google/protobuf/empty.proto";
+
+package data_management;
+
+service DataManagementService {
+  rpc ListDatasetCommits (DatasetPointer) returns (DatasetSummary);
+  rpc ListDatasets (ListQueryOptions) returns (stream DatasetPointer);
+  rpc CreateDataset (CreateDatasetRequest) returns (DatasetVersionPointer);
+  rpc UpdateDataset (CreateCommitRequest) returns (DatasetVersionPointer);
+  rpc RollbackDataset (DatasetVersionPointer) returns (DatasetVersionPointer);
+  rpc FetchVersionedDataset (DatasetVersionPointer) returns (DatasetDetails);
+  rpc DeleteDataset (DatasetPointer) returns (google.protobuf.Empty);
+}
+
+message CreateDatasetRequest {
+  string name = 1;
+  string description = 2;
+  string dataset_type = 3;
+  string uri = 4;
+}
+
+message ListQueryOptions {
+  int32 limit = 1;
+  int32 index = 2;
+}
+
+message CreateCommitRequest {
+  string dataset_id = 1;
+  string parent_commit_id = 2;
+  string commit_message = 3;
+  CommitType commit_type = 4;
+  string uri = 5;
+}
+
+message DatasetVersionPointer {
+  string dataset_id = 1;
+  string commit_id = 2;
+}
+
+message DatasetPointer {
+  string dataset_id = 1;
+}
+
+message DatasetSummary {
+  string datasetId = 1;
+  string name = 2;
+  string description = 3;
+  string dataset_type = 4;
+  string last_updated_at = 5;
+  repeated CommitInfo commits = 6;
+
+}
+
+message DatasetDetails {
+  string dataset_id = 1;
+  string name = 2;
+  string description = 3;
+  string dataset_type = 4;
+  string last_updated_at = 5;
+  repeated DatasetPart parts = 6;
+}
+
+message DatasetPart {
+  string dataset_id = 1;
+  string commit_id = 2;
+  string uri = 3;
+}
+
+message CommitInfo {
+  string dataset_id = 1;
+  string commit_id = 2;
+  string created_at = 3;
+  CommitType commit_type = 4;
+}
+
+enum CommitType {
+  OVERWRITE = 0;
+  APPEND = 1;
+}
