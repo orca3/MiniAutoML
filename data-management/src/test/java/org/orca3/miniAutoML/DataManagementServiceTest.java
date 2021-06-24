@@ -1,7 +1,5 @@
 package org.orca3.miniAutoML;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
@@ -12,7 +10,6 @@ import org.junit.Test;
 import org.orca3.miniAutoML.models.MemoryStore;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
 
 public class DataManagementServiceTest {
     @ClassRule
@@ -54,19 +51,19 @@ public class DataManagementServiceTest {
     @Test
     public void updateDataset_sequential() throws Exception {
         createDataset(1);
-        DatasetVersionPointer reply = updateDataset(1, 2, CommitType.APPEND);
+        DatasetVersionPointer reply = updateDataset(1, 2);
         assertEquals("1", reply.getDatasetId());
         assertEquals("2", reply.getCommitId());
 
-        reply = updateDataset(1, 3, CommitType.APPEND);
+        reply = updateDataset(1, 3);
         assertEquals("1", reply.getDatasetId());
         assertEquals("3", reply.getCommitId());
 
-        reply = updateDataset(1, 4, CommitType.OVERWRITE);
+        reply = updateDataset(1, 4);
         assertEquals("1", reply.getDatasetId());
         assertEquals("4", reply.getCommitId());
 
-        reply = updateDataset(1, 5, CommitType.APPEND);
+        reply = updateDataset(1, 5);
         assertEquals("1", reply.getDatasetId());
         assertEquals("5", reply.getCommitId());
     }
@@ -80,11 +77,10 @@ public class DataManagementServiceTest {
                 .build());
     }
 
-    private DatasetVersionPointer updateDataset(int datasetId, int commitId, CommitType commitType) {
+    private DatasetVersionPointer updateDataset(int datasetId, int commitId) {
         return blockingStub.updateDataset(CreateCommitRequest.newBuilder()
                 .setDatasetId(Integer.toString(datasetId))
                 .setCommitMessage(String.format("commit %d", commitId))
-                .setCommitType(commitType)
                 .setUri(String.format("s3://someBucket/somePath/someObject/%s/%s", datasetId, commitId))
                 .build());
     }

@@ -41,7 +41,6 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                     .setDatasetId(datasetId)
                     .setCommitId(commit.getCommitId())
                     .setCreatedAt(commit.getCreatedAt())
-                    .setCommitType(CommitType.valueOf(commit.getCommitType()))
                     .build());
         }
 
@@ -64,7 +63,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         store.datasets.put(Integer.toString(datasetId), dataset);
         int commitId = dataset.getNextCommitId();
         dataset.commits.put(Integer.toString(commitId),
-                new Commit(datasetId, commitId, request.getUri(), CommitType.APPEND.name()));
+                new Commit(datasetId, commitId, request.getUri()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
                 .setDatasetId(Integer.toString(datasetId))
@@ -83,7 +82,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         Dataset dataset = store.datasets.get(datasetId);
         int commitId = dataset.getNextCommitId();
         dataset.commits.put(Integer.toString(commitId),
-                new Commit(datasetId, commitId, request.getUri(), request.getCommitType().name()));
+                new Commit(datasetId, commitId, request.getUri()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
                 .setDatasetId(datasetId)
@@ -119,9 +118,6 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                 .setLastUpdatedAt(dataset.getUpdatedAt());
         for (int i = 1; i <= Integer.parseInt(commitId); i ++) {
             Commit commit = dataset.commits.get(Integer.toString(i));
-            if (commit.getCommitType().equals(CommitType.OVERWRITE.name())) {
-                responseBuilder.clearParts();
-            }
             responseBuilder.addParts(DatasetPart.newBuilder()
                     .setDatasetId(datasetId)
                     .setCommitId(Long.toString(i))

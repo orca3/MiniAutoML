@@ -8,22 +8,20 @@ public class Commit {
     private final String datasetId;
     private final String commitId;
     private final String uri;
-    private final String commitType;
     private final String createdAt;
 
-    public Commit(int datasetId, int commitId, String uri, String commitType) {
-        this(Integer.toString(datasetId), Integer.toString(commitId), uri, commitType, ISO_INSTANT.format(Instant.now()));
+    public Commit(int datasetId, int commitId, String uri) {
+        this(Integer.toString(datasetId), Integer.toString(commitId), uri, ISO_INSTANT.format(Instant.now()));
     }
 
-    public Commit(String datasetId, int commitId, String uri, String commitType) {
-        this(datasetId, Integer.toString(commitId), uri, commitType, ISO_INSTANT.format(Instant.now()));
+    public Commit(String datasetId, int commitId, String uri) {
+        this(datasetId, Integer.toString(commitId), uri, ISO_INSTANT.format(Instant.now()));
     }
 
-    public Commit(String datasetId, String commitId, String uri, String commitType, String createdAt) {
+    public Commit(String datasetId, String commitId, String uri, String createdAt) {
         this.datasetId = datasetId;
         this.commitId = commitId;
         this.uri = uri;
-        this.commitType = commitType;
         this.createdAt = createdAt;
     }
 
@@ -37,10 +35,6 @@ public class Commit {
 
     public String getUri() {
         return uri;
-    }
-
-    public String getCommitType() {
-        return commitType;
     }
 
     public String getCreatedAt() {
