@@ -63,7 +63,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         store.datasets.put(Integer.toString(datasetId), dataset);
         int commitId = dataset.getNextCommitId();
         dataset.commits.put(Integer.toString(commitId),
-                new Commit(datasetId, commitId, request.getUri()));
+                new Commit(datasetId, commitId, request.getUri(), request.getTagsList()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
                 .setDatasetId(Integer.toString(datasetId))
@@ -82,7 +82,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         Dataset dataset = store.datasets.get(datasetId);
         int commitId = dataset.getNextCommitId();
         dataset.commits.put(Integer.toString(commitId),
-                new Commit(datasetId, commitId, request.getUri()));
+                new Commit(datasetId, commitId, request.getUri(), request.getTagsList()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
                 .setDatasetId(datasetId)

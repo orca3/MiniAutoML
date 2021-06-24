@@ -22,6 +22,7 @@ message CreateDatasetRequest {
   string description = 2;
   string dataset_type = 3;
   string uri = 4;
+  repeated Tag tags = 5;
 }
 
 message ListQueryOptions {
@@ -33,6 +34,7 @@ message CreateCommitRequest {
   string dataset_id = 1;
   string commit_message = 2;
   string uri = 3;
+  repeated Tag tags = 4;
 }
 
 message DatasetVersionPointer {
@@ -73,4 +75,9 @@ message CommitInfo {
   string dataset_id = 1;
   string commit_id = 2;
   string created_at = 3;
+}
+
+message Tag {
+  string tag_key = 1;
+  string tag_value = 2;
 }
