@@ -13,7 +13,6 @@ service DataManagementService {
   rpc ListDatasets (ListQueryOptions) returns (stream DatasetPointer);
   rpc CreateDataset (CreateDatasetRequest) returns (DatasetVersionPointer);
   rpc UpdateDataset (CreateCommitRequest) returns (DatasetVersionPointer);
-  rpc RollbackDataset (DatasetVersionPointer) returns (DatasetVersionPointer);
   rpc FetchVersionedDataset (DatasetVersionPointer) returns (DatasetDetails);
   rpc DeleteDataset (DatasetPointer) returns (google.protobuf.Empty);
 }
@@ -32,10 +31,9 @@ message ListQueryOptions {
 
 message CreateCommitRequest {
   string dataset_id = 1;
-  string parent_commit_id = 2;
-  string commit_message = 3;
-  CommitType commit_type = 4;
-  string uri = 5;
+  string commit_message = 2;
+  CommitType commit_type = 3;
+  string uri = 4;
 }
 
 message DatasetVersionPointer {

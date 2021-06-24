@@ -10,44 +10,36 @@ import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.stub.StreamObserver;
 import org.orca3.miniAutoML.models.Commit;
 import org.orca3.miniAutoML.models.Dataset;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Protocol;
+import org.orca3.miniAutoML.models.MemoryStore;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class DataManagementService extends DataManagementServiceGrpc.DataManagementServiceImplBase {
-    private final Jedis redis;
-    private static final String DATASET_INDEX = "datasets";
-    private static final String DATASET_KEY_FORMAT = "dataset:%s";
-    private static final String COMMIT_KEY_FORMAT = "dataset:%s:commit:%s";
-    private static final String DATASET_ID_SEED_KEY = "seed:dataset";
-    private static final String DATASET_COMMIT_SEED_KEY = "latestCommit";
+    private final MemoryStore store;
 
-    public DataManagementService(Jedis redis) {
-        this.redis = redis;
+    public DataManagementService(MemoryStore store) {
+        this.store = store;
     }
 
     @Override
     public void listDatasetCommits(DatasetPointer request, StreamObserver<DatasetSummary> responseObserver) {
         String datasetId = request.getDatasetId();
-        if (!redis.sismember(DATASET_INDEX, datasetId)) {
+        if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
             return;
         }
-        Dataset dataset = Dataset.fromRedisHash(redis.hgetAll(String.format(DATASET_KEY_FORMAT, datasetId)));
+        Dataset dataset = store.datasets.get(datasetId);
         DatasetSummary.Builder responseBuilder = DatasetSummary.newBuilder()
                 .setDatasetId(datasetId)
                 .setName(dataset.getName())
                 .setDescription(dataset.getDescription())
                 .setDatasetType(dataset.getDatasetType())
                 .setLastUpdatedAt(dataset.getUpdatedAt());
-        long lastCommitId = Long.parseLong(redis.hget(String.format(DATASET_KEY_FORMAT, datasetId), DATASET_COMMIT_SEED_KEY));
-        for (long commitId = 1; commitId <= lastCommitId; commitId++) {
-            Commit commit = Commit.fromRedisHash(redis.hgetAll(String.format(COMMIT_KEY_FORMAT, datasetId, lastCommitId)));
+        for (Commit commit: dataset.commits.values()) {
             responseBuilder.addCommits(CommitInfo.newBuilder()
                     .setDatasetId(datasetId)
-                    .setCommitId(Long.toString(commitId))
+                    .setCommitId(commit.getCommitId())
                     .setCreatedAt(commit.getCreatedAt())
                     .setCommitType(CommitType.valueOf(commit.getCommitType()))
                     .build());
@@ -59,7 +51,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
 
     @Override
     public void listDatasets(ListQueryOptions request, StreamObserver<DatasetPointer> responseObserver) {
-        for (String datasetId : redis.smembers(DATASET_INDEX)) {
+        for (String datasetId : store.datasets.keySet()) {
             responseObserver.onNext(DatasetPointer.newBuilder().setDatasetId(datasetId).build());
         }
         responseObserver.onCompleted();
@@ -67,17 +59,16 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
 
     @Override
     public void createDataset(CreateDatasetRequest request, StreamObserver<DatasetVersionPointer> responseObserver) {
-        long datasetId = redis.incr(DATASET_ID_SEED_KEY);
+        int datasetId = store.datasetIdSeed.incrementAndGet();
         Dataset dataset = new Dataset(datasetId, request.getName(), request.getDescription(), request.getDatasetType());
-        redis.hset(String.format(DATASET_KEY_FORMAT, datasetId), dataset.toRedisHash());
-        long commitId = redis.hincrBy(String.format(DATASET_KEY_FORMAT, datasetId), DATASET_COMMIT_SEED_KEY, 1);
-        Commit commit = new Commit(datasetId, commitId, request.getUri(), CommitType.APPEND.name());
-        redis.hset(String.format(COMMIT_KEY_FORMAT, datasetId, commitId), commit.toRedisHash());
-        redis.sadd(DATASET_INDEX, Long.toString(datasetId));
+        store.datasets.put(Integer.toString(datasetId), dataset);
+        int commitId = dataset.getNextCommitId();
+        dataset.commits.put(Integer.toString(commitId),
+                new Commit(datasetId, commitId, request.getUri(), CommitType.APPEND.name()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
-                .setDatasetId(Long.toString(datasetId))
-                .setCommitId(Long.toString(commitId))
+                .setDatasetId(Integer.toString(datasetId))
+                .setCommitId(Integer.toString(commitId))
                 .build());
         responseObserver.onCompleted();
     }
@@ -85,78 +76,49 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     @Override
     public void updateDataset(CreateCommitRequest request, StreamObserver<DatasetVersionPointer> responseObserver) {
         String datasetId = request.getDatasetId();
-        if (!redis.sismember(DATASET_INDEX, datasetId)) {
+        if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
             return;
         }
-        String lastCommitId = redis.hget(String.format(DATASET_KEY_FORMAT, datasetId), DATASET_COMMIT_SEED_KEY);
-        String commitId = request.getParentCommitId();
-        if (!lastCommitId.equals(commitId)) {
-            responseObserver.onError(Status.INVALID_ARGUMENT
-                    .withDescription(String.format("Commit %s is not the latest commit in dataset %s",
-                            commitId, datasetId))
-                    .asException());
-            return;
-        }
-        long newCommitId = redis.hincrBy(String.format(DATASET_KEY_FORMAT, datasetId), DATASET_COMMIT_SEED_KEY, 1);
-        Commit commit = new Commit(datasetId, newCommitId, request.getUri(), request.getCommitType().name());
-        redis.hset(String.format(COMMIT_KEY_FORMAT, datasetId, newCommitId), commit.toRedisHash());
+        Dataset dataset = store.datasets.get(datasetId);
+        int commitId = dataset.getNextCommitId();
+        dataset.commits.put(Integer.toString(commitId),
+                new Commit(datasetId, commitId, request.getUri(), request.getCommitType().name()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
                 .setDatasetId(datasetId)
-                .setCommitId(Long.toString(newCommitId))
+                .setCommitId(Integer.toString(commitId))
                 .build());
         responseObserver.onCompleted();
     }
 
     @Override
-    public void rollbackDataset(DatasetVersionPointer request, StreamObserver<DatasetVersionPointer> responseObserver) {
-        String datasetId = request.getDatasetId();
-        if (!redis.sismember(DATASET_INDEX, datasetId)) {
-            responseObserver.onError(datasetNotFoundException(datasetId));
-            return;
-        }
-        String commitId = request.getCommitId();
-        if (!redis.exists(String.format(COMMIT_KEY_FORMAT, datasetId, commitId))) {
-            responseObserver.onError(commitNotFoundException(datasetId, commitId));
-            return;
-        }
-        long previousCommitId = Long.parseLong(redis.hget(String.format(DATASET_KEY_FORMAT, datasetId), DATASET_COMMIT_SEED_KEY));
-        redis.hset(String.format(DATASET_KEY_FORMAT, datasetId), DATASET_COMMIT_SEED_KEY, commitId);
-        long commitToDelete = Long.parseLong(commitId) + 1;
-        while (commitToDelete <= previousCommitId) {
-            redis.del(String.format(COMMIT_KEY_FORMAT, datasetId, commitToDelete));
-            commitToDelete ++;
-        }
-    }
-
-    @Override
     public void fetchVersionedDataset(DatasetVersionPointer request, StreamObserver<DatasetDetails> responseObserver) {
         String datasetId = request.getDatasetId();
-        if (!redis.sismember(DATASET_INDEX, datasetId)) {
+        if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
             return;
         }
+        Dataset dataset = store.datasets.get(datasetId);
         String commitId;
         if (request.getCommitId().isEmpty()) {
-            commitId = redis.hget(String.format(DATASET_KEY_FORMAT, datasetId), DATASET_COMMIT_SEED_KEY);
+            commitId = Integer.toString(dataset.getLastCommitId());
         } else {
             commitId = request.getCommitId();
-            if (!redis.exists(String.format(COMMIT_KEY_FORMAT, datasetId, commitId))) {
+            if (!dataset.commits.containsKey(commitId)) {
                 responseObserver.onError(commitNotFoundException(datasetId, commitId));
                 return;
             }
         }
 
-        Dataset dataset = Dataset.fromRedisHash(redis.hgetAll(String.format(DATASET_KEY_FORMAT, datasetId)));
         DatasetDetails.Builder responseBuilder = DatasetDetails.newBuilder()
                 .setDatasetId(datasetId)
                 .setName(dataset.getName())
                 .setDescription(dataset.getDescription())
                 .setDatasetType(dataset.getDatasetType())
                 .setLastUpdatedAt(dataset.getUpdatedAt());
-        for (long i = 1; i <= Long.parseLong(commitId); i ++) {
-            Commit commit = Commit.fromRedisHash(redis.hgetAll(String.format(COMMIT_KEY_FORMAT, datasetId, i)));
+        for (int i = 1; i <= Integer.parseInt(commitId); i ++) {
+            Commit commit = dataset.commits.get(Integer.toString(i));
             if (commit.getCommitType().equals(CommitType.OVERWRITE.name())) {
                 responseBuilder.clearParts();
             }
@@ -174,16 +136,11 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     @Override
     public void deleteDataset(DatasetPointer request, StreamObserver<Empty> responseObserver) {
         String datasetId = request.getDatasetId();
-        if (!redis.sismember(DATASET_INDEX, datasetId)) {
+        if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
             return;
         }
-        long lastCommitId = Long.parseLong(redis.hget(String.format(DATASET_KEY_FORMAT, datasetId), DATASET_COMMIT_SEED_KEY));
-        redis.srem(DATASET_INDEX, datasetId);
-        redis.del(String.format(DATASET_KEY_FORMAT, datasetId));
-        for (int i = 1; i <= lastCommitId; i ++) {
-            redis.del(String.format(COMMIT_KEY_FORMAT, datasetId, lastCommitId));
-        }
+        store.datasets.remove(datasetId);
         responseObserver.onCompleted();
     }
 
@@ -212,7 +169,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
             }
         }
         HealthStatusManager health = new HealthStatusManager();
-        DataManagementService dmService = new DataManagementService(new Jedis("localhost", Protocol.DEFAULT_PORT));
+        DataManagementService dmService = new DataManagementService(new MemoryStore());
         final Server server = ServerBuilder.forPort(port)
                 .addService(dmService)
                 .addService(ProtoReflectionService.newInstance())
@@ -222,7 +179,6 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         System.out.println("Listening on port " + port);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Start graceful shutdown
-            dmService.redis.close();
             server.shutdown();
             try {
                 if (!server.awaitTermination(30, TimeUnit.SECONDS)) {

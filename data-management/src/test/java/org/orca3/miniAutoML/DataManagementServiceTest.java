@@ -9,34 +9,26 @@ import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
-import redis.clients.jedis.Jedis;
+import org.orca3.miniAutoML.models.MemoryStore;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 public class DataManagementServiceTest {
-    @SuppressWarnings("rawtypes")
-    @ClassRule
-    public static GenericContainer redis = new GenericContainer(DockerImageName.parse("redis:6"))
-            .withExposedPorts(6379);
-
     @ClassRule
     public static final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
-    private static Jedis jedis;
+    public static final MemoryStore store = new MemoryStore();
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        jedis = new Jedis(redis.getHost(), redis.getFirstMappedPort());
         grpcCleanup.register(InProcessServerBuilder.forName("hostname").directExecutor()
-                .addService(new DataManagementService(jedis))
+                .addService(new DataManagementService(store))
                 .build().start());
     }
 
     @After
     public void tearDown() {
-        jedis.flushAll();
+        store.clear();
     }
 
     DataManagementServiceGrpc.DataManagementServiceBlockingStub blockingStub =
@@ -62,37 +54,21 @@ public class DataManagementServiceTest {
     @Test
     public void updateDataset_sequential() throws Exception {
         createDataset(1);
-        DatasetVersionPointer reply = updateDataset(1, 1, CommitType.APPEND);
+        DatasetVersionPointer reply = updateDataset(1, 2, CommitType.APPEND);
         assertEquals("1", reply.getDatasetId());
         assertEquals("2", reply.getCommitId());
 
-        reply = updateDataset(1, 2, CommitType.APPEND);
+        reply = updateDataset(1, 3, CommitType.APPEND);
         assertEquals("1", reply.getDatasetId());
         assertEquals("3", reply.getCommitId());
 
-        reply = updateDataset(1, 3, CommitType.OVERWRITE);
+        reply = updateDataset(1, 4, CommitType.OVERWRITE);
         assertEquals("1", reply.getDatasetId());
         assertEquals("4", reply.getCommitId());
 
-        reply = updateDataset(1, 4, CommitType.APPEND);
+        reply = updateDataset(1, 5, CommitType.APPEND);
         assertEquals("1", reply.getDatasetId());
         assertEquals("5", reply.getCommitId());
-    }
-
-    @Test
-    public void updateDataset_rejectWrongParent() {
-        createDataset(1);
-        DatasetVersionPointer reply = updateDataset(1, 1, CommitType.APPEND);
-        assertEquals("1", reply.getDatasetId());
-        assertEquals("2", reply.getCommitId());
-
-        reply = updateDataset(1, 2, CommitType.APPEND);
-        assertEquals("1", reply.getDatasetId());
-        assertEquals("3", reply.getCommitId());
-
-        StatusRuntimeException e = assertThrows(StatusRuntimeException.class, () ->
-                updateDataset(1, 2, CommitType.OVERWRITE));
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), e.getStatus().getCode());
     }
 
     private DatasetVersionPointer createDataset(int id) {
@@ -104,13 +80,12 @@ public class DataManagementServiceTest {
                 .build());
     }
 
-    private DatasetVersionPointer updateDataset(int datasetId, int parentCommitId, CommitType commitType) {
+    private DatasetVersionPointer updateDataset(int datasetId, int commitId, CommitType commitType) {
         return blockingStub.updateDataset(CreateCommitRequest.newBuilder()
                 .setDatasetId(Integer.toString(datasetId))
-                .setParentCommitId(Integer.toString(parentCommitId))
-                .setCommitMessage(String.format("commit %d", parentCommitId + 1))
+                .setCommitMessage(String.format("commit %d", commitId))
                 .setCommitType(commitType)
-                .setUri(String.format("s3://someBucket/somePath/someObject/%s/%s", datasetId, parentCommitId + 1))
+                .setUri(String.format("s3://someBucket/somePath/someObject/%s/%s", datasetId, commitId))
                 .build());
     }
 }
