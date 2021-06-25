@@ -13,6 +13,7 @@ import org.orca3.miniAutoML.models.Dataset;
 import org.orca3.miniAutoML.models.MemoryStore;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class DataManagementService extends DataManagementServiceGrpc.DataManagementServiceImplBase {
@@ -92,7 +93,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     }
 
     @Override
-    public void fetchVersionedDataset(DatasetVersionPointer request, StreamObserver<DatasetDetails> responseObserver) {
+    public void fetchVersionedDataset(DatasetQuery request, StreamObserver<DatasetDetails> responseObserver) {
         String datasetId = request.getDatasetId();
         if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
@@ -118,6 +119,17 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                 .setLastUpdatedAt(dataset.getUpdatedAt());
         for (int i = 1; i <= Integer.parseInt(commitId); i ++) {
             Commit commit = dataset.commits.get(Integer.toString(i));
+            boolean matched = true;
+            for (Tag tag: request.getTagsList()) {
+                if (commit.getTags().containsKey(tag.getTagKey())) {
+                    matched = commit.getTags().get(tag.getTagKey()).equals(tag.getTagValue());
+                } else {
+                    matched = false;
+                }
+            }
+            if (!matched) {
+                continue;
+            }
             responseBuilder.addParts(DatasetPart.newBuilder()
                     .setDatasetId(datasetId)
                     .setCommitId(Long.toString(i))
