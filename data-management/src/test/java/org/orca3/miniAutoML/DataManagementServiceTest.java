@@ -106,7 +106,7 @@ public class DataManagementServiceTest {
         return blockingStub.createDataset(CreateDatasetRequest.newBuilder()
                 .setName(String.format("test-%s", id))
                 .setDescription("test dataset")
-                .setDatasetType("image")
+                .setDatasetType(DatasetType.GENERIC)
                 .addAllTags(tags)
                 .setUri(String.format("s3://someBucket/somePath/someObject/%s/001", id))
                 .build());

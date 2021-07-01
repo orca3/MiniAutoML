@@ -20,7 +20,7 @@ service DataManagementService {
 message CreateDatasetRequest {
   string name = 1;
   string description = 2;
-  string dataset_type = 3;
+  DatasetType dataset_type = 3;
   string uri = 4;
   repeated Tag tags = 5;
 }
@@ -56,7 +56,7 @@ message DatasetSummary {
   string datasetId = 1;
   string name = 2;
   string description = 3;
-  string dataset_type = 4;
+  DatasetType dataset_type = 4;
   string last_updated_at = 5;
   repeated CommitInfo commits = 6;
 
@@ -66,7 +66,7 @@ message DatasetDetails {
   string dataset_id = 1;
   string name = 2;
   string description = 3;
-  string dataset_type = 4;
+  DatasetType dataset_type = 4;
   string last_updated_at = 5;
   repeated DatasetPart parts = 6;
 }
@@ -86,4 +86,9 @@ message CommitInfo {
 message Tag {
   string tag_key = 1;
   string tag_value = 2;
+}
+
+enum DatasetType {
+  GENERIC = 0;
+  TEXT_INTENT = 1;
 }

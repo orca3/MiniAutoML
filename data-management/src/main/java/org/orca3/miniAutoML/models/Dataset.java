@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.orca3.miniAutoML.DatasetType;
 
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
@@ -11,12 +12,12 @@ public class Dataset {
     private final String datasetId;
     private final String name;
     private final String description;
-    private final String datasetType;
+    private final DatasetType datasetType;
     private final String updatedAt;
     public Map<String, Commit> commits;
     private final AtomicInteger commitIdSeed;
 
-    public Dataset(String datasetId, String name, String description, String datasetType, String updatedAt) {
+    public Dataset(String datasetId, String name, String description, DatasetType datasetType, String updatedAt) {
         this.datasetId = datasetId;
         this.name = name;
         this.description = description;
@@ -34,7 +35,7 @@ public class Dataset {
         return commitIdSeed.get();
     }
 
-    public Dataset(long datasetId, String name, String description, String datasetType) {
+    public Dataset(long datasetId, String name, String description, DatasetType datasetType) {
         this(Long.toString(datasetId), name, description, datasetType, ISO_INSTANT.format(Instant.now()));
     }
 
@@ -50,7 +51,7 @@ public class Dataset {
         return description;
     }
 
-    public String getDatasetType() {
+    public DatasetType getDatasetType() {
         return datasetType;
     }
 

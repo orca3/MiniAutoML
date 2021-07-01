@@ -13,7 +13,6 @@ import org.orca3.miniAutoML.models.Dataset;
 import org.orca3.miniAutoML.models.MemoryStore;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class DataManagementService extends DataManagementServiceGrpc.DataManagementServiceImplBase {
