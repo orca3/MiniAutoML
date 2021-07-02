@@ -216,6 +216,9 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         String versionHash = String.format("hash%s", Base64.getEncoder().encodeToString(pickedCommits.toByteArray()));
         responseBuilder.setVersionHash(versionHash);
 
+        String versionHashKey = MemoryStore.calculateVersionHashKey(datasetId, versionHash);
+        store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
+                .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.RUNNING).build());
         futures.put(versionHash, threadPool.submit(new DatasetCompressor(minioClient, store, datasetId,
                 dataset.getDatasetType(), parts, versionHash, config.minioBucketName)));
 

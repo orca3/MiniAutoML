@@ -31,13 +31,11 @@ public class DatasetCompressor implements Runnable {
     @Override
     public void run() {
         String versionHashKey = MemoryStore.calculateVersionHashKey(datasetId, versionHash);
-        store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
-                .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.RUNNING).build());
         List<FileInfo> versionHashParts;
         switch (datasetType) {
             case TEXT_INTENT:
                 try {
-                    versionHashParts = IntentTextTransformer.compress(datasetParts, versionHash, bucketName, minioClient);
+                    versionHashParts = IntentTextTransformer.compress(datasetParts, datasetId, versionHash, bucketName, minioClient);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

@@ -185,7 +185,7 @@ public class IntentTextTransformer {
         }
     }
 
-    public static List<FileInfo> compress(List<DatasetPart> parts, String jobId, String bucketName, MinioClient minioClient) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+    public static List<FileInfo> compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         List<IntentTextCollection> collection = Lists.newArrayListWithCapacity(parts.size());
         // Download
         for (DatasetPart part : parts) {
@@ -209,8 +209,8 @@ public class IntentTextTransformer {
         } catch (CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
             throw new RuntimeException(e);
         }
-        String mergedExamplesPath = Paths.get("versionedDatasets", jobId, EXAMPLES_FILE_NAME).toString();
-        String mergedLabelsPath = Paths.get("versionedDatasets", jobId, LABELS_FILE_NAME).toString();
+        String mergedExamplesPath = Paths.get("versionedDatasets", datasetId, versionHash, EXAMPLES_FILE_NAME).toString();
+        String mergedLabelsPath = Paths.get("versionedDatasets", datasetId, versionHash, LABELS_FILE_NAME).toString();
         minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
                 .object(mergedExamplesPath)
                 .stream(new ByteArrayInputStream(labelsWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
@@ -223,7 +223,7 @@ public class IntentTextTransformer {
                 .build());
         return ImmutableList.of(
             FileInfo.newBuilder().setName(EXAMPLES_FILE_NAME).setPath(mergedExamplesPath).setBucket(bucketName).build(),
-            FileInfo.newBuilder().setName(LABELS_FILE_NAME).setPath(mergedExamplesPath).setBucket(bucketName).build()
+            FileInfo.newBuilder().setName(LABELS_FILE_NAME).setPath(mergedLabelsPath).setBucket(bucketName).build()
         );
     }
 }

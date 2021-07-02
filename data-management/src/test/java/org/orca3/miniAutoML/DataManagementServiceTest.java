@@ -1,5 +1,6 @@
 package org.orca3.miniAutoML;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -7,6 +8,7 @@ import io.grpc.testing.GrpcCleanupRule;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -18,11 +20,15 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
+import static org.orca3.miniAutoML.transformers.IntentTextTransformer.EXAMPLES_FILE_NAME;
+import static org.orca3.miniAutoML.transformers.IntentTextTransformer.LABELS_FILE_NAME;
 
 public class DataManagementServiceTest {
     @ClassRule
     public static final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
     public static final MemoryStore store = new MemoryStore();
+    public static MinioClient minioClient;
+    public static String minioBucketName;
     DataManagementServiceGrpc.DataManagementServiceBlockingStub blockingStub =
             DataManagementServiceGrpc.newBlockingStub(grpcCleanup.register(
                     InProcessChannelBuilder.forName("hostname").directExecutor().build()));
@@ -32,10 +38,11 @@ public class DataManagementServiceTest {
         Properties props = new Properties();
         props.load(DataManagementService.class.getClassLoader().getResourceAsStream("config-test.properties"));
         DataManagementService.Config config = new DataManagementService.Config(props);
-        MinioClient minioClient = MinioClient.builder()
+        minioClient = MinioClient.builder()
                 .endpoint(config.minioHost)
                 .credentials(config.minioAccessKey, config.minioSecretKey)
                 .build();
+        minioBucketName = config.minioBucketName;
         boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(config.minioBucketName).build());
         if (!found) {
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(config.minioBucketName).build());
@@ -114,6 +121,52 @@ public class DataManagementServiceTest {
         assertEquals("1", fetchedDataset.getDatasetId());
         assertEquals("test-1", fetchedDataset.getName());
         assertEquals("hashEA==", fetchedDataset.getVersionHash());
+    }
+
+    @Test
+    public void datasetSnapshot() throws Exception {
+        ClassLoader cl = getClass().getClassLoader();
+        for (String f : ImmutableList.of("test.csv", "train.csv", "validation.csv")) {
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(minioBucketName)
+                    .object("ingest/" + f)
+                    .stream(cl.getResourceAsStream("datasets/" + f), -1, 5 * 1024 * 1024).build());
+        }
+        String datasetId = blockingStub.createDataset(CreateDatasetRequest.newBuilder()
+                .setName("Dataset Snapshot Test")
+                .setDescription("test dataset")
+                .setDatasetType(DatasetType.TEXT_INTENT)
+                .setUri("ingest/train.csv")
+                .build()).getDatasetId();
+        blockingStub.updateDataset(CreateCommitRequest.newBuilder()
+                .setDatasetId(datasetId)
+                .setCommitMessage("test data")
+                .setUri("ingest/test.csv")
+                .build());
+        blockingStub.updateDataset(CreateCommitRequest.newBuilder()
+                .setDatasetId(datasetId)
+                .setCommitMessage("validation data")
+                .setUri("ingest/validation.csv")
+                .build());
+        DatasetVersionHash fetchedDatasetVersionHash = blockingStub.fetchVersionedDataset(
+                DatasetQuery.newBuilder().setDatasetId(datasetId).build());
+        String versionHash = fetchedDatasetVersionHash.getVersionHash();
+        int iteration = 0;
+        VersionHashDataset result = blockingStub.fetchDatasetByVersionHash(VersionHashQuery.newBuilder()
+                .setDatasetId(datasetId).setVersionHash(versionHash).build());
+        while (result.getState() == SnapshotState.RUNNING && ++iteration < 20) {
+            Thread.sleep(1000);
+            result = blockingStub.fetchDatasetByVersionHash(VersionHashQuery.newBuilder()
+                    .setDatasetId(datasetId).setVersionHash(versionHash).build());
+        }
+        assertEquals(SnapshotState.READY, result.getState());
+        assertEquals(2, result.getPartsCount());
+        assertEquals(EXAMPLES_FILE_NAME, result.getParts(0).getName());
+        assertEquals(minioBucketName, result.getParts(0).getBucket());
+        assertEquals("versionedDatasets/1/hashDg==/examples.csv", result.getParts(0).getPath());
+        assertEquals(LABELS_FILE_NAME, result.getParts(1).getName());
+        assertEquals(minioBucketName, result.getParts(1).getBucket());
+        assertEquals("versionedDatasets/1/hashDg==/labels.csv", result.getParts(1).getPath());
     }
 
     private DatasetVersionPointer createDataset(int id, List<Tag> tags) {
