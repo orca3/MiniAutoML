@@ -13,16 +13,17 @@ service DataManagementService {
   rpc ListDatasets (ListQueryOptions) returns (stream DatasetPointer);
   rpc CreateDataset (CreateDatasetRequest) returns (DatasetVersionPointer);
   rpc UpdateDataset (CreateCommitRequest) returns (DatasetVersionPointer);
-  rpc RollbackDataset (DatasetVersionPointer) returns (DatasetVersionPointer);
-  rpc FetchVersionedDataset (DatasetVersionPointer) returns (DatasetDetails);
+  rpc FetchVersionedDataset (DatasetQuery) returns (DatasetVersionHash);
+  rpc FetchDatasetByVersionHash (VersionHashQuery) returns (VersionHashDataset);
   rpc DeleteDataset (DatasetPointer) returns (google.protobuf.Empty);
 }
 
 message CreateDatasetRequest {
   string name = 1;
   string description = 2;
-  string dataset_type = 3;
+  DatasetType dataset_type = 3;
   string uri = 4;
+  repeated Tag tags = 5;
 }
 
 message ListQueryOptions {
@@ -32,15 +33,25 @@ message ListQueryOptions {
 
 message CreateCommitRequest {
   string dataset_id = 1;
-  string parent_commit_id = 2;
-  string commit_message = 3;
-  CommitType commit_type = 4;
-  string uri = 5;
+  string commit_message = 2;
+  string uri = 3;
+  repeated Tag tags = 4;
 }
 
 message DatasetVersionPointer {
   string dataset_id = 1;
   string commit_id = 2;
+}
+
+message DatasetQuery {
+  string dataset_id = 1;
+  string commit_id = 2;
+  repeated Tag tags = 3;
+}
+
+message VersionHashQuery {
+  string dataset_id = 1;
+  string version_hash = 2;
 }
 
 message DatasetPointer {
@@ -51,19 +62,19 @@ message DatasetSummary {
   string datasetId = 1;
   string name = 2;
   string description = 3;
-  string dataset_type = 4;
+  DatasetType dataset_type = 4;
   string last_updated_at = 5;
   repeated CommitInfo commits = 6;
 
 }
 
-message DatasetDetails {
+message DatasetVersionHash {
   string dataset_id = 1;
   string name = 2;
   string description = 3;
-  string dataset_type = 4;
+  DatasetType dataset_type = 4;
   string last_updated_at = 5;
-  repeated DatasetPart parts = 6;
+  string version_hash = 6;
 }
 
 message DatasetPart {
@@ -72,14 +83,37 @@ message DatasetPart {
   string uri = 3;
 }
 
+message VersionHashDataset {
+  string dataset_id = 1;
+  string version_hash = 2;
+  SnapshotState state = 3;
+  repeated FileInfo parts = 4;
+}
+
 message CommitInfo {
   string dataset_id = 1;
   string commit_id = 2;
   string created_at = 3;
-  CommitType commit_type = 4;
 }
 
-enum CommitType {
-  OVERWRITE = 0;
-  APPEND = 1;
+message Tag {
+  string tag_key = 1;
+  string tag_value = 2;
+}
+
+message FileInfo {
+  string name = 1;
+  string bucket = 2;
+  string path = 3;
+}
+
+enum DatasetType {
+  GENERIC = 0;
+  TEXT_INTENT = 1;
+}
+
+enum SnapshotState {
+  RUNNING = 0;
+  READY = 1;
+  FAILED = 2;
 }
