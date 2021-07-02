@@ -1,5 +1,6 @@
 package org.orca3.miniAutoML.transformers;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -21,6 +22,7 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import org.orca3.miniAutoML.DatasetPart;
+import org.orca3.miniAutoML.FileInfo;
 import org.orca3.miniAutoML.models.IntentText;
 import org.orca3.miniAutoML.models.IntentTextCollection;
 import org.orca3.miniAutoML.models.Label;
@@ -183,7 +185,7 @@ public class IntentTextTransformer {
         }
     }
 
-    public static void compress(List<DatasetPart> parts, String jobId, String bucketName, MinioClient minioClient) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+    public static List<FileInfo> compress(List<DatasetPart> parts, String jobId, String bucketName, MinioClient minioClient) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         List<IntentTextCollection> collection = Lists.newArrayListWithCapacity(parts.size());
         // Download
         for (DatasetPart part : parts) {
@@ -207,15 +209,21 @@ public class IntentTextTransformer {
         } catch (CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
             throw new RuntimeException(e);
         }
+        String mergedExamplesPath = Paths.get("versionedDatasets", jobId, EXAMPLES_FILE_NAME).toString();
+        String mergedLabelsPath = Paths.get("versionedDatasets", jobId, LABELS_FILE_NAME).toString();
         minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
-                .object(Paths.get("datasetView", jobId, EXAMPLES_FILE_NAME).toString())
+                .object(mergedExamplesPath)
                 .stream(new ByteArrayInputStream(labelsWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
                 .contentType("text/csv")
                 .build());
         minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
-                .object(Paths.get("datasetView", jobId, LABELS_FILE_NAME).toString())
+                .object(mergedLabelsPath)
                 .stream(new ByteArrayInputStream(examplesWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
                 .contentType("text/csv")
                 .build());
+        return ImmutableList.of(
+            FileInfo.newBuilder().setName(EXAMPLES_FILE_NAME).setPath(mergedExamplesPath).setBucket(bucketName).build(),
+            FileInfo.newBuilder().setName(LABELS_FILE_NAME).setPath(mergedExamplesPath).setBucket(bucketName).build()
+        );
     }
 }

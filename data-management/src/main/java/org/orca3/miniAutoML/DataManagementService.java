@@ -1,6 +1,7 @@
 package org.orca3.miniAutoML;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -31,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 public class DataManagementService extends DataManagementServiceGrpc.DataManagementServiceImplBase {
     private static final Logger logger = LoggerFactory.getLogger(DataManagementService.class);
     private final MemoryStore store;
+    private final Map<String, Future<?>> futures;
     private final ExecutorService threadPool;
     private final Config config;
     private final MinioClient minioClient;
@@ -40,6 +43,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         this.threadPool = new ForkJoinPool(4);
         this.minioClient = minioClient;
         this.config = config;
+        this.futures = Maps.newHashMap();
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -209,13 +213,29 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                     .setUri(commit.getUri())
                     .build());
         }
-        String versionHash = Base64.getEncoder().encodeToString(pickedCommits.toByteArray());
+        String versionHash = String.format("hash%s", Base64.getEncoder().encodeToString(pickedCommits.toByteArray()));
         responseBuilder.setVersionHash(versionHash);
 
-        Future<?> future = threadPool.submit(new DatasetCompressor(minioClient, dataset.getDatasetType(), parts, versionHash, config.minioBucketName));
+        futures.put(versionHash, threadPool.submit(new DatasetCompressor(minioClient, store, datasetId,
+                dataset.getDatasetType(), parts, versionHash, config.minioBucketName)));
+
 
         responseObserver.onNext(responseBuilder.build());
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void fetchDatasetByVersionHash(VersionHashQuery request, StreamObserver<VersionHashDataset> responseObserver) {
+        String versionHashKey = MemoryStore.calculateVersionHashKey(request.getDatasetId(), request.getVersionHash());
+        if (store.versionHashRegistry.containsKey(versionHashKey)) {
+            responseObserver.onNext(store.versionHashRegistry.get(versionHashKey));
+            responseObserver.onCompleted();
+        } else {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription(String.format("VersionHash %s for Dataset %s not found",
+                            request.getVersionHash(), request.getDatasetId()))
+                    .asException());
+        }
     }
 
     @Override

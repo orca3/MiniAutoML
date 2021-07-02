@@ -97,7 +97,7 @@ public class DataManagementServiceTest {
                 DatasetQuery.newBuilder().setDatasetId("1").setCommitId("4").build());
         assertEquals("1", fetchedDataset.getDatasetId());
         assertEquals("test-1", fetchedDataset.getName());
-        assertEquals("Hg==", fetchedDataset.getVersionHash());
+        assertEquals("hashHg==", fetchedDataset.getVersionHash());
 
         fetchedDataset = blockingStub.fetchVersionedDataset(
                 DatasetQuery.newBuilder().setDatasetId("1").setCommitId("4").addTags(
@@ -105,7 +105,7 @@ public class DataManagementServiceTest {
                 ).build());
         assertEquals("1", fetchedDataset.getDatasetId());
         assertEquals("test-1", fetchedDataset.getName());
-        assertEquals("", fetchedDataset.getVersionHash());
+        assertEquals("hash", fetchedDataset.getVersionHash());
 
         fetchedDataset = blockingStub.fetchVersionedDataset(
                 DatasetQuery.newBuilder().setDatasetId("1").setCommitId("4").addTags(
@@ -113,7 +113,7 @@ public class DataManagementServiceTest {
                 ).build());
         assertEquals("1", fetchedDataset.getDatasetId());
         assertEquals("test-1", fetchedDataset.getName());
-        assertEquals("EA==", fetchedDataset.getVersionHash());
+        assertEquals("hashEA==", fetchedDataset.getVersionHash());
     }
 
     private DatasetVersionPointer createDataset(int id, List<Tag> tags) {
