@@ -4,34 +4,29 @@ import io.minio.MinioClient;
 import org.apache.commons.lang3.NotImplementedException;
 import org.orca3.miniAutoML.transformers.IntentTextTransformer;
 
-import java.io.IOException;
-import java.nio.file.Files;
+import java.util.List;
 
 public class DatasetCompressor implements Runnable {
     private final MinioClient minioClient;
-    private final DatasetDetails details;
-    private final String jobId;
+    private final DatasetType datasetType;
+    private List<DatasetPart> parts;
+    private final String versionHash;
     private final String bucketName;
 
-    public DatasetCompressor(MinioClient minioClient, DatasetDetails details, String jobId, String bucketName) {
+    public DatasetCompressor(MinioClient minioClient, DatasetType datasetType, List<DatasetPart> parts, String versionHash, String bucketName) {
         this.minioClient = minioClient;
-        this.details = details;
-        this.jobId = jobId;
+        this.datasetType = datasetType;
+        this.parts = parts;
+        this.versionHash = versionHash;
         this.bucketName = bucketName;
     }
 
     @Override
     public void run() {
-        String tmpdir;
-        try {
-            tmpdir = Files.createTempDirectory(jobId).toFile().getAbsolutePath();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        switch (this.details.getDatasetType()) {
+        switch (datasetType) {
             case TEXT_INTENT:
                 try {
-                    IntentTextTransformer.compress(details, tmpdir, jobId, bucketName, minioClient);
+                    IntentTextTransformer.compress(parts, versionHash, bucketName, minioClient);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

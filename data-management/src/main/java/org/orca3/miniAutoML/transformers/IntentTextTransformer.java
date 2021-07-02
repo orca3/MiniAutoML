@@ -11,27 +11,28 @@ import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
-import io.minio.DownloadObjectArgs;
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
-import io.minio.UploadObjectArgs;
+import io.minio.PutObjectArgs;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
-import org.orca3.miniAutoML.DatasetDetails;
 import org.orca3.miniAutoML.DatasetPart;
 import org.orca3.miniAutoML.models.IntentText;
 import org.orca3.miniAutoML.models.IntentTextCollection;
 import org.orca3.miniAutoML.models.Label;
 
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -91,15 +92,15 @@ public class IntentTextTransformer {
         Map<String, String> mergedLabels = Maps.newHashMap();
         int labelSeed = 0;
 
-        for (int i = 0; i < collections.size(); i++) {
+        for (IntentTextCollection collection : collections) {
             Map<String, String> remap = Maps.newHashMap();
-            for (Map.Entry<String, String> entry : collections.get(i).getLabels().entrySet()) {
+            for (Map.Entry<String, String> entry : collection.getLabels().entrySet()) {
                 if (!mergedLabels.containsKey(entry.getValue())) {
                     mergedLabels.put(entry.getValue(), Integer.toString(++labelSeed));
                 }
                 remap.put(entry.getKey(), mergedLabels.get(entry.getValue()));
             }
-            for (IntentText t : collections.get(i).getTexts()) {
+            for (IntentText t : collection.getTexts()) {
                 String[] oldLabels = t.getSplicedLabels();
                 String[] newLabels = new String[oldLabels.length];
                 for (int j = 0; j < oldLabels.length; j++) {
@@ -157,45 +158,64 @@ public class IntentTextTransformer {
                 .collect(Collectors.toList()));
     }
 
-    public static void compress(DatasetDetails details, String tmpdir, String jobId, String bucketName, MinioClient minioClient) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-        List<IntentTextCollection> collection = Lists.newArrayListWithCapacity(details.getPartsList().size());
+    public static String ingest(String ingestUri, String datasetId, String commitId, String bucketName, MinioClient minioClient) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        URI uri = URI.create(ingestUri);
+        try (Reader ingestReader = new InputStreamReader(minioClient.getObject(GetObjectArgs.builder()
+                .bucket(bucketName).object(uri.getPath()).build()))) {
+            List<IntentText> data = IntentTextTransformer.transform(ingestReader);
+            Writer labelsWriter = new StringWriter();
+            Writer examplesWriter = new StringWriter();
+            IntentTextTransformer.toFile(IntentTextTransformer.repackage(data), labelsWriter, examplesWriter);
+            String commitRoot = Paths.get("dataset", datasetId, "commit", commitId).toString();
+            minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
+                    .object(Paths.get(commitRoot, LABELS_FILE_NAME).toString())
+                    .stream(new ByteArrayInputStream(labelsWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
+                    .contentType("text/csv")
+                    .build());
+            minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
+                    .object(Paths.get(commitRoot, EXAMPLES_FILE_NAME).toString())
+                    .stream(new ByteArrayInputStream(examplesWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
+                    .contentType("text/csv")
+                    .build());
+            return commitRoot;
+        } catch (CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void compress(List<DatasetPart> parts, String jobId, String bucketName, MinioClient minioClient) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        List<IntentTextCollection> collection = Lists.newArrayListWithCapacity(parts.size());
         // Download
-        for (int i = 0; i < details.getPartsList().size(); i++) {
-            DatasetPart part = details.getParts(i);
+        for (DatasetPart part : parts) {
             URI uri = URI.create(part.getUri());
-            String exampleFile = Paths.get(tmpdir, Integer.toString(i), EXAMPLES_FILE_NAME).toString();
-            String labelFile = Paths.get(tmpdir, Integer.toString(i), LABELS_FILE_NAME).toString();
-            minioClient.downloadObject(DownloadObjectArgs.builder()
-                    .bucket(uri.getHost())
-                    .object(Paths.get(uri.getPath(), EXAMPLES_FILE_NAME).toString())
-                    .filename(exampleFile).build());
-            minioClient.downloadObject(DownloadObjectArgs.builder()
-                    .bucket(uri.getHost())
-                    .object(Paths.get(uri.getPath(), LABELS_FILE_NAME).toString())
-                    .filename(labelFile).build());
-            try (Reader labelsReader = new FileReader(labelFile);
-                 Reader examplesReader = new FileReader(exampleFile)) {
+            try (Reader labelsReader = new InputStreamReader(minioClient.getObject(GetObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(Paths.get(uri.getPath(), LABELS_FILE_NAME).toString()).build()));
+                 Reader examplesReader = new InputStreamReader(minioClient.getObject(GetObjectArgs.builder()
+                         .bucket(bucketName)
+                         .object(Paths.get(uri.getPath(), EXAMPLES_FILE_NAME).toString()).build()))) {
                 collection.add(IntentTextTransformer.fromFile(labelsReader, examplesReader));
             }
         }
         // Merge locally
         IntentTextCollection mergedCollection = IntentTextTransformer.merge(collection);
         // Upload
-        String mergedExamplesFile = Paths.get(tmpdir, "merged", EXAMPLES_FILE_NAME).toString();
-        String mergedLabelsFile = Paths.get(tmpdir, "merged", LABELS_FILE_NAME).toString();
-        try (Writer labelsWriter = new FileWriter(mergedLabelsFile);
-             Writer examplesWriter = new FileWriter(mergedExamplesFile)) {
+        Writer labelsWriter = new StringWriter();
+        Writer examplesWriter = new StringWriter();
+        try {
             IntentTextTransformer.toFile(mergedCollection, labelsWriter, examplesWriter);
         } catch (CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
             throw new RuntimeException(e);
         }
-        minioClient.uploadObject(
-                UploadObjectArgs.builder().bucket(bucketName)
-                        .object(String.format("datasets/%s/examples.csv", jobId))
-                        .filename(mergedExamplesFile).contentType("text/csv").build());
-        minioClient.uploadObject(
-                UploadObjectArgs.builder().bucket(bucketName)
-                        .object(String.format("datasets/%s/labels.csv", jobId))
-                        .filename(mergedLabelsFile).contentType("text/csv").build());
+        minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
+                .object(Paths.get("datasetView", jobId, EXAMPLES_FILE_NAME).toString())
+                .stream(new ByteArrayInputStream(labelsWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
+                .contentType("text/csv")
+                .build());
+        minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
+                .object(Paths.get("datasetView", jobId, LABELS_FILE_NAME).toString())
+                .stream(new ByteArrayInputStream(examplesWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
+                .contentType("text/csv")
+                .build());
     }
 }

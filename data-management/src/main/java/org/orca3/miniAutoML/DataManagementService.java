@@ -1,5 +1,6 @@
 package org.orca3.miniAutoML;
 
+import com.google.common.collect.Lists;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -18,6 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Base64;
+import java.util.BitSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -125,8 +129,10 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         Dataset dataset = new Dataset(datasetId, request.getName(), request.getDescription(), request.getDatasetType());
         store.datasets.put(Integer.toString(datasetId), dataset);
         int commitId = dataset.getNextCommitId();
-        dataset.commits.put(Integer.toString(commitId),
-                new Commit(datasetId, commitId, request.getUri(), request.getTagsList()));
+
+        String commitUri = DatasetIngestion.ingest(minioClient, Integer.toString(datasetId), Integer.toString(commitId),
+                request.getDatasetType(), request.getUri(), config.minioBucketName);
+        dataset.commits.put(Integer.toString(commitId), new Commit(datasetId, commitId, commitUri, request.getTagsList()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
                 .setDatasetId(Integer.toString(datasetId))
@@ -143,19 +149,20 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
             return;
         }
         Dataset dataset = store.datasets.get(datasetId);
-        int commitId = dataset.getNextCommitId();
-        dataset.commits.put(Integer.toString(commitId),
-                new Commit(datasetId, commitId, request.getUri(), request.getTagsList()));
+        String commitId = Integer.toString(dataset.getNextCommitId());
+        String commitUri = DatasetIngestion.ingest(minioClient, datasetId, commitId, dataset.getDatasetType(),
+                request.getUri(), config.minioBucketName);
+        dataset.commits.put(commitId, new Commit(datasetId, commitId, commitUri, request.getTagsList()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
                 .setDatasetId(datasetId)
-                .setCommitId(Integer.toString(commitId))
+                .setCommitId(commitId)
                 .build());
         responseObserver.onCompleted();
     }
 
     @Override
-    public void fetchVersionedDataset(DatasetQuery request, StreamObserver<DatasetDetails> responseObserver) {
+    public void fetchVersionedDataset(DatasetQuery request, StreamObserver<DatasetVersionHash> responseObserver) {
         String datasetId = request.getDatasetId();
         if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
@@ -173,12 +180,15 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
             }
         }
 
-        DatasetDetails.Builder responseBuilder = DatasetDetails.newBuilder()
+        DatasetVersionHash.Builder responseBuilder = DatasetVersionHash.newBuilder()
                 .setDatasetId(datasetId)
                 .setName(dataset.getName())
                 .setDescription(dataset.getDescription())
                 .setDatasetType(dataset.getDatasetType())
                 .setLastUpdatedAt(dataset.getUpdatedAt());
+
+        BitSet pickedCommits = new BitSet();
+        List<DatasetPart> parts = Lists.newArrayList();
         for (int i = 1; i <= Integer.parseInt(commitId); i++) {
             Commit commit = dataset.commits.get(Integer.toString(i));
             boolean matched = true;
@@ -192,17 +202,19 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
             if (!matched) {
                 continue;
             }
-            responseBuilder.addParts(DatasetPart.newBuilder()
+            pickedCommits.set(i);
+            parts.add(DatasetPart.newBuilder()
                     .setDatasetId(datasetId)
-                    .setCommitId(Long.toString(i))
+                    .setCommitId(Integer.toString(i))
                     .setUri(commit.getUri())
                     .build());
         }
-        DatasetDetails details = responseBuilder.build();
+        String versionHash = Base64.getEncoder().encodeToString(pickedCommits.toByteArray());
+        responseBuilder.setVersionHash(versionHash);
 
-        Future<?> future = threadPool.submit(new DatasetCompressor(minioClient, details, "testJobId", config.minioBucketName));
+        Future<?> future = threadPool.submit(new DatasetCompressor(minioClient, dataset.getDatasetType(), parts, versionHash, config.minioBucketName));
 
-        responseObserver.onNext(details);
+        responseObserver.onNext(responseBuilder.build());
         responseObserver.onCompleted();
     }
 

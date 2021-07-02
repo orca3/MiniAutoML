@@ -20,8 +20,8 @@ public class Commit {
         this(Integer.toString(datasetId), Integer.toString(commitId), uri, ISO_INSTANT.format(Instant.now()), tags);
     }
 
-    public Commit(String datasetId, int commitId, String uri, List<Tag> tags) {
-        this(datasetId, Integer.toString(commitId), uri, ISO_INSTANT.format(Instant.now()), tags);
+    public Commit(String datasetId, String commitId, String uri, List<Tag> tags) {
+        this(datasetId, commitId, uri, ISO_INSTANT.format(Instant.now()), tags);
     }
 
     public Commit(String datasetId, String commitId, String uri, String createdAt, List<Tag> tags) {

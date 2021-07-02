@@ -13,7 +13,7 @@ service DataManagementService {
   rpc ListDatasets (ListQueryOptions) returns (stream DatasetPointer);
   rpc CreateDataset (CreateDatasetRequest) returns (DatasetVersionPointer);
   rpc UpdateDataset (CreateCommitRequest) returns (DatasetVersionPointer);
-  rpc FetchVersionedDataset (DatasetQuery) returns (DatasetDetails);
+  rpc FetchVersionedDataset (DatasetQuery) returns (DatasetVersionHash);
   rpc DeleteDataset (DatasetPointer) returns (google.protobuf.Empty);
 }
 
@@ -62,13 +62,13 @@ message DatasetSummary {
 
 }
 
-message DatasetDetails {
+message DatasetVersionHash {
   string dataset_id = 1;
   string name = 2;
   string description = 3;
   DatasetType dataset_type = 4;
   string last_updated_at = 5;
-  repeated DatasetPart parts = 6;
+  string version_hash = 6;
 }
 
 message DatasetPart {
