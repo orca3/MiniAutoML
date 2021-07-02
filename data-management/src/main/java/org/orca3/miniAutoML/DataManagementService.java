@@ -8,18 +8,81 @@ import io.grpc.health.v1.HealthCheckResponse;
 import io.grpc.protobuf.services.HealthStatusManager;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.stub.StreamObserver;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
 import org.orca3.miniAutoML.models.Commit;
 import org.orca3.miniAutoML.models.Dataset;
 import org.orca3.miniAutoML.models.MemoryStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class DataManagementService extends DataManagementServiceGrpc.DataManagementServiceImplBase {
+    private static final Logger logger = LoggerFactory.getLogger(DataManagementService.class);
     private final MemoryStore store;
+    private final ExecutorService threadPool;
+    private final Config config;
+    private final MinioClient minioClient;
 
-    public DataManagementService(MemoryStore store) {
+    public DataManagementService(MemoryStore store, MinioClient minioClient, Config config) {
         this.store = store;
+        this.threadPool = new ForkJoinPool(4);
+        this.minioClient = minioClient;
+        this.config = config;
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Properties props = new Properties();
+        props.load(DataManagementService.class.getClassLoader().getResourceAsStream("config.properties"));
+        Config config = new Config(props);
+        MinioClient minioClient = MinioClient.builder()
+                .endpoint(config.minioHost)
+                .credentials(config.minioAccessKey, config.minioSecretKey)
+                .build();
+        try {
+            boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(config.minioBucketName).build());
+            if (!found) {
+                logger.info("Creating bucket '{}'.", config.minioBucketName);
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(config.minioBucketName).build());
+            } else {
+                logger.info("Bucket '{}' already exists.", config.minioBucketName);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        HealthStatusManager health = new HealthStatusManager();
+        DataManagementService dmService = new DataManagementService(new MemoryStore(), minioClient, config);
+
+        int port = Integer.parseInt(config.serverPort);
+        final Server server = ServerBuilder.forPort(port)
+                .addService(dmService)
+                .addService(ProtoReflectionService.newInstance())
+                .addService(health.getHealthService())
+                .build()
+                .start();
+        System.out.println("Listening on port " + port);
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            // Start graceful shutdown
+            server.shutdown();
+            try {
+                if (!server.awaitTermination(30, TimeUnit.SECONDS)) {
+                    server.shutdownNow();
+                    server.awaitTermination(5, TimeUnit.SECONDS);
+                }
+            } catch (InterruptedException ex) {
+                server.shutdownNow();
+            }
+        }));
+        health.setStatus("", HealthCheckResponse.ServingStatus.SERVING);
+        server.awaitTermination();
     }
 
     @Override
@@ -36,7 +99,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                 .setDescription(dataset.getDescription())
                 .setDatasetType(dataset.getDatasetType())
                 .setLastUpdatedAt(dataset.getUpdatedAt());
-        for (Commit commit: dataset.commits.values()) {
+        for (Commit commit : dataset.commits.values()) {
             responseBuilder.addCommits(CommitInfo.newBuilder()
                     .setDatasetId(datasetId)
                     .setCommitId(commit.getCommitId())
@@ -116,10 +179,10 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                 .setDescription(dataset.getDescription())
                 .setDatasetType(dataset.getDatasetType())
                 .setLastUpdatedAt(dataset.getUpdatedAt());
-        for (int i = 1; i <= Integer.parseInt(commitId); i ++) {
+        for (int i = 1; i <= Integer.parseInt(commitId); i++) {
             Commit commit = dataset.commits.get(Integer.toString(i));
             boolean matched = true;
-            for (Tag tag: request.getTagsList()) {
+            for (Tag tag : request.getTagsList()) {
                 if (commit.getTags().containsKey(tag.getTagKey())) {
                     matched = commit.getTags().get(tag.getTagKey()).equals(tag.getTagValue());
                 } else {
@@ -135,8 +198,11 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                     .setUri(commit.getUri())
                     .build());
         }
+        DatasetDetails details = responseBuilder.build();
 
-        responseObserver.onNext(responseBuilder.build());
+        Future<?> future = threadPool.submit(new DatasetCompressor(minioClient, details, "testJobId", config.minioBucketName));
+
+        responseObserver.onNext(details);
         responseObserver.onCompleted();
     }
 
@@ -164,39 +230,19 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                 .asException();
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        int port = 51001;
-        if (args.length >= 1) {
-            try {
-                port = Integer.parseInt(args[0]);
-            } catch (NumberFormatException ex) {
-                System.err.println("Usage: [port]");
-                System.err.println("  port      The listen port. Defaults to " + port);
-                System.exit(1);
-            }
+    static class Config {
+        final String minioBucketName;
+        final String minioAccessKey;
+        final String minioSecretKey;
+        final String minioHost;
+        final String serverPort;
+
+        public Config(Properties properties) {
+            this.minioBucketName = properties.getProperty("minio.bucketName");
+            this.minioAccessKey = properties.getProperty("minio.accessKey");
+            this.minioSecretKey = properties.getProperty("minio.secretKey");
+            this.minioHost = properties.getProperty("minio.host");
+            this.serverPort = properties.getProperty("server.port");
         }
-        HealthStatusManager health = new HealthStatusManager();
-        DataManagementService dmService = new DataManagementService(new MemoryStore());
-        final Server server = ServerBuilder.forPort(port)
-                .addService(dmService)
-                .addService(ProtoReflectionService.newInstance())
-                .addService(health.getHealthService())
-                .build()
-                .start();
-        System.out.println("Listening on port " + port);
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            // Start graceful shutdown
-            server.shutdown();
-            try {
-                if (!server.awaitTermination(30, TimeUnit.SECONDS)) {
-                    server.shutdownNow();
-                    server.awaitTermination(5, TimeUnit.SECONDS);
-                }
-            } catch (InterruptedException ex) {
-                server.shutdownNow();
-            }
-        }));
-        health.setStatus("", HealthCheckResponse.ServingStatus.SERVING);
-        server.awaitTermination();
     }
 }

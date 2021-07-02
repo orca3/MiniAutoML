@@ -4,6 +4,9 @@ import com.google.common.collect.Lists;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -12,6 +15,7 @@ import org.orca3.miniAutoML.models.MemoryStore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
@@ -19,11 +23,25 @@ public class DataManagementServiceTest {
     @ClassRule
     public static final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
     public static final MemoryStore store = new MemoryStore();
+    DataManagementServiceGrpc.DataManagementServiceBlockingStub blockingStub =
+            DataManagementServiceGrpc.newBlockingStub(grpcCleanup.register(
+                    InProcessChannelBuilder.forName("hostname").directExecutor().build()));
 
     @BeforeClass
     public static void beforeClass() throws Exception {
+        Properties props = new Properties();
+        props.load(DataManagementService.class.getClassLoader().getResourceAsStream("config-test.properties"));
+        DataManagementService.Config config = new DataManagementService.Config(props);
+        MinioClient minioClient = MinioClient.builder()
+                .endpoint(config.minioHost)
+                .credentials(config.minioAccessKey, config.minioSecretKey)
+                .build();
+        boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(config.minioBucketName).build());
+        if (!found) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(config.minioBucketName).build());
+        }
         grpcCleanup.register(InProcessServerBuilder.forName("hostname").directExecutor()
-                .addService(new DataManagementService(store))
+                .addService(new DataManagementService(store, minioClient, config))
                 .build().start());
     }
 
@@ -31,10 +49,6 @@ public class DataManagementServiceTest {
     public void tearDown() {
         store.clear();
     }
-
-    DataManagementServiceGrpc.DataManagementServiceBlockingStub blockingStub =
-            DataManagementServiceGrpc.newBlockingStub(grpcCleanup.register(
-                    InProcessChannelBuilder.forName("hostname").directExecutor().build()));
 
     @Test
     public void createDataset_simpleCreation() throws Exception {
