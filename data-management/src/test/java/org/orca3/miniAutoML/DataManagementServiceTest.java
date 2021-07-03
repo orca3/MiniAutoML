@@ -14,7 +14,10 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.orca3.miniAutoML.models.MemoryStore;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -24,8 +27,28 @@ import static org.orca3.miniAutoML.transformers.IntentTextTransformer.EXAMPLES_F
 import static org.orca3.miniAutoML.transformers.IntentTextTransformer.LABELS_FILE_NAME;
 
 public class DataManagementServiceTest {
+    static {
+        Properties props = new Properties();
+        try {
+            props.load(DataManagementService.class.getClassLoader().getResourceAsStream("config-test.properties"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        config = new DataManagementService.Config(props);
+
+    }
     @ClassRule
     public static final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
+    public static final DockerImageName MINIO_IMAGE = DockerImageName.parse("minio/minio");
+    public static final DataManagementService.Config config;
+
+    @ClassRule
+    public static GenericContainer<?> minio =
+            new GenericContainer<>(MINIO_IMAGE).withExposedPorts(9000)
+                    .withEnv("MINIO_ROOT_USER", config.minioAccessKey)
+                    .withEnv("MINIO_ROOT_PASSWORD", config.minioSecretKey)
+                    .withCommand("server", "/data");
+
     public static final MemoryStore store = new MemoryStore();
     public static MinioClient minioClient;
     public static String minioBucketName;
@@ -39,7 +62,7 @@ public class DataManagementServiceTest {
         props.load(DataManagementService.class.getClassLoader().getResourceAsStream("config-test.properties"));
         DataManagementService.Config config = new DataManagementService.Config(props);
         minioClient = MinioClient.builder()
-                .endpoint(config.minioHost)
+                .endpoint(String.format("http://%s:%d", minio.getHost(), minio.getMappedPort(9000)))
                 .credentials(config.minioAccessKey, config.minioSecretKey)
                 .build();
         minioBucketName = config.minioBucketName;
