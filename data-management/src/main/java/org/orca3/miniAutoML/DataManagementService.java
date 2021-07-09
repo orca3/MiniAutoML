@@ -134,9 +134,9 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         store.datasets.put(Integer.toString(datasetId), dataset);
         int commitId = dataset.getNextCommitId();
 
-        String commitUri = DatasetIngestion.ingest(minioClient, Integer.toString(datasetId), Integer.toString(commitId),
-                request.getDatasetType(), request.getUri(), config.minioBucketName);
-        dataset.commits.put(Integer.toString(commitId), new Commit(datasetId, commitId, commitUri, request.getTagsList()));
+        String commitRoot = DatasetIngestion.ingest(minioClient, Integer.toString(datasetId), Integer.toString(commitId),
+                request.getDatasetType(), request.getBucket(), request.getPath(), config.minioBucketName);
+        dataset.commits.put(Integer.toString(commitId), new Commit(datasetId, commitId, commitRoot, request.getTagsList()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
                 .setDatasetId(Integer.toString(datasetId))
@@ -155,7 +155,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         Dataset dataset = store.datasets.get(datasetId);
         String commitId = Integer.toString(dataset.getNextCommitId());
         String commitUri = DatasetIngestion.ingest(minioClient, datasetId, commitId, dataset.getDatasetType(),
-                request.getUri(), config.minioBucketName);
+                request.getBucket(), request.getPath(), config.minioBucketName);
         dataset.commits.put(commitId, new Commit(datasetId, commitId, commitUri, request.getTagsList()));
 
         responseObserver.onNext(DatasetVersionPointer.newBuilder()
@@ -210,7 +210,8 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
             parts.add(DatasetPart.newBuilder()
                     .setDatasetId(datasetId)
                     .setCommitId(Integer.toString(i))
-                    .setUri(commit.getUri())
+                    .setBucket(config.minioBucketName)
+                    .setPathPrefix(commit.getPath())
                     .build());
         }
         String versionHash = String.format("hash%s", Base64.getEncoder().encodeToString(pickedCommits.toByteArray()));
