@@ -22,8 +22,9 @@ message CreateDatasetRequest {
   string name = 1;
   string description = 2;
   DatasetType dataset_type = 3;
-  string uri = 4;
-  repeated Tag tags = 5;
+  string bucket = 4;
+  string path = 5;
+  repeated Tag tags = 6;
 }
 
 message ListQueryOptions {
@@ -34,8 +35,9 @@ message ListQueryOptions {
 message CreateCommitRequest {
   string dataset_id = 1;
   string commit_message = 2;
-  string uri = 3;
-  repeated Tag tags = 4;
+  string bucket = 3;
+  string path = 4;
+  repeated Tag tags = 5;
 }
 
 message DatasetVersionPointer {
@@ -80,7 +82,8 @@ message DatasetVersionHash {
 message DatasetPart {
   string dataset_id = 1;
   string commit_id = 2;
-  string uri = 3;
+  string bucket = 3;
+  string path_prefix = 4;
 }
 
 message VersionHashDataset {

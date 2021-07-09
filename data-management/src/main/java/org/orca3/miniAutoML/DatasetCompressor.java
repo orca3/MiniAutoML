@@ -3,6 +3,8 @@ package org.orca3.miniAutoML;
 import io.minio.MinioClient;
 import org.apache.commons.lang3.NotImplementedException;
 import org.orca3.miniAutoML.models.MemoryStore;
+import org.orca3.miniAutoML.transformers.DatasetTransformer;
+import org.orca3.miniAutoML.transformers.GenericTransformer;
 import org.orca3.miniAutoML.transformers.IntentTextTransformer;
 
 import java.util.List;
@@ -32,19 +34,21 @@ public class DatasetCompressor implements Runnable {
     public void run() {
         String versionHashKey = MemoryStore.calculateVersionHashKey(datasetId, versionHash);
         List<FileInfo> versionHashParts;
+        DatasetTransformer transformer;
         switch (datasetType) {
             case TEXT_INTENT:
-                try {
-                    versionHashParts = IntentTextTransformer.compress(datasetParts, datasetId, versionHash, bucketName, minioClient);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                transformer = new IntentTextTransformer();
                 break;
             case GENERIC:
             default:
-                store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
-                        .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.FAILED).build());
-                throw new NotImplementedException("Not implemented");
+                transformer = new GenericTransformer();
+        }
+        try {
+            versionHashParts = transformer.compress(datasetParts, datasetId, versionHash, bucketName, minioClient);
+        } catch (Exception e) {
+            store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
+                    .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.FAILED).build());
+            throw new RuntimeException(e);
         }
         store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
                 .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.READY)
