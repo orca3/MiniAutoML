@@ -7,6 +7,6 @@ echo "Upload dataset"
 mc -q cp data-management/src/test/resources/datasets/test.csv myminio/mini-automl/upload/001.csv
 echo
 echo "Creating intent dataset"
-grpcurl -v -plaintext \
+grpcurl -plaintext \
   -d '{"name": "dataset-1", "dataset_type": "TEXT_INTENT", "bucket": "mini-automl", "path": "upload/001.csv"}' \
   localhost:51001 data_management.DataManagementService/CreateDataset

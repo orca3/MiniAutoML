@@ -9,12 +9,12 @@ import "google/protobuf/empty.proto";
 package data_management;
 
 service DataManagementService {
-  rpc ListDatasetCommits (DatasetPointer) returns (DatasetSummary);
+  rpc GetDatasetSummary (DatasetPointer) returns (DatasetSummary);
   rpc ListDatasets (ListQueryOptions) returns (stream DatasetPointer);
-  rpc CreateDataset (CreateDatasetRequest) returns (DatasetVersionPointer);
-  rpc UpdateDataset (CreateCommitRequest) returns (DatasetVersionPointer);
-  rpc FetchVersionedDataset (DatasetQuery) returns (DatasetVersionHash);
-  rpc FetchDatasetByVersionHash (VersionHashQuery) returns (VersionHashDataset);
+  rpc CreateDataset (CreateDatasetRequest) returns (DatasetSummary);
+  rpc UpdateDataset (CreateCommitRequest) returns (DatasetSummary);
+  rpc PrepareTrainingDataset (DatasetQuery) returns (DatasetVersionHash);
+  rpc FetchTrainingDataset (VersionHashQuery) returns (VersionHashDataset);
   rpc DeleteDataset (DatasetPointer) returns (google.protobuf.Empty);
 }
 
@@ -38,11 +38,6 @@ message CreateCommitRequest {
   string bucket = 3;
   string path = 4;
   repeated Tag tags = 5;
-}
-
-message DatasetVersionPointer {
-  string dataset_id = 1;
-  string commit_id = 2;
 }
 
 message DatasetQuery {
@@ -97,6 +92,9 @@ message CommitInfo {
   string dataset_id = 1;
   string commit_id = 2;
   string created_at = 3;
+  string commit_message = 4;
+  repeated Tag tags = 5;
+  string path = 6;
 }
 
 message Tag {

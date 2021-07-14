@@ -92,79 +92,82 @@ public class DataManagementServiceTest {
         minioClient.putObject(PutObjectArgs.builder()
                 .bucket(minioBucketName).object(path)
                 .stream(cl.getResourceAsStream("genericDatasets/foo"), -1, 5 * 1024 * 1024).build());
-        DatasetVersionPointer reply = blockingStub.createDataset(CreateDatasetRequest.newBuilder()
+        DatasetSummary reply = blockingStub.createDataset(CreateDatasetRequest.newBuilder()
                 .setName("test-1").setDescription("test dataset").setDatasetType(DatasetType.GENERIC)
                 .setBucket(minioBucketName).setPath(path).build());
         assertEquals("1", reply.getDatasetId());
-        assertEquals("1", reply.getCommitId());
+        assertEquals(1, reply.getCommitsCount());
     }
 
     @Test
     public void createDataset_repeatedCreation() throws Exception {
-        DatasetVersionPointer reply = null;
+        DatasetSummary reply = null;
         for (int i = 0; i < 3; i++) {
             reply = blockingStub.createDataset(CreateDatasetRequest.newBuilder()
                     .setName("test-1").setDescription("test dataset").setDatasetType(DatasetType.GENERIC)
                     .setBucket(minioBucketName).setPath("ingest/genericDatasets/foo").build());
         }
         assertEquals("3", reply.getDatasetId());
-        assertEquals("1", reply.getCommitId());
+        assertEquals(1, reply.getCommitsCount());
     }
 
     @Test
     public void updateDataset_sequential() throws Exception {
-        DatasetVersionPointer createDatasetReply = blockingStub.createDataset(CreateDatasetRequest.newBuilder()
+        DatasetSummary reply = blockingStub.createDataset(CreateDatasetRequest.newBuilder()
                 .setName("test-1")
                 .setDescription("test dataset")
                 .setDatasetType(DatasetType.GENERIC)
                 .setBucket(minioBucketName).setPath("ingest/genericDatasets/foo").build());
-        DatasetVersionPointer reply = blockingStub.updateDataset(CreateCommitRequest.newBuilder()
-                .setDatasetId(createDatasetReply.getDatasetId())
+        assertEquals("1", reply.getDatasetId());
+        assertEquals(1, reply.getCommitsCount());
+
+        reply = blockingStub.updateDataset(CreateCommitRequest.newBuilder()
+                .setDatasetId(reply.getDatasetId())
                 .addAllTags(Lists.newArrayList(
                         Tag.newBuilder().setTagKey("foo").setTagValue("bar1").build()
                 ))
                 .setBucket(minioBucketName).setPath("ingest/genericDatasets/bar")
                 .build());
         assertEquals("1", reply.getDatasetId());
-        assertEquals("2", reply.getCommitId());
+        assertEquals(2, reply.getCommitsCount());
 
         reply = blockingStub.updateDataset(CreateCommitRequest.newBuilder()
-                .setDatasetId(createDatasetReply.getDatasetId())
+                .setDatasetId(reply.getDatasetId())
                 .addAllTags(Lists.newArrayList(
                         Tag.newBuilder().setTagKey("foo").setTagValue("bar1").build()
                 ))
                 .setBucket(minioBucketName).setPath("ingest/genericDatasets/coo")
                 .build());
         assertEquals("1", reply.getDatasetId());
-        assertEquals("3", reply.getCommitId());
+        assertEquals(3, reply.getCommitsCount());
 
         reply = blockingStub.updateDataset(CreateCommitRequest.newBuilder()
-                .setDatasetId(createDatasetReply.getDatasetId())
+                .setDatasetId(reply.getDatasetId())
                 .addAllTags(Lists.newArrayList(
                         Tag.newBuilder().setTagKey("foo").setTagValue("bar2").build()
                 ))
                 .setBucket(minioBucketName).setPath("ingest/genericDatasets/dzz")
                 .build());
         assertEquals("1", reply.getDatasetId());
-        assertEquals("4", reply.getCommitId());
+        assertEquals(4, reply.getCommitsCount());
 
         reply = blockingStub.updateDataset(CreateCommitRequest.newBuilder()
-                .setDatasetId(createDatasetReply.getDatasetId())
+                .setDatasetId(reply.getDatasetId())
                 .addAllTags(Lists.newArrayList(
                         Tag.newBuilder().setTagKey("foo").setTagValue("bar2").build()
                 ))
                 .setBucket(minioBucketName).setPath("ingest/genericDatasets/ell")
                 .build());
         assertEquals("1", reply.getDatasetId());
-        assertEquals("5", reply.getCommitId());
+        assertEquals(5, reply.getCommitsCount());
 
-        DatasetVersionHash fetchedDataset = blockingStub.fetchVersionedDataset(
+        DatasetVersionHash fetchedDataset = blockingStub.prepareTrainingDataset(
                 DatasetQuery.newBuilder().setDatasetId("1").setCommitId("4").build());
         assertEquals("1", fetchedDataset.getDatasetId());
         assertEquals("test-1", fetchedDataset.getName());
         assertEquals("hashHg==", fetchedDataset.getVersionHash());
 
-        fetchedDataset = blockingStub.fetchVersionedDataset(
+        fetchedDataset = blockingStub.prepareTrainingDataset(
                 DatasetQuery.newBuilder().setDatasetId("1").setCommitId("4").addTags(
                         Tag.newBuilder().setTagKey("gibilish").setTagValue("gblish").build()
                 ).build());
@@ -172,7 +175,7 @@ public class DataManagementServiceTest {
         assertEquals("test-1", fetchedDataset.getName());
         assertEquals("hash", fetchedDataset.getVersionHash());
 
-        fetchedDataset = blockingStub.fetchVersionedDataset(
+        fetchedDataset = blockingStub.prepareTrainingDataset(
                 DatasetQuery.newBuilder().setDatasetId("1").setCommitId("4").addTags(
                         Tag.newBuilder().setTagKey("foo").setTagValue("bar2").build()
                 ).build());
@@ -208,15 +211,15 @@ public class DataManagementServiceTest {
                 .setBucket(minioBucketName)
                 .setPath("ingest/validation.csv")
                 .build());
-        DatasetVersionHash fetchedDatasetVersionHash = blockingStub.fetchVersionedDataset(
+        DatasetVersionHash fetchedDatasetVersionHash = blockingStub.prepareTrainingDataset(
                 DatasetQuery.newBuilder().setDatasetId(datasetId).build());
         String versionHash = fetchedDatasetVersionHash.getVersionHash();
         int iteration = 0;
-        VersionHashDataset result = blockingStub.fetchDatasetByVersionHash(VersionHashQuery.newBuilder()
+        VersionHashDataset result = blockingStub.fetchTrainingDataset(VersionHashQuery.newBuilder()
                 .setDatasetId(datasetId).setVersionHash(versionHash).build());
         while (result.getState() == SnapshotState.RUNNING && ++iteration < 20) {
             Thread.sleep(1000);
-            result = blockingStub.fetchDatasetByVersionHash(VersionHashQuery.newBuilder()
+            result = blockingStub.fetchTrainingDataset(VersionHashQuery.newBuilder()
                     .setDatasetId(datasetId).setVersionHash(versionHash).build());
         }
         assertEquals(SnapshotState.READY, result.getState());

@@ -1,7 +1,6 @@
 package org.orca3.miniAutoML;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -13,13 +12,13 @@ import io.grpc.stub.StreamObserver;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import org.orca3.miniAutoML.models.Commit;
 import org.orca3.miniAutoML.models.Dataset;
 import org.orca3.miniAutoML.models.MemoryStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.BitSet;
 import java.util.List;
@@ -27,13 +26,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
 public class DataManagementService extends DataManagementServiceGrpc.DataManagementServiceImplBase {
     private static final Logger logger = LoggerFactory.getLogger(DataManagementService.class);
     private final MemoryStore store;
-    private final Map<String, Future<?>> futures;
     private final ExecutorService threadPool;
     private final Config config;
     private final MinioClient minioClient;
@@ -43,7 +43,6 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         this.threadPool = new ForkJoinPool(4);
         this.minioClient = minioClient;
         this.config = config;
-        this.futures = Maps.newHashMap();
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -94,28 +93,14 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     }
 
     @Override
-    public void listDatasetCommits(DatasetPointer request, StreamObserver<DatasetSummary> responseObserver) {
+    public void getDatasetSummary(DatasetPointer request, StreamObserver<DatasetSummary> responseObserver) {
         String datasetId = request.getDatasetId();
         if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
             return;
         }
         Dataset dataset = store.datasets.get(datasetId);
-        DatasetSummary.Builder responseBuilder = DatasetSummary.newBuilder()
-                .setDatasetId(datasetId)
-                .setName(dataset.getName())
-                .setDescription(dataset.getDescription())
-                .setDatasetType(dataset.getDatasetType())
-                .setLastUpdatedAt(dataset.getUpdatedAt());
-        for (Commit commit : dataset.commits.values()) {
-            responseBuilder.addCommits(CommitInfo.newBuilder()
-                    .setDatasetId(datasetId)
-                    .setCommitId(commit.getCommitId())
-                    .setCreatedAt(commit.getCreatedAt())
-                    .build());
-        }
-
-        responseObserver.onNext(responseBuilder.build());
+        responseObserver.onNext(dataset.toDatasetSummary());
         responseObserver.onCompleted();
     }
 
@@ -128,25 +113,29 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     }
 
     @Override
-    public void createDataset(CreateDatasetRequest request, StreamObserver<DatasetVersionPointer> responseObserver) {
-        int datasetId = store.datasetIdSeed.incrementAndGet();
+    public void createDataset(CreateDatasetRequest request, StreamObserver<DatasetSummary> responseObserver) {
+        String datasetId = Integer.toString(store.datasetIdSeed.incrementAndGet());
         Dataset dataset = new Dataset(datasetId, request.getName(), request.getDescription(), request.getDatasetType());
-        store.datasets.put(Integer.toString(datasetId), dataset);
-        int commitId = dataset.getNextCommitId();
+        store.datasets.put(datasetId, dataset);
+        String commitId = Integer.toString(dataset.getNextCommitId());
 
-        String commitRoot = DatasetIngestion.ingest(minioClient, Integer.toString(datasetId), Integer.toString(commitId),
+        String commitRoot = DatasetIngestion.ingest(minioClient, datasetId, commitId,
                 request.getDatasetType(), request.getBucket(), request.getPath(), config.minioBucketName);
-        dataset.commits.put(Integer.toString(commitId), new Commit(datasetId, commitId, commitRoot, request.getTagsList()));
-
-        responseObserver.onNext(DatasetVersionPointer.newBuilder()
-                .setDatasetId(Integer.toString(datasetId))
-                .setCommitId(Integer.toString(commitId))
+        dataset.commits.put(commitId, CommitInfo.newBuilder()
+                .setDatasetId(datasetId)
+                .setCommitId(commitId)
+                .setCreatedAt(ISO_INSTANT.format(Instant.now()))
+                .setCommitMessage("Initial commit")
+                .addAllTags(request.getTagsList())
+                .setPath(commitRoot)
                 .build());
+
+        responseObserver.onNext(dataset.toDatasetSummary());
         responseObserver.onCompleted();
     }
 
     @Override
-    public void updateDataset(CreateCommitRequest request, StreamObserver<DatasetVersionPointer> responseObserver) {
+    public void updateDataset(CreateCommitRequest request, StreamObserver<DatasetSummary> responseObserver) {
         String datasetId = request.getDatasetId();
         if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
@@ -154,19 +143,23 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         }
         Dataset dataset = store.datasets.get(datasetId);
         String commitId = Integer.toString(dataset.getNextCommitId());
-        String commitUri = DatasetIngestion.ingest(minioClient, datasetId, commitId, dataset.getDatasetType(),
+        String commitRoot = DatasetIngestion.ingest(minioClient, datasetId, commitId, dataset.getDatasetType(),
                 request.getBucket(), request.getPath(), config.minioBucketName);
-        dataset.commits.put(commitId, new Commit(datasetId, commitId, commitUri, request.getTagsList()));
-
-        responseObserver.onNext(DatasetVersionPointer.newBuilder()
+        dataset.commits.put(commitId, CommitInfo.newBuilder()
                 .setDatasetId(datasetId)
                 .setCommitId(commitId)
+                .setCreatedAt(ISO_INSTANT.format(Instant.now()))
+                .setCommitMessage(request.getCommitMessage())
+                .addAllTags(request.getTagsList())
+                .setPath(commitRoot)
                 .build());
+
+        responseObserver.onNext(dataset.toDatasetSummary());
         responseObserver.onCompleted();
     }
 
     @Override
-    public void fetchVersionedDataset(DatasetQuery request, StreamObserver<DatasetVersionHash> responseObserver) {
+    public void prepareTrainingDataset(DatasetQuery request, StreamObserver<DatasetVersionHash> responseObserver) {
         String datasetId = request.getDatasetId();
         if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
@@ -194,14 +187,10 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         BitSet pickedCommits = new BitSet();
         List<DatasetPart> parts = Lists.newArrayList();
         for (int i = 1; i <= Integer.parseInt(commitId); i++) {
-            Commit commit = dataset.commits.get(Integer.toString(i));
+            CommitInfo commit = dataset.commits.get(Integer.toString(i));
             boolean matched = true;
             for (Tag tag : request.getTagsList()) {
-                if (commit.getTags().containsKey(tag.getTagKey())) {
-                    matched = commit.getTags().get(tag.getTagKey()).equals(tag.getTagValue());
-                } else {
-                    matched = false;
-                }
+                matched &= commit.getTagsList().stream().anyMatch(k -> k.equals(tag));
             }
             if (!matched) {
                 continue;
@@ -218,10 +207,12 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         responseBuilder.setVersionHash(versionHash);
 
         String versionHashKey = MemoryStore.calculateVersionHashKey(datasetId, versionHash);
-        store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
-                .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.RUNNING).build());
-        futures.put(versionHash, threadPool.submit(new DatasetCompressor(minioClient, store, datasetId,
-                dataset.getDatasetType(), parts, versionHash, config.minioBucketName)));
+        if (!store.versionHashRegistry.containsKey(versionHashKey)) {
+            store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
+                    .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.RUNNING).build());
+            threadPool.submit(new DatasetCompressor(minioClient, store, datasetId,
+                    dataset.getDatasetType(), parts, versionHash, config.minioBucketName));
+        }
 
 
         responseObserver.onNext(responseBuilder.build());
@@ -229,7 +220,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     }
 
     @Override
-    public void fetchDatasetByVersionHash(VersionHashQuery request, StreamObserver<VersionHashDataset> responseObserver) {
+    public void fetchTrainingDataset(VersionHashQuery request, StreamObserver<VersionHashDataset> responseObserver) {
         String versionHashKey = MemoryStore.calculateVersionHashKey(request.getDatasetId(), request.getVersionHash());
         if (store.versionHashRegistry.containsKey(versionHashKey)) {
             responseObserver.onNext(store.versionHashRegistry.get(versionHashKey));
@@ -250,6 +241,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
             return;
         }
         store.datasets.remove(datasetId);
+        responseObserver.onNext(Empty.newBuilder().build());
         responseObserver.onCompleted();
     }
 
