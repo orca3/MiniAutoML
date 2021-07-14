@@ -1,5 +1,7 @@
 package org.orca3.miniAutoML.models;
 
+import org.orca3.miniAutoML.CommitInfo;
+import org.orca3.miniAutoML.DatasetSummary;
 import org.orca3.miniAutoML.DatasetType;
 
 import java.time.Instant;
@@ -16,7 +18,7 @@ public class Dataset {
     private final DatasetType datasetType;
     private final String updatedAt;
     private final AtomicInteger commitIdSeed;
-    public Map<String, Commit> commits;
+    public Map<String, CommitInfo> commits;
 
     public Dataset(String datasetId, String name, String description, DatasetType datasetType, String updatedAt) {
         this.datasetId = datasetId;
@@ -28,8 +30,8 @@ public class Dataset {
         this.commitIdSeed = new AtomicInteger();
     }
 
-    public Dataset(long datasetId, String name, String description, DatasetType datasetType) {
-        this(Long.toString(datasetId), name, description, datasetType, ISO_INSTANT.format(Instant.now()));
+    public Dataset(String datasetId, String name, String description, DatasetType datasetType) {
+        this(datasetId, name, description, datasetType, ISO_INSTANT.format(Instant.now()));
     }
 
     public int getNextCommitId() {
@@ -58,5 +60,16 @@ public class Dataset {
 
     public String getUpdatedAt() {
         return updatedAt;
+    }
+
+    public DatasetSummary toDatasetSummary() {
+        DatasetSummary.Builder builder = DatasetSummary.newBuilder()
+                .setDatasetId(datasetId)
+                .setName(getName())
+                .setDescription(getDescription())
+                .setDatasetType(getDatasetType())
+                .setLastUpdatedAt(getUpdatedAt())
+                .addAllCommits(commits.values());
+        return builder.build();
     }
 }

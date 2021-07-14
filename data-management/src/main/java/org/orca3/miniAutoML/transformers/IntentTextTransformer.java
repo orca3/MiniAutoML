@@ -73,7 +73,7 @@ public class IntentTextTransformer implements DatasetTransformer {
             d.labels(labelIndexes);
             repackagedIntentText.add(d);
         }
-        return new IntentTextCollection().labels(indexedLabels)
+        return new IntentTextCollection().labels(flipMap(indexedLabels))
                 .texts(repackagedIntentText);
     }
 
@@ -106,10 +106,14 @@ public class IntentTextTransformer implements DatasetTransformer {
             }
         }
 
-        ImmutableMap.Builder<String, String> b = ImmutableMap.builder();
-        mergedLabels.forEach((k, v) -> b.put(v, k));
         return new IntentTextCollection().texts(mergedUtterances)
-                .labels(b.build());
+                .labels(flipMap(mergedLabels));
+    }
+
+    static Map<String, String> flipMap(Map<String, String> map) {
+        ImmutableMap.Builder<String, String> b = ImmutableMap.builder();
+        map.forEach((k, v) -> b.put(v, k));
+        return b.build();
     }
 
     static IntentTextCollection fromFile(Reader labelReader, Reader examplesReader) {
@@ -210,12 +214,12 @@ public class IntentTextTransformer implements DatasetTransformer {
         try {
             minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
                     .object(mergedExamplesPath)
-                    .stream(new ByteArrayInputStream(labelsWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
+                    .stream(new ByteArrayInputStream(examplesWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
                     .contentType("text/csv")
                     .build());
             minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
                     .object(mergedLabelsPath)
-                    .stream(new ByteArrayInputStream(examplesWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
+                    .stream(new ByteArrayInputStream(labelsWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
                     .contentType("text/csv")
                     .build());
         } catch (InvalidKeyException | IOException | NoSuchAlgorithmException e) {
