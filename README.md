@@ -220,3 +220,15 @@ Fetching dataset 1 with version hashBA==
   ]
 }
 ```
+9. To inspect file content, setup mc alias first: 
+```
+source ./scripts/dm-000-env-vars.sh
+mc alias -q set myminio http://127.0.0.1:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+```
+10. Then copy file from minio to local for your inspection
+```
+mc cp myminio/mini-automl/versionedDatasets/1/hashDg==/training.csv hashDg==/training.csv
+mc cp myminio/mini-automl/versionedDatasets/1/hashDg==/examples.csv hashDg==/examples.csv
+head hashDg==/training.csv
+head hashDg==/examples.csv
+```

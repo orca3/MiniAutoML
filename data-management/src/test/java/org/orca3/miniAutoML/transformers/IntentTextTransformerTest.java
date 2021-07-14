@@ -47,9 +47,9 @@ public class IntentTextTransformerTest {
         }
         IntentTextCollection result = IntentTextTransformer.repackage(texts);
         assertEquals(3, result.getLabels().size());
-        assertEquals("1", result.getLabels().get("activate_my_card"));
-        assertEquals("2", result.getLabels().get("card_arrival"));
-        assertEquals("3", result.getLabels().get("card_not_working"));
+        assertEquals("activate_my_card", result.getLabels().get("1"));
+        assertEquals("card_arrival", result.getLabels().get("2"));
+        assertEquals("card_not_working", result.getLabels().get("3"));
         assertEquals(2, result.getTexts().size());
         assertEquals("I am still waiting on my credit card?", result.getTexts().get(0).getUtterance());
         assertArrayEquals(new String[]{"1", "2"}, result.getTexts().get(0).getSplicedLabels());
