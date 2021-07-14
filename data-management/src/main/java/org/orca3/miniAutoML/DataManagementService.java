@@ -186,6 +186,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
 
         BitSet pickedCommits = new BitSet();
         List<DatasetPart> parts = Lists.newArrayList();
+        List<CommitInfo> commitInfoList = Lists.newLinkedList();
         for (int i = 1; i <= Integer.parseInt(commitId); i++) {
             CommitInfo commit = dataset.commits.get(Integer.toString(i));
             boolean matched = true;
@@ -196,6 +197,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                 continue;
             }
             pickedCommits.set(i);
+            commitInfoList.add(commit);
             parts.add(DatasetPart.newBuilder()
                     .setDatasetId(datasetId)
                     .setCommitId(Integer.toString(i))
@@ -204,7 +206,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
                     .build());
         }
         String versionHash = String.format("hash%s", Base64.getEncoder().encodeToString(pickedCommits.toByteArray()));
-        responseBuilder.setVersionHash(versionHash);
+        responseBuilder.addAllCommits(commitInfoList).setVersionHash(versionHash);
 
         String versionHashKey = MemoryStore.calculateVersionHashKey(datasetId, versionHash);
         if (!store.versionHashRegistry.containsKey(versionHashKey)) {
