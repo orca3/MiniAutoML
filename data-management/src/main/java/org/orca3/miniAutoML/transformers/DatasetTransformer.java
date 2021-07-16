@@ -4,13 +4,13 @@ import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import org.orca3.miniAutoML.CommitInfo;
 import org.orca3.miniAutoML.DatasetPart;
-import org.orca3.miniAutoML.VersionHashDataset;
+import org.orca3.miniAutoML.VersionedSnapshot;
 
 import java.nio.file.Paths;
 import java.util.List;
 
 public interface DatasetTransformer {
-    VersionHashDataset compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException;
+    VersionedSnapshot compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException;
 
     CommitInfo.Builder ingest(String ingestBucket, String ingestPath, String datasetId, String commitId, String bucketName, MinioClient minioClient) throws MinioException;
 

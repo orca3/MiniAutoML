@@ -38,7 +38,11 @@ Creating intent dataset
           "tag_value": "test set"
         }
       ],
-      "path": "dataset/1/commit/1"
+      "path": "dataset/1/commit/1",
+      "statistics": {
+        "numExamples": "5500",
+        "numLabels": "151"
+      }
     }
   ]
 }
@@ -70,7 +74,11 @@ Adding new commit to dataset 1
           "tag_value": "test set"
         }
       ],
-      "path": "dataset/1/commit/1"
+      "path": "dataset/1/commit/1",
+      "statistics": {
+        "numExamples": "5500",
+        "numLabels": "151"
+      }
     },
     {
       "dataset_id": "1",
@@ -83,7 +91,11 @@ Adding new commit to dataset 1
           "tag_value": "training set"
         }
       ],
-      "path": "dataset/1/commit/2"
+      "path": "dataset/1/commit/2",
+      "statistics": {
+        "numExamples": "7600",
+        "numLabels": "151"
+      }
     },
     {
       "dataset_id": "1",
@@ -96,7 +108,11 @@ Adding new commit to dataset 1
           "tag_value": "validation set"
         }
       ],
-      "path": "dataset/1/commit/3"
+      "path": "dataset/1/commit/3",
+      "statistics": {
+        "numExamples": "3100",
+        "numLabels": "151"
+      }
     }
   ]
 }
@@ -121,7 +137,11 @@ Adding new commit to dataset 1
           "tag_value": "test set"
         }
       ],
-      "path": "dataset/1/commit/1"
+      "path": "dataset/1/commit/1",
+      "statistics": {
+        "numExamples": "5500",
+        "numLabels": "151"
+      }
     },
     {
       "dataset_id": "1",
@@ -134,7 +154,11 @@ Adding new commit to dataset 1
           "tag_value": "training set"
         }
       ],
-      "path": "dataset/1/commit/2"
+      "path": "dataset/1/commit/2",
+      "statistics": {
+        "numExamples": "7600",
+        "numLabels": "151"
+      }
     },
     {
       "dataset_id": "1",
@@ -147,7 +171,11 @@ Adding new commit to dataset 1
           "tag_value": "validation set"
         }
       ],
-      "path": "dataset/1/commit/3"
+      "path": "dataset/1/commit/3",
+      "statistics": {
+        "numExamples": "3100",
+        "numLabels": "151"
+      }
     }
   ]
 }
@@ -170,7 +198,11 @@ Fetching dataset 1 with version hashDg==
       "bucket": "mini-automl",
       "path": "versionedDatasets/1/hashDg==/labels.csv"
     }
-  ]
+  ],
+  "statistics": {
+    "numExamples": "16200",
+    "numLabels": "151"
+  }
 }
 ```
 7. Prepare a version of dataset 1 using tag filters: `./scripts/dm-006-prepare-partial-dataset.sh 1 "training set"`
@@ -194,7 +226,11 @@ Prepare a version of dataset 1 that contains only training data with tag categor
           "tag_value": "training set"
         }
       ],
-      "path": "dataset/1/commit/2"
+      "path": "dataset/1/commit/2",
+      "statistics": {
+        "numExamples": "7600",
+        "numLabels": "151"
+      }
     }
   ]
 }
@@ -217,7 +253,11 @@ Fetching dataset 1 with version hashBA==
       "bucket": "mini-automl",
       "path": "versionedDatasets/1/hashBA==/labels.csv"
     }
-  ]
+  ],
+  "statistics": {
+    "numExamples": "7600",
+    "numLabels": "151"
+  }
 }
 ```
 9. To inspect file content, setup mc alias first: 

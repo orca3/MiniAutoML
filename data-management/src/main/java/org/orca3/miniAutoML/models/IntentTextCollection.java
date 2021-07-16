@@ -9,6 +9,10 @@ import java.util.Map;
 
 public class IntentTextCollection {
     private List<IntentText> texts = Lists.newArrayList();
+    /**
+     * Key: label string
+     * Value: label id
+     */
     private Map<String, String> labels = Maps.newHashMap();
 
     public List<IntentText> getTexts() {

@@ -13,8 +13,8 @@ service DataManagementService {
   rpc ListDatasets (ListQueryOptions) returns (stream DatasetPointer);
   rpc CreateDataset (CreateDatasetRequest) returns (DatasetSummary);
   rpc UpdateDataset (CreateCommitRequest) returns (DatasetSummary);
-  rpc PrepareTrainingDataset (DatasetQuery) returns (DatasetVersionHash);
-  rpc FetchTrainingDataset (VersionHashQuery) returns (VersionHashDataset);
+  rpc PrepareTrainingDataset (DatasetQuery) returns (SnapshotVersion);
+  rpc FetchTrainingDataset (VersionQuery) returns (VersionedSnapshot);
   rpc DeleteDataset (DatasetPointer) returns (google.protobuf.Empty);
 }
 
@@ -46,7 +46,7 @@ message DatasetQuery {
   repeated Tag tags = 3;
 }
 
-message VersionHashQuery {
+message VersionQuery {
   string dataset_id = 1;
   string version_hash = 2;
 }
@@ -65,7 +65,7 @@ message DatasetSummary {
 
 }
 
-message DatasetVersionHash {
+message SnapshotVersion {
   string dataset_id = 1;
   string name = 2;
   string description = 3;
@@ -82,7 +82,7 @@ message DatasetPart {
   string path_prefix = 4;
 }
 
-message VersionHashDataset {
+message VersionedSnapshot {
   string dataset_id = 1;
   string version_hash = 2;
   SnapshotState state = 3;

@@ -6,10 +6,10 @@ import java.util.Objects;
 
 public class Label {
     @CsvBindByPosition(position = 0)
-    private String index;
+    private String label;
 
     @CsvBindByPosition(position = 1)
-    private String label;
+    private String index;
 
     public String getIndex() {
         return index;
