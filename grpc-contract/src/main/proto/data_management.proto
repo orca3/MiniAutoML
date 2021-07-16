@@ -87,6 +87,7 @@ message VersionHashDataset {
   string version_hash = 2;
   SnapshotState state = 3;
   repeated FileInfo parts = 4;
+  map<string, string> statistics = 7;
 }
 
 message CommitInfo {
@@ -96,6 +97,7 @@ message CommitInfo {
   string commit_message = 4;
   repeated Tag tags = 5;
   string path = 6;
+  map<string, string> statistics = 7;
 }
 
 message Tag {

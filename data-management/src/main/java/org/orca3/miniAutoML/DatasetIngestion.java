@@ -6,9 +6,13 @@ import org.orca3.miniAutoML.transformers.DatasetTransformer;
 import org.orca3.miniAutoML.transformers.GenericTransformer;
 import org.orca3.miniAutoML.transformers.IntentTextTransformer;
 
+import java.time.Instant;
+
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
+
 public class DatasetIngestion {
 
-    public static String ingest(MinioClient minioClient, String datasetId, String commitId, DatasetType datasetType, String ingestBucket, String ingestPath, String bucketName) {
+    public static CommitInfo.Builder ingest(MinioClient minioClient, String datasetId, String commitId, DatasetType datasetType, String ingestBucket, String ingestPath, String bucketName) {
         DatasetTransformer transformer;
         switch (datasetType) {
             case TEXT_INTENT:

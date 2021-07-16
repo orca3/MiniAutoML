@@ -16,8 +16,11 @@ import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.MinioException;
+import org.orca3.miniAutoML.CommitInfo;
 import org.orca3.miniAutoML.DatasetPart;
 import org.orca3.miniAutoML.FileInfo;
+import org.orca3.miniAutoML.SnapshotState;
+import org.orca3.miniAutoML.VersionHashDataset;
 import org.orca3.miniAutoML.models.IntentText;
 import org.orca3.miniAutoML.models.IntentTextCollection;
 import org.orca3.miniAutoML.models.Label;
@@ -32,11 +35,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
 public class IntentTextTransformer implements DatasetTransformer {
 
@@ -158,13 +164,14 @@ public class IntentTextTransformer implements DatasetTransformer {
                 .collect(Collectors.toList()));
     }
 
-    public String ingest(String ingestBucket, String ingestPath, String datasetId, String commitId, String bucketName, MinioClient minioClient) throws MinioException {
+    public CommitInfo.Builder ingest(String ingestBucket, String ingestPath, String datasetId, String commitId, String bucketName, MinioClient minioClient) throws MinioException {
         try (Reader ingestReader = new InputStreamReader(minioClient.getObject(GetObjectArgs.builder()
                 .bucket(ingestBucket).object(ingestPath).build()))) {
             List<IntentText> data = IntentTextTransformer.transform(ingestReader);
             Writer labelsWriter = new StringWriter();
             Writer examplesWriter = new StringWriter();
-            IntentTextTransformer.toFile(IntentTextTransformer.repackage(data), labelsWriter, examplesWriter);
+            IntentTextCollection commitData = IntentTextTransformer.repackage(data);
+            IntentTextTransformer.toFile(commitData, labelsWriter, examplesWriter);
             String commitRoot = DatasetTransformer.getCommitRoot(datasetId, commitId);
             minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
                     .object(Paths.get(commitRoot, LABELS_FILE_NAME).toString())
@@ -176,14 +183,19 @@ public class IntentTextTransformer implements DatasetTransformer {
                     .stream(new ByteArrayInputStream(examplesWriter.toString().getBytes(StandardCharsets.UTF_8)), -1, 10485760)
                     .contentType("text/csv")
                     .build());
-            return commitRoot;
+            return CommitInfo.newBuilder()
+                    .setDatasetId(datasetId)
+                    .setCommitId(commitId)
+                    .setCreatedAt(ISO_INSTANT.format(Instant.now()))
+                    .putAllStatistics(commitData.stats())
+                    .setPath(commitRoot);
         } catch (CsvRequiredFieldEmptyException | CsvDataTypeMismatchException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<FileInfo> compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException {
+    public VersionHashDataset compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException {
         List<IntentTextCollection> collection = Lists.newArrayListWithCapacity(parts.size());
         // Download
         for (DatasetPart part : parts) {
@@ -225,9 +237,11 @@ public class IntentTextTransformer implements DatasetTransformer {
         } catch (InvalidKeyException | IOException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-        return ImmutableList.of(
-            FileInfo.newBuilder().setName(EXAMPLES_FILE_NAME).setPath(mergedExamplesPath).setBucket(bucketName).build(),
-            FileInfo.newBuilder().setName(LABELS_FILE_NAME).setPath(mergedLabelsPath).setBucket(bucketName).build()
-        );
+        return VersionHashDataset.newBuilder()
+                .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.READY)
+                .addParts(FileInfo.newBuilder().setName(EXAMPLES_FILE_NAME).setPath(mergedExamplesPath).setBucket(bucketName).build())
+                .addParts(FileInfo.newBuilder().setName(LABELS_FILE_NAME).setPath(mergedLabelsPath).setBucket(bucketName).build())
+                .putAllStatistics(mergedCollection.stats())
+                .build();
     }
 }

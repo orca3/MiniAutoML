@@ -8,19 +8,25 @@ import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.MinioException;
 import io.minio.messages.Item;
+import org.orca3.miniAutoML.CommitInfo;
 import org.orca3.miniAutoML.DatasetPart;
 import org.orca3.miniAutoML.FileInfo;
+import org.orca3.miniAutoML.SnapshotState;
+import org.orca3.miniAutoML.VersionHashDataset;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.List;
+
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
 public class GenericTransformer implements DatasetTransformer {
 
     @Override
-    public List<FileInfo> compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException {
+    public VersionHashDataset compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException {
         String versionHashRoot = DatasetTransformer.getVersionHashRoot(datasetId, versionHash);
         for (int i = 0; i < parts.size(); i++) {
             int j = 0;
@@ -37,11 +43,13 @@ public class GenericTransformer implements DatasetTransformer {
                 j++;
             }
         }
-        return ImmutableList.of();
+        return VersionHashDataset.newBuilder()
+                .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.READY)
+                .build();
     }
 
     @Override
-    public String ingest(String ingestBucket, String ingestPath, String datasetId, String commitId, String bucketName, MinioClient minioClient) throws MinioException {
+    public CommitInfo.Builder ingest(String ingestBucket, String ingestPath, String datasetId, String commitId, String bucketName, MinioClient minioClient) throws MinioException {
         int i = 0;
         String commitRoot = DatasetTransformer.getCommitRoot(datasetId, commitId);
         for (Result<Item> r : minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).prefix(ingestPath).build())) {
@@ -55,6 +63,10 @@ public class GenericTransformer implements DatasetTransformer {
             }
             i++;
         }
-        return commitRoot;
+        return CommitInfo.newBuilder()
+                .setDatasetId(datasetId)
+                .setCommitId(commitId)
+                .setCreatedAt(ISO_INSTANT.format(Instant.now()))
+                .setPath(commitRoot);
     }
 }
