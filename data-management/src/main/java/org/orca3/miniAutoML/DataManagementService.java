@@ -193,9 +193,8 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         String versionHash = String.format("hash%s", Base64.getEncoder().encodeToString(pickedCommits.toByteArray()));
         responseBuilder.addAllCommits(commitInfoList).setVersionHash(versionHash);
 
-        String versionHashKey = MemoryStore.calculateVersionHashKey(datasetId, versionHash);
-        if (!store.versionHashRegistry.containsKey(versionHashKey)) {
-            store.versionHashRegistry.put(versionHashKey, VersionedSnapshot.newBuilder()
+        if (!dataset.versionHashRegistry.containsKey(versionHash)) {
+            dataset.versionHashRegistry.put(versionHash, VersionedSnapshot.newBuilder()
                     .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.RUNNING).build());
             threadPool.submit(new DatasetCompressor(minioClient, store, datasetId,
                     dataset.getDatasetType(), parts, versionHash, config.minioBucketName));
@@ -208,9 +207,14 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
 
     @Override
     public void fetchTrainingDataset(VersionQuery request, StreamObserver<VersionedSnapshot> responseObserver) {
-        String versionHashKey = MemoryStore.calculateVersionHashKey(request.getDatasetId(), request.getVersionHash());
-        if (store.versionHashRegistry.containsKey(versionHashKey)) {
-            responseObserver.onNext(store.versionHashRegistry.get(versionHashKey));
+        String datasetId = request.getDatasetId();
+        if (!store.datasets.containsKey(datasetId)) {
+            responseObserver.onError(datasetNotFoundException(datasetId));
+            return;
+        }
+        Dataset dataset = store.datasets.get(datasetId);
+        if (dataset.versionHashRegistry.containsKey(request.getVersionHash())) {
+            responseObserver.onNext(dataset.versionHashRegistry.get(request.getVersionHash()));
             responseObserver.onCompleted();
         } else {
             responseObserver.onError(Status.NOT_FOUND

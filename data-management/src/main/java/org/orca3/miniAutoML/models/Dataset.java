@@ -3,6 +3,7 @@ package org.orca3.miniAutoML.models;
 import org.orca3.miniAutoML.CommitInfo;
 import org.orca3.miniAutoML.DatasetSummary;
 import org.orca3.miniAutoML.DatasetType;
+import org.orca3.miniAutoML.VersionedSnapshot;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -18,7 +19,8 @@ public class Dataset {
     private final DatasetType datasetType;
     private final String updatedAt;
     private final AtomicInteger commitIdSeed;
-    public Map<String, CommitInfo> commits;
+    public final Map<String, CommitInfo> commits;
+    public final Map<String, VersionedSnapshot> versionHashRegistry;
 
     public Dataset(String datasetId, String name, String description, DatasetType datasetType, String updatedAt) {
         this.datasetId = datasetId;
@@ -28,6 +30,7 @@ public class Dataset {
         this.updatedAt = updatedAt;
         this.commits = new HashMap<>();
         this.commitIdSeed = new AtomicInteger();
+        this.versionHashRegistry = new HashMap<>();
     }
 
     public Dataset(String datasetId, String name, String description, DatasetType datasetType) {
