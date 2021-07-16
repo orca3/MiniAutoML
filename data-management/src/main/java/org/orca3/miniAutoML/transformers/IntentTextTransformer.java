@@ -48,17 +48,17 @@ public class IntentTextTransformer implements DatasetTransformer {
     public static final String EXAMPLES_FILE_NAME = "examples.csv";
     public static final String LABELS_FILE_NAME = "labels.csv";
 
-    static List<IntentText> transform(Reader reader) {
+    static List<IntentText> ingestRawInput(Reader reader) {
         MappingStrategy<IntentText> ms = new ColumnPositionMappingStrategy<>();
         ms.setType(IntentText.class);
         CsvToBean<IntentText> cb = new CsvToBeanBuilder<IntentText>(reader)
                 .withMappingStrategy(ms)
-                .withIgnoreQuotations(true).withQuoteChar('"')
+                .withQuoteChar('"')
                 .withIgnoreLeadingWhiteSpace(true).build();
         return cb.parse();
     }
 
-    static IntentTextCollection repackage(List<IntentText> rawInput) {
+    static IntentTextCollection packageRawInput(List<IntentText> rawInput) {
         Map<String, String> indexedLabels = new HashMap<>();
         int labelCount = 0;
         List<IntentText> repackagedIntentText = new ArrayList<>();
@@ -78,7 +78,7 @@ public class IntentTextTransformer implements DatasetTransformer {
             d.labels(labelIndexes);
             repackagedIntentText.add(d);
         }
-        return new IntentTextCollection().labels(flipMap(indexedLabels))
+        return new IntentTextCollection().labels(indexedLabels)
                 .texts(repackagedIntentText);
     }
 
@@ -96,29 +96,25 @@ public class IntentTextTransformer implements DatasetTransformer {
         for (IntentTextCollection collection : collections) {
             Map<String, String> remap = Maps.newHashMap();
             for (Map.Entry<String, String> entry : collection.getLabels().entrySet()) {
-                if (!mergedLabels.containsKey(entry.getValue())) {
-                    mergedLabels.put(entry.getValue(), Integer.toString(++labelSeed));
+                String label = entry.getKey();
+                String labelId = entry.getValue();
+                if (!mergedLabels.containsKey(label)) {
+                    mergedLabels.put(label, Integer.toString(++labelSeed));
                 }
-                remap.put(entry.getKey(), mergedLabels.get(entry.getValue()));
+                remap.put(labelId, mergedLabels.get(label));
             }
             for (IntentText t : collection.getTexts()) {
-                String[] oldLabels = t.getSplicedLabels();
-                String[] newLabels = new String[oldLabels.length];
-                for (int j = 0; j < oldLabels.length; j++) {
-                    newLabels[j] = remap.get(oldLabels[j]);
+                String[] oldLabelIds = t.getSplicedLabels();
+                String[] newLabelIds = new String[oldLabelIds.length];
+                for (int j = 0; j < oldLabelIds.length; j++) {
+                    newLabelIds[j] = remap.get(oldLabelIds[j]);
                 }
-                mergedUtterances.add(new IntentText().utterance(t.getUtterance()).labels(newLabels));
+                mergedUtterances.add(new IntentText().utterance(t.getUtterance()).labels(newLabelIds));
             }
         }
 
         return new IntentTextCollection().texts(mergedUtterances)
-                .labels(flipMap(mergedLabels));
-    }
-
-    static Map<String, String> flipMap(Map<String, String> map) {
-        ImmutableMap.Builder<String, String> b = ImmutableMap.builder();
-        map.forEach((k, v) -> b.put(v, k));
-        return b.build();
+                .labels(mergedLabels);
     }
 
     static IntentTextCollection fromFile(Reader labelReader, Reader examplesReader) {
@@ -126,14 +122,14 @@ public class IntentTextTransformer implements DatasetTransformer {
         examplesMs.setType(IntentText.class);
         CsvToBean<IntentText> examplesCb = new CsvToBeanBuilder<IntentText>(examplesReader)
                 .withMappingStrategy(examplesMs)
-                .withIgnoreQuotations(true).withQuoteChar('"')
+                .withQuoteChar('"')
                 .withIgnoreLeadingWhiteSpace(true).build();
 
         MappingStrategy<Label> labelMs = new ColumnPositionMappingStrategy<>();
         labelMs.setType(Label.class);
         CsvToBean<Label> labelCb = new CsvToBeanBuilder<Label>(labelReader)
                 .withMappingStrategy(labelMs)
-                .withIgnoreQuotations(true).withQuoteChar('"')
+                .withQuoteChar('"')
                 .withIgnoreLeadingWhiteSpace(true).build();
 
         return new IntentTextCollection().texts(examplesCb.parse())
@@ -166,10 +162,10 @@ public class IntentTextTransformer implements DatasetTransformer {
     public CommitInfo.Builder ingest(String ingestBucket, String ingestPath, String datasetId, String commitId, String bucketName, MinioClient minioClient) throws MinioException {
         try (Reader ingestReader = new InputStreamReader(minioClient.getObject(GetObjectArgs.builder()
                 .bucket(ingestBucket).object(ingestPath).build()))) {
-            List<IntentText> data = IntentTextTransformer.transform(ingestReader);
+            List<IntentText> data = IntentTextTransformer.ingestRawInput(ingestReader);
             Writer labelsWriter = new StringWriter();
             Writer examplesWriter = new StringWriter();
-            IntentTextCollection commitData = IntentTextTransformer.repackage(data);
+            IntentTextCollection commitData = IntentTextTransformer.packageRawInput(data);
             IntentTextTransformer.toFile(commitData, labelsWriter, examplesWriter);
             String commitRoot = DatasetTransformer.getCommitRoot(datasetId, commitId);
             minioClient.putObject(PutObjectArgs.builder().bucket(bucketName)
