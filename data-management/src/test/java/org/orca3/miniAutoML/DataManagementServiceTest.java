@@ -161,7 +161,7 @@ public class DataManagementServiceTest {
         assertEquals("1", reply.getDatasetId());
         assertEquals(5, reply.getCommitsCount());
 
-        DatasetVersionHash fetchedDataset = blockingStub.prepareTrainingDataset(
+        SnapshotVersion fetchedDataset = blockingStub.prepareTrainingDataset(
                 DatasetQuery.newBuilder().setDatasetId("1").setCommitId("4").build());
         assertEquals("1", fetchedDataset.getDatasetId());
         assertEquals("test-1", fetchedDataset.getName());
@@ -211,15 +211,15 @@ public class DataManagementServiceTest {
                 .setBucket(minioBucketName)
                 .setPath("ingest/validation.csv")
                 .build());
-        DatasetVersionHash fetchedDatasetVersionHash = blockingStub.prepareTrainingDataset(
+        SnapshotVersion fetchedDatasetVersionHash = blockingStub.prepareTrainingDataset(
                 DatasetQuery.newBuilder().setDatasetId(datasetId).build());
         String versionHash = fetchedDatasetVersionHash.getVersionHash();
         int iteration = 0;
-        VersionHashDataset result = blockingStub.fetchTrainingDataset(VersionHashQuery.newBuilder()
+        VersionedSnapshot result = blockingStub.fetchTrainingDataset(VersionQuery.newBuilder()
                 .setDatasetId(datasetId).setVersionHash(versionHash).build());
         while (result.getState() == SnapshotState.RUNNING && ++iteration < 20) {
             Thread.sleep(1000);
-            result = blockingStub.fetchTrainingDataset(VersionHashQuery.newBuilder()
+            result = blockingStub.fetchTrainingDataset(VersionQuery.newBuilder()
                     .setDatasetId(datasetId).setVersionHash(versionHash).build());
         }
         assertEquals(SnapshotState.READY, result.getState());

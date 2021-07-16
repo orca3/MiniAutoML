@@ -1,6 +1,5 @@
 package org.orca3.miniAutoML.transformers;
 
-import com.google.common.collect.ImmutableList;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
 import io.minio.ListObjectsArgs;
@@ -10,9 +9,8 @@ import io.minio.errors.MinioException;
 import io.minio.messages.Item;
 import org.orca3.miniAutoML.CommitInfo;
 import org.orca3.miniAutoML.DatasetPart;
-import org.orca3.miniAutoML.FileInfo;
 import org.orca3.miniAutoML.SnapshotState;
-import org.orca3.miniAutoML.VersionHashDataset;
+import org.orca3.miniAutoML.VersionedSnapshot;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -26,7 +24,7 @@ import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 public class GenericTransformer implements DatasetTransformer {
 
     @Override
-    public VersionHashDataset compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException {
+    public VersionedSnapshot compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException {
         String versionHashRoot = DatasetTransformer.getVersionHashRoot(datasetId, versionHash);
         for (int i = 0; i < parts.size(); i++) {
             int j = 0;
@@ -43,7 +41,7 @@ public class GenericTransformer implements DatasetTransformer {
                 j++;
             }
         }
-        return VersionHashDataset.newBuilder()
+        return VersionedSnapshot.newBuilder()
                 .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.READY)
                 .build();
     }

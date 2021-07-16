@@ -1,6 +1,6 @@
 package org.orca3.miniAutoML.models;
 
-import org.orca3.miniAutoML.VersionHashDataset;
+import org.orca3.miniAutoML.VersionedSnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MemoryStore {
     public final Map<String, Dataset> datasets;
     public final AtomicInteger datasetIdSeed;
-    public final Map<String, VersionHashDataset> versionHashRegistry;
+    public final Map<String, VersionedSnapshot> versionHashRegistry;
 
     public MemoryStore() {
         this.datasets = new HashMap<>();

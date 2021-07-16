@@ -18,18 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.Base64;
 import java.util.BitSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
 public class DataManagementService extends DataManagementServiceGrpc.DataManagementServiceImplBase {
     private static final Logger logger = LoggerFactory.getLogger(DataManagementService.class);
@@ -149,7 +144,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     }
 
     @Override
-    public void prepareTrainingDataset(DatasetQuery request, StreamObserver<DatasetVersionHash> responseObserver) {
+    public void prepareTrainingDataset(DatasetQuery request, StreamObserver<SnapshotVersion> responseObserver) {
         String datasetId = request.getDatasetId();
         if (!store.datasets.containsKey(datasetId)) {
             responseObserver.onError(datasetNotFoundException(datasetId));
@@ -167,7 +162,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
             }
         }
 
-        DatasetVersionHash.Builder responseBuilder = DatasetVersionHash.newBuilder()
+        SnapshotVersion.Builder responseBuilder = SnapshotVersion.newBuilder()
                 .setDatasetId(datasetId)
                 .setName(dataset.getName())
                 .setDescription(dataset.getDescription())
@@ -200,7 +195,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
 
         String versionHashKey = MemoryStore.calculateVersionHashKey(datasetId, versionHash);
         if (!store.versionHashRegistry.containsKey(versionHashKey)) {
-            store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
+            store.versionHashRegistry.put(versionHashKey, VersionedSnapshot.newBuilder()
                     .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.RUNNING).build());
             threadPool.submit(new DatasetCompressor(minioClient, store, datasetId,
                     dataset.getDatasetType(), parts, versionHash, config.minioBucketName));
@@ -212,7 +207,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     }
 
     @Override
-    public void fetchTrainingDataset(VersionHashQuery request, StreamObserver<VersionHashDataset> responseObserver) {
+    public void fetchTrainingDataset(VersionQuery request, StreamObserver<VersionedSnapshot> responseObserver) {
         String versionHashKey = MemoryStore.calculateVersionHashKey(request.getDatasetId(), request.getVersionHash());
         if (store.versionHashRegistry.containsKey(versionHashKey)) {
             responseObserver.onNext(store.versionHashRegistry.get(versionHashKey));

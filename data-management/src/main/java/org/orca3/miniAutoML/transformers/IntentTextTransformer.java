@@ -1,6 +1,5 @@
 package org.orca3.miniAutoML.transformers;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -20,7 +19,7 @@ import org.orca3.miniAutoML.CommitInfo;
 import org.orca3.miniAutoML.DatasetPart;
 import org.orca3.miniAutoML.FileInfo;
 import org.orca3.miniAutoML.SnapshotState;
-import org.orca3.miniAutoML.VersionHashDataset;
+import org.orca3.miniAutoML.VersionedSnapshot;
 import org.orca3.miniAutoML.models.IntentText;
 import org.orca3.miniAutoML.models.IntentTextCollection;
 import org.orca3.miniAutoML.models.Label;
@@ -195,7 +194,7 @@ public class IntentTextTransformer implements DatasetTransformer {
     }
 
     @Override
-    public VersionHashDataset compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException {
+    public VersionedSnapshot compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException {
         List<IntentTextCollection> collection = Lists.newArrayListWithCapacity(parts.size());
         // Download
         for (DatasetPart part : parts) {
@@ -237,7 +236,7 @@ public class IntentTextTransformer implements DatasetTransformer {
         } catch (InvalidKeyException | IOException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-        return VersionHashDataset.newBuilder()
+        return VersionedSnapshot.newBuilder()
                 .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.READY)
                 .addParts(FileInfo.newBuilder().setName(EXAMPLES_FILE_NAME).setPath(mergedExamplesPath).setBucket(bucketName).build())
                 .addParts(FileInfo.newBuilder().setName(LABELS_FILE_NAME).setPath(mergedLabelsPath).setBucket(bucketName).build())
