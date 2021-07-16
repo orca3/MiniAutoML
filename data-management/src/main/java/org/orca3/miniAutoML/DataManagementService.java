@@ -119,16 +119,11 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         store.datasets.put(datasetId, dataset);
         String commitId = Integer.toString(dataset.getNextCommitId());
 
-        String commitRoot = DatasetIngestion.ingest(minioClient, datasetId, commitId,
+        CommitInfo.Builder builder = DatasetIngestion.ingest(minioClient, datasetId, commitId,
                 request.getDatasetType(), request.getBucket(), request.getPath(), config.minioBucketName);
-        dataset.commits.put(commitId, CommitInfo.newBuilder()
-                .setDatasetId(datasetId)
-                .setCommitId(commitId)
-                .setCreatedAt(ISO_INSTANT.format(Instant.now()))
+        dataset.commits.put(commitId, builder
                 .setCommitMessage("Initial commit")
-                .addAllTags(request.getTagsList())
-                .setPath(commitRoot)
-                .build());
+                .addAllTags(request.getTagsList()).build());
 
         responseObserver.onNext(dataset.toDatasetSummary());
         responseObserver.onCompleted();
@@ -143,16 +138,11 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
         }
         Dataset dataset = store.datasets.get(datasetId);
         String commitId = Integer.toString(dataset.getNextCommitId());
-        String commitRoot = DatasetIngestion.ingest(minioClient, datasetId, commitId, dataset.getDatasetType(),
+        CommitInfo.Builder builder = DatasetIngestion.ingest(minioClient, datasetId, commitId, dataset.getDatasetType(),
                 request.getBucket(), request.getPath(), config.minioBucketName);
-        dataset.commits.put(commitId, CommitInfo.newBuilder()
-                .setDatasetId(datasetId)
-                .setCommitId(commitId)
-                .setCreatedAt(ISO_INSTANT.format(Instant.now()))
+        dataset.commits.put(commitId, builder
                 .setCommitMessage(request.getCommitMessage())
-                .addAllTags(request.getTagsList())
-                .setPath(commitRoot)
-                .build());
+                .addAllTags(request.getTagsList()).build());
 
         responseObserver.onNext(dataset.toDatasetSummary());
         responseObserver.onCompleted();

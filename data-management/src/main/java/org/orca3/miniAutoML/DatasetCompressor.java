@@ -33,7 +33,7 @@ public class DatasetCompressor implements Runnable {
     @Override
     public void run() {
         String versionHashKey = MemoryStore.calculateVersionHashKey(datasetId, versionHash);
-        List<FileInfo> versionHashParts;
+        VersionHashDataset versionHashDataset;
         DatasetTransformer transformer;
         switch (datasetType) {
             case TEXT_INTENT:
@@ -44,14 +44,12 @@ public class DatasetCompressor implements Runnable {
                 transformer = new GenericTransformer();
         }
         try {
-            versionHashParts = transformer.compress(datasetParts, datasetId, versionHash, bucketName, minioClient);
+            versionHashDataset = transformer.compress(datasetParts, datasetId, versionHash, bucketName, minioClient);
         } catch (Exception e) {
             store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
                     .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.FAILED).build());
             throw new RuntimeException(e);
         }
-        store.versionHashRegistry.put(versionHashKey, VersionHashDataset.newBuilder()
-                .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.READY)
-                .addAllParts(versionHashParts).build());
+        store.versionHashRegistry.put(versionHashKey, versionHashDataset);
     }
 }
