@@ -26,10 +26,10 @@ public class IntentTextTransformerTest {
     ClassLoader cl = getClass().getClassLoader();
 
     @Test
-    public void testTransform() throws IOException {
+    public void testIngestRawInput() throws IOException {
         List<IntentText> result;
         try (Reader r = new InputStreamReader(Objects.requireNonNull(cl.getResourceAsStream("datasets/intent-1.csv")))) {
-            result = IntentTextTransformer.transform(r);
+            result = IntentTextTransformer.ingestRawInput(r);
         }
         assertEquals(2, result.size());
         assertEquals("I am still waiting on my credit card?", result.get(0).getUtterance());
@@ -39,13 +39,13 @@ public class IntentTextTransformerTest {
     }
 
     @Test
-    public void testRepackage() throws IOException {
+    public void testPackageRawInput() throws IOException {
         ClassLoader cl = getClass().getClassLoader();
         List<IntentText> texts;
         try (Reader r = new InputStreamReader(Objects.requireNonNull(cl.getResourceAsStream("datasets/intent-1.csv")))) {
-            texts = IntentTextTransformer.transform(r);
+            texts = IntentTextTransformer.ingestRawInput(r);
         }
-        IntentTextCollection result = IntentTextTransformer.repackage(texts);
+        IntentTextCollection result = IntentTextTransformer.packageRawInput(texts);
         assertEquals(3, result.getLabels().size());
         assertEquals("1", result.getLabels().get("activate_my_card"));
         assertEquals("2", result.getLabels().get("card_arrival"));
@@ -61,8 +61,8 @@ public class IntentTextTransformerTest {
     public void testMerge() {
         IntentTextCollection a = new IntentTextCollection()
                 .labels(ImmutableMap.<String, String>builder()
-                        .put("1", "foo")
-                        .put("2", "bar")
+                        .put("foo", "1")
+                        .put("bar", "2")
                         .build())
                 .texts(ImmutableList.<IntentText>builder()
                         .add(new IntentText().labels("1").utterance("sample 1"))
@@ -74,9 +74,9 @@ public class IntentTextTransformerTest {
                         .build());
         IntentTextCollection b = new IntentTextCollection()
                 .labels(ImmutableMap.<String, String>builder()
-                        .put("1", "bar")
-                        .put("2", "foo")
-                        .put("3", "cho")
+                        .put("bar", "1")
+                        .put("foo", "2")
+                        .put("cho", "3")
                         .build())
                 .texts(ImmutableList.<IntentText>builder()
                         .add(new IntentText().labels("1").utterance("sample 7"))
@@ -93,7 +93,7 @@ public class IntentTextTransformerTest {
                         .add(new Label().index("3").label("cho"))
                         .build().toArray(Label[]::new),
                 result.getLabels().entrySet().stream()
-                        .map(e -> new Label().index(e.getKey()).label(e.getValue()))
+                        .map(e -> new Label().index(e.getValue()).label(e.getKey()))
                         .toArray(Label[]::new));
         assertArrayEquals(ImmutableList.<IntentText>builder()
                         .add(new IntentText().labels("1").utterance("sample 1"))
@@ -142,9 +142,9 @@ public class IntentTextTransformerTest {
 
     private void assertTestIntentTextCollection(IntentTextCollection result) {
         assertEquals(3, result.getLabels().size());
-        assertEquals("activate_my_card", result.getLabels().get("0"));
-        assertEquals("card_arrival", result.getLabels().get("1"));
-        assertEquals("card_not_working", result.getLabels().get("2"));
+        assertEquals("0", result.getLabels().get("activate_my_card"));
+        assertEquals("1", result.getLabels().get("card_arrival"));
+        assertEquals("2", result.getLabels().get("card_not_working"));
         assertEquals(2, result.getTexts().size());
         assertEquals("I am still waiting on my credit card?", result.getTexts().get(0).getUtterance());
         assertArrayEquals(new String[]{"0", "1"}, result.getTexts().get(0).getSplicedLabels());

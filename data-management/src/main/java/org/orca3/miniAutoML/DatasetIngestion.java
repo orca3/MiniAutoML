@@ -2,21 +2,30 @@ package org.orca3.miniAutoML;
 
 import io.minio.MinioClient;
 import org.apache.commons.lang3.NotImplementedException;
+import org.orca3.miniAutoML.transformers.DatasetTransformer;
+import org.orca3.miniAutoML.transformers.GenericTransformer;
 import org.orca3.miniAutoML.transformers.IntentTextTransformer;
+
+import java.time.Instant;
+
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
 public class DatasetIngestion {
 
-    public static String ingest(MinioClient minioClient, String datasetId, String commitId, DatasetType datasetType, String uri, String bucketName) {
+    public static CommitInfo.Builder ingest(MinioClient minioClient, String datasetId, String commitId, DatasetType datasetType, String ingestBucket, String ingestPath, String bucketName) {
+        DatasetTransformer transformer;
         switch (datasetType) {
             case TEXT_INTENT:
-                try {
-                    return IntentTextTransformer.ingest(uri, datasetId, commitId, bucketName, minioClient);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                transformer = new IntentTextTransformer();
+                break;
             case GENERIC:
             default:
-                return uri;
+                transformer = new GenericTransformer();
+        }
+        try {
+            return transformer.ingest(ingestBucket, ingestPath, datasetId, commitId, bucketName, minioClient);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

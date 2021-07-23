@@ -1,5 +1,6 @@
 package org.orca3.miniAutoML.models;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -8,6 +9,10 @@ import java.util.Map;
 
 public class IntentTextCollection {
     private List<IntentText> texts = Lists.newArrayList();
+    /**
+     * Key: label string
+     * Value: label id
+     */
     private Map<String, String> labels = Maps.newHashMap();
 
     public List<IntentText> getTexts() {
@@ -26,5 +31,12 @@ public class IntentTextCollection {
     public IntentTextCollection labels(Map<String, String> labels) {
         this.labels = labels;
         return this;
+    }
+
+    public Map<String, String> stats() {
+        return ImmutableMap.<String, String>builder()
+                .put("numLabels", Integer.toString(labels.size()))
+                .put("numExamples", Integer.toString(texts.size()))
+                .build();
     }
 }

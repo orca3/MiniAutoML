@@ -9,12 +9,12 @@ import "google/protobuf/empty.proto";
 package data_management;
 
 service DataManagementService {
-  rpc ListDatasetCommits (DatasetPointer) returns (DatasetSummary);
+  rpc GetDatasetSummary (DatasetPointer) returns (DatasetSummary);
   rpc ListDatasets (ListQueryOptions) returns (stream DatasetPointer);
-  rpc CreateDataset (CreateDatasetRequest) returns (DatasetVersionPointer);
-  rpc UpdateDataset (CreateCommitRequest) returns (DatasetVersionPointer);
-  rpc FetchVersionedDataset (DatasetQuery) returns (DatasetVersionHash);
-  rpc FetchDatasetByVersionHash (VersionHashQuery) returns (VersionHashDataset);
+  rpc CreateDataset (CreateDatasetRequest) returns (DatasetSummary);
+  rpc UpdateDataset (CreateCommitRequest) returns (DatasetSummary);
+  rpc PrepareTrainingDataset (DatasetQuery) returns (SnapshotVersion);
+  rpc FetchTrainingDataset (VersionQuery) returns (VersionedSnapshot);
   rpc DeleteDataset (DatasetPointer) returns (google.protobuf.Empty);
 }
 
@@ -22,8 +22,9 @@ message CreateDatasetRequest {
   string name = 1;
   string description = 2;
   DatasetType dataset_type = 3;
-  string uri = 4;
-  repeated Tag tags = 5;
+  string bucket = 4;
+  string path = 5;
+  repeated Tag tags = 6;
 }
 
 message ListQueryOptions {
@@ -34,13 +35,9 @@ message ListQueryOptions {
 message CreateCommitRequest {
   string dataset_id = 1;
   string commit_message = 2;
-  string uri = 3;
-  repeated Tag tags = 4;
-}
-
-message DatasetVersionPointer {
-  string dataset_id = 1;
-  string commit_id = 2;
+  string bucket = 3;
+  string path = 4;
+  repeated Tag tags = 5;
 }
 
 message DatasetQuery {
@@ -49,7 +46,7 @@ message DatasetQuery {
   repeated Tag tags = 3;
 }
 
-message VersionHashQuery {
+message VersionQuery {
   string dataset_id = 1;
   string version_hash = 2;
 }
@@ -68,32 +65,39 @@ message DatasetSummary {
 
 }
 
-message DatasetVersionHash {
+message SnapshotVersion {
   string dataset_id = 1;
   string name = 2;
   string description = 3;
   DatasetType dataset_type = 4;
   string last_updated_at = 5;
   string version_hash = 6;
+  repeated CommitInfo commits = 7;
 }
 
 message DatasetPart {
   string dataset_id = 1;
   string commit_id = 2;
-  string uri = 3;
+  string bucket = 3;
+  string path_prefix = 4;
 }
 
-message VersionHashDataset {
+message VersionedSnapshot {
   string dataset_id = 1;
   string version_hash = 2;
   SnapshotState state = 3;
   repeated FileInfo parts = 4;
+  map<string, string> statistics = 7;
 }
 
 message CommitInfo {
   string dataset_id = 1;
   string commit_id = 2;
   string created_at = 3;
+  string commit_message = 4;
+  repeated Tag tags = 5;
+  string path = 6;
+  map<string, string> statistics = 7;
 }
 
 message Tag {
