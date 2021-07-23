@@ -232,6 +232,9 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# MinIO data
+myminio/
+
 # Translations
 *.mo
 *.pot
