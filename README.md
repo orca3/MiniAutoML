@@ -11,13 +11,13 @@ System Requirement:
 ```
 ...
 Starting data-management service
-23:21:49.197 [org.orca3.miniAutoML.DataManagementService.main()] INFO  org.orca3.miniAutoML.DataManagementService - Creating bucket 'mini-automl'.
+23:21:49.197 [org.orca3.miniAutoML.DataManagementService.main()] INFO  org.orca3.miniAutoML.DataManagementService - Creating bucket 'mini-automl-dm'.
 Listening on port 51001
 ```
 3. In another tab, create a dataset: `./scripts/dm-003-create-dataset.sh`
 ```
 Upload dataset
-`data-management/src/test/resources/datasets/test.csv` -> `myminio/mini-automl/upload/001.csv`
+`data-management/src/test/resources/datasets/test.csv` -> `myminio/mini-automl-dm/upload/001.csv`
 Total: 0 B, Transferred: 281.90 KiB, Speed: 14.64 MiB/s
 
 Creating intent dataset
@@ -50,9 +50,9 @@ Creating intent dataset
 4. Add more commits to dataset: `./scripts/dm-004-add-commits.sh 1`
 ```
 Uploading new data file
-`data-management/src/test/resources/datasets/train.csv` -> `myminio/mini-automl/upload/002.csv`
+`data-management/src/test/resources/datasets/train.csv` -> `myminio/mini-automl-dm/upload/002.csv`
 Total: 0 B, Transferred: 398.27 KiB, Speed: 20.82 MiB/s
-`data-management/src/test/resources/datasets/validation.csv` -> `myminio/mini-automl/upload/003.csv`
+`data-management/src/test/resources/datasets/validation.csv` -> `myminio/mini-automl-dm/upload/003.csv`
 Total: 0 B, Transferred: 161.40 KiB, Speed: 12.72 MiB/s
 
 Adding new commit to dataset 1
@@ -190,12 +190,12 @@ Fetching dataset 1 with version hashDg==
   "parts": [
     {
       "name": "examples.csv",
-      "bucket": "mini-automl",
+      "bucket": "mini-automl-dm",
       "path": "versionedDatasets/1/hashDg==/examples.csv"
     },
     {
       "name": "labels.csv",
-      "bucket": "mini-automl",
+      "bucket": "mini-automl-dm",
       "path": "versionedDatasets/1/hashDg==/labels.csv"
     }
   ],
@@ -245,12 +245,12 @@ Fetching dataset 1 with version hashBA==
   "parts": [
     {
       "name": "examples.csv",
-      "bucket": "mini-automl",
+      "bucket": "mini-automl-dm",
       "path": "versionedDatasets/1/hashBA==/examples.csv"
     },
     {
       "name": "labels.csv",
-      "bucket": "mini-automl",
+      "bucket": "mini-automl-dm",
       "path": "versionedDatasets/1/hashBA==/labels.csv"
     }
   ],
@@ -267,8 +267,8 @@ mc alias -q set myminio http://127.0.0.1:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT
 ```
 10. Then copy file from minio to local for your inspection
 ```
-mc cp myminio/mini-automl/versionedDatasets/1/hashDg==/training.csv hashDg==/training.csv
-mc cp myminio/mini-automl/versionedDatasets/1/hashDg==/examples.csv hashDg==/examples.csv
+mc cp myminio/mini-automl-dm/versionedDatasets/1/hashDg==/training.csv hashDg==/training.csv
+mc cp myminio/mini-automl-dm/versionedDatasets/1/hashDg==/examples.csv hashDg==/examples.csv
 head hashDg==/training.csv
 head hashDg==/examples.csv
 ```
