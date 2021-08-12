@@ -2,13 +2,16 @@
 Text classification with the torchtext library
 ==================================
 
+This training code is extended from pytorch text classification tutorial: https://pytorch.org/tutorials/beginner/text_sentiment_ngrams_tutorial.html
 
+By using this sample code, I will show how a mode training code can be integrated with a deep learning framework:
 
-In this tutorial, we will show how to use the torchtext library to build the dataset for the text classification analysis. Users will have the flexibility to
-
-   - Access to the raw data as an iterator
+   - Fetch training data from dataset-management (DM) data bucket
+   - Convert training data from DM format to Pytorch dataset format
    - Build data processing pipeline to convert the raw text strings into ``torch.Tensor`` that can be used to train the model
-   - Shuffle and iterate the data with `torch.utils.data.DataLoader <https://pytorch.org/docs/stable/data.html?highlight=dataloader#torch.utils.data.DataLoader>`__
+   - Shuffle and iterate the data with `torch.utils.data.DataLoader`
+   - Training model
+   - Push the model, checkpoints and training metrics to metadata store
 """
 
 import csv
