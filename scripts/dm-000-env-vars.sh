@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 export MINIO_ROOT_USER=foooo
 export MINIO_ROOT_PASSWORD=barbarbar
-export MINIO_BUCKET=mini-automl
+export MINIO_DM_BUCKET=mini-automl-dm
 
