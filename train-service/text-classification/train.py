@@ -1,3 +1,16 @@
+"""
+Text classification with the torchtext library
+==================================
+
+
+
+In this tutorial, we will show how to use the torchtext library to build the dataset for the text classification analysis. Users will have the flexibility to
+
+   - Access to the raw data as an iterator
+   - Build data processing pipeline to convert the raw text strings into ``torch.Tensor`` that can be used to train the model
+   - Shuffle and iterate the data with `torch.utils.data.DataLoader <https://pytorch.org/docs/stable/data.html?highlight=dataloader#torch.utils.data.DataLoader>`__
+"""
+
 import csv
 import io
 import time
@@ -20,20 +33,42 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
 
+from minio import Minio
+
 ######################################################################
-# Define parameters
+# Define parameters and set values from environment variables
 # ---------------------
 
+# <TODO, read with default value when converting to docker image>
 # define hyperparameter
 EPOCHS = 20 # epoch
 LR = 5  # learning rate
 BATCH_SIZE = 64 # batch size for training
 FC_SIZE = 128 # node count for the middle fully connected layer
+MINIO_SERVER = "127.0.0.1:9000"
+MINIO_SERVER_ACCESS_KEY = "foooo"
+MINIO_SERVER_SECRET_KEY = "barbarbar"
+TRAINING_DATA_BUCKET = "mini-automl-dm"
+TRAINING_DATA_PATH = "versionedDatasets/1/hashBA==/"
+MODEL_BUCKET = "mini-automl-serving"
+MODEL_ID = "aaf98dsfase"
+MODEL_VERSION = "1"
 
 
 ######################################################################
 # Download training data from MinIO
 # ---------------------
+
+client = Minio(
+    MINIO_SERVER,
+    access_key=MINIO_SERVER_ACCESS_KEY,
+    secret_key=MINIO_SERVER_SECRET_KEY,
+    secure=False
+)
+
+# download training data
+client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "examples.csv", "examples.csv")
+client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "labels.csv", "labels.csv")
 
 ######################################################################
 # Convert data from dataset management training data format to Pytorch dataset
@@ -55,7 +90,7 @@ def get_dataset_iter(datasetname, path):
 def load_label_dict(path):
     with open(path, mode='r') as infile:
         reader = csv.reader(infile)
-        label_dict = {rows[0]:rows[1] for rows in reader}
+        label_dict = {int(rows[0]): rows[1] for rows in reader}
         return label_dict
 
 ######################################################################
@@ -75,7 +110,7 @@ vocab = build_vocab_from_iterator(yield_tokens(example_iter), specials=["<unk>"]
 vocab.set_default_index(vocab["<unk>"])
 
 text_pipeline = lambda x: vocab(tokenizer(x))
-label_pipeline = lambda x: int(x)
+label_pipeline = lambda x: int(x) - 1
 
 def collate_batch(batch):
     label_list, text_list, offsets = [], [], [0]
