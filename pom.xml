@@ -18,6 +18,7 @@
     <modules>
         <module>grpc-contract</module>
         <module>data-management</module>
+        <module>metadata-store</module>
     </modules>
 
     <dependencyManagement>
