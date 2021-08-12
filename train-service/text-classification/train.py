@@ -16,6 +16,7 @@ By using this sample code, I will show you how a mode training code can be integ
 
 import csv
 import io
+import os
 import time
 import torch
 from torchtext.data.utils import get_tokenizer
@@ -39,24 +40,70 @@ from torchtext.data.functional import to_map_style_dataset
 from minio import Minio
 
 ######################################################################
-# Define parameters and set values from environment variables
+# Define parameters and read values from environment variables
 # ---------------------
 
-# <TODO, read with default value when converting to docker image>
-# define hyperparameter
-EPOCHS = 20 # epoch
-LR = 5  # learning rate
-BATCH_SIZE = 64 # batch size for training
-FC_SIZE = 128 # node count for the middle fully connected layer
-MINIO_SERVER = "127.0.0.1:9000"
-MINIO_SERVER_ACCESS_KEY = "foooo"
-MINIO_SERVER_SECRET_KEY = "barbarbar"
-TRAINING_DATA_BUCKET = "mini-automl-dm"
-TRAINING_DATA_PATH = "versionedDatasets/1/hashBA==/"
-MODEL_BUCKET = "mini-automl-serving"
-MODEL_ID = "aaf98dsfase"
-MODEL_VERSION = "1"
+print("Training parameters")
 
+EPOCHS = os.getenv('EPOCHS')
+if EPOCHS is None:
+    EPOCHS = 20
+print("{}={}".format("EPOCHS", EPOCHS))
+
+LR = os.getenv('LR')
+if LR is None:
+    LR = 5
+print("{}={}".format("LR", LR))
+
+BATCH_SIZE = os.getenv('BATCH_SIZE')
+if BATCH_SIZE is None:
+    BATCH_SIZE = 64
+print("{}={}".format("BATCH_SIZE", BATCH_SIZE))
+
+FC_SIZE = os.getenv('FC_SIZE')
+if FC_SIZE is None:
+    FC_SIZE = 128
+print("{}={}".format("FC_SIZE", FC_SIZE))
+
+MINIO_SERVER = os.getenv('MINIO_SERVER')
+if MINIO_SERVER is None:
+    MINIO_SERVER = "127.0.0.1:9000"
+print("{}={}".format("MINIO_SERVER", MINIO_SERVER))
+
+MINIO_SERVER_ACCESS_KEY = os.getenv('MINIO_SERVER_ACCESS_KEY')
+if MINIO_SERVER_ACCESS_KEY is None:
+    MINIO_SERVER_ACCESS_KEY = "foooo"
+print("{}={}".format("MINIO_SERVER_ACCESS_KEY", MINIO_SERVER_ACCESS_KEY))
+
+MINIO_SERVER_SECRET_KEY = os.getenv('MINIO_SERVER_SECRET_KEY')
+if MINIO_SERVER_SECRET_KEY is None:
+    MINIO_SERVER_SECRET_KEY = "barbarbar"
+print("{}={}".format("MINIO_SERVER_SECRET_KEY", MINIO_SERVER_SECRET_KEY))
+
+TRAINING_DATA_BUCKET = os.getenv('TRAINING_DATA_BUCKET')
+if TRAINING_DATA_BUCKET is None:
+    TRAINING_DATA_BUCKET = "mini-automl-dm"
+print("{}={}".format("TRAINING_DATA_BUCKET", TRAINING_DATA_BUCKET))
+
+TRAINING_DATA_PATH = os.getenv('TRAINING_DATA_PATH')
+if TRAINING_DATA_PATH is None:
+    TRAINING_DATA_PATH = "versionedDatasets/1/hashBA==/"
+print("{}={}".format("TRAINING_DATA_PATH", TRAINING_DATA_PATH))
+
+MODEL_BUCKET = os.getenv('MODEL_BUCKET')
+if MODEL_BUCKET is None:
+    MODEL_BUCKET = "mini-automl-serving"
+print("{}={}".format("MODEL_BUCKET", MODEL_BUCKET))
+
+MODEL_ID = os.getenv('MODEL_ID')
+if MODEL_ID is None:
+    MODEL_ID = "aaf98dsfase"
+print("{}={}".format("MODEL_ID", MODEL_ID))
+
+MODEL_VERSION = os.getenv('MODEL_VERSION')
+if MODEL_VERSION is None:
+    MODEL_VERSION = "1"
+print("{}={}".format("MODEL_VERSION", MODEL_VERSION))
 
 ######################################################################
 # Download training data from MinIO
