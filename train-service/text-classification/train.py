@@ -4,7 +4,7 @@ Text classification with the torchtext library
 
 This training code is extended from pytorch text classification tutorial: https://pytorch.org/tutorials/beginner/text_sentiment_ngrams_tutorial.html
 
-By using this sample code, I will show how a mode training code can be integrated with a deep learning framework:
+By using this sample code, I will show you how a mode training code can be integrated with out mini autoML deep learning framework:
 
    - Fetch training data from dataset-management (DM) data bucket
    - Convert training data from DM format to Pytorch dataset format
