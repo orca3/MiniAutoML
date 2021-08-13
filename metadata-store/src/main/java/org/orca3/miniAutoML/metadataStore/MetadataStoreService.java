@@ -3,7 +3,8 @@ package org.orca3.miniAutoML.metadataStore;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.orca3.miniAutoML.ServiceBase;
-import org.orca3.miniAutoML.metadataStore.models.ExecutionInfo;
+import org.orca3.miniAutoML.metadataStore.models.ArtifactInfo;
+import org.orca3.miniAutoML.metadataStore.models.ArtifactRepo;
 import org.orca3.miniAutoML.metadataStore.models.MemoryStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,58 +41,126 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
     }
 
     @Override
-    public void logExecutionStart(LogExecutionStartRequest request, StreamObserver<LogExecutionStartResponse> responseObserver) {
+    public void logRunStart(LogRunStartRequest request, StreamObserver<LogRunStartResponse> responseObserver) {
         String runId = request.getRunId();
-        if (store.executionInfoMap.containsKey(runId)) {
+        if (store.runInfoMap.containsKey(runId)) {
             responseObserver.onError(Status.ALREADY_EXISTS
                     .withDescription(String.format("Run %s already exists", runId))
                     .asException());
         }
-        ExecutionInfo executionInfo = new ExecutionInfo(request.getStartTime(), runId, request.getRunName(), request.getTracing());
-        store.executionInfoMap.put(request.getRunId(), executionInfo);
-
-        responseObserver.onNext(LogExecutionStartResponse.newBuilder()
+        RunInfo runInfo = RunInfo.newBuilder()
                 .setStartTime(request.getStartTime())
-                .setRunId(runId)
+                .setRunId(request.getRunId())
                 .setRunName(request.getRunName())
                 .setTracing(request.getTracing())
+                .setSuccess(false)
+                .setMessage("Running")
+                .build();
+        store.runInfoMap.put(request.getRunId(), runInfo);
+
+        responseObserver.onNext(LogRunStartResponse.newBuilder()
+                .setRunInfo(runInfo)
                 .build());
         responseObserver.onCompleted();
     }
 
     @Override
     public void logEpoch(LogEpochRequest request, StreamObserver<LogEpochResponse> responseObserver) {
-        super.logEpoch(request, responseObserver);
-    }
-
-    @Override
-    public void logExecutionEnd(LogExecutionEndRequest request, StreamObserver<LogExecutionEndResponse> responseObserver) {
-        String runId = request.getRunId();
-        if (!store.executionInfoMap.containsKey(runId)) {
+        String runId = request.getEpochInfo().getRunId();
+        if (!store.runInfoMap.containsKey(runId)) {
             responseObserver.onError(Status.NOT_FOUND
                     .withDescription(String.format("Run %s doesn't exist", runId))
                     .asException());
         }
-        ExecutionInfo ei = store.executionInfoMap.get(runId).endExecution(request.getEndTime(), request.getSuccess(), request.getMessage());
-        responseObserver.onNext(LogExecutionEndResponse.newBuilder()
-                .setStartTime(ei.getStartTime())
-                .setEndTime(ei.getEndTime())
-                .setSuccess(ei.isSuccess())
-                .setMessage(ei.getMessage())
-                .setRunId(ei.getRunId())
-                .setRunName(ei.getRunName())
-                .setTracing(ei.getTracing())
+        RunInfo ri = store.runInfoMap.get(runId);
+        Integer epochId = request.getEpochInfo().getEpochId();
+        if (ri.getEpochsMap().containsKey(epochId)) {
+            responseObserver.onError(Status.ALREADY_EXISTS
+                    .withDescription(String.format("Epoch %s in Run %s already exists", epochId, runId))
+                    .asException());
+        }
+        store.runInfoMap.put(runId, RunInfo.newBuilder().mergeFrom(ri)
+                .putEpochs(request.getEpochInfo().getEpochId(), request.getEpochInfo())
+                .build());
+
+        responseObserver.onNext(LogEpochResponse.newBuilder()
+                .setEpochInfo(request.getEpochInfo())
+                .build());
+    }
+
+    @Override
+    public void logRunEnd(LogRunEndRequest request, StreamObserver<LogRunEndResponse> responseObserver) {
+        String runId = request.getRunId();
+        if (!store.runInfoMap.containsKey(runId)) {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription(String.format("Run %s doesn't exist", runId))
+                    .asException());
+        }
+        RunInfo ri = RunInfo.newBuilder().mergeFrom(store.runInfoMap.get(runId))
+                .setEndTime(request.getEndTime())
+                .setSuccess(request.getSuccess())
+                .setMessage(request.getMessage())
+                .build();
+        store.runInfoMap.put(runId, ri);
+        responseObserver.onNext(LogRunEndResponse.newBuilder()
+                .setRunInfo(ri)
                 .build());
         responseObserver.onCompleted();
     }
 
     @Override
+    public void getRunStatus(GetRunStatusRequest request, StreamObserver<GetRunStatusResponse> responseObserver) {
+        String runId = request.getRunId();
+        if (!store.runInfoMap.containsKey(runId)) {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription(String.format("Run %s doesn't exist", runId))
+                    .asException());
+        }
+        RunInfo ri = store.runInfoMap.get(runId);
+        responseObserver.onNext(GetRunStatusResponse.newBuilder()
+                .setRunInfo(ri)
+                .build());
+    }
+
+    @Override
     public void createArtifact(CreateArtifactRequest request, StreamObserver<CreateArtifactResponse> responseObserver) {
-        super.createArtifact(request, responseObserver);
+        String artifactName = request.getArtifact().getName();
+        String version;
+        ArtifactRepo repo;
+        if (store.artifactRepos.containsKey(artifactName)) {
+            repo = store.artifactRepos.get(artifactName);
+        } else {
+            repo = new ArtifactRepo(artifactName);
+            store.artifactRepos.put(artifactName, repo);
+        }
+        version = Integer.toString(repo.getSeed());
+        repo.artifacts.put(version, new ArtifactInfo(request.getArtifact()));
+        responseObserver.onNext(CreateArtifactResponse.newBuilder()
+                .setVersion(version)
+                .setArtifact(request.getArtifact())
+                .build());
+        responseObserver.onCompleted();
     }
 
     @Override
     public void getArtifact(GetArtifactRequest request, StreamObserver<GetArtifactResponse> responseObserver) {
-        super.getArtifact(request, responseObserver);
+        String artifactName = request.getName();
+        if (!store.artifactRepos.containsKey(artifactName)) {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription(String.format("Artifact %s doesn't exist", artifactName))
+                    .asException());
+        }
+        ArtifactRepo repo = store.artifactRepos.get(artifactName);
+        String version = request.getVersion();
+        if (!repo.artifacts.containsKey(version)) {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription(String.format("Version %s of Artifact %s doesn't exist", version, artifactName))
+                    .asException());
+        }
+        responseObserver.onNext(GetArtifactResponse.newBuilder()
+                .setName(artifactName)
+                .setVersion(version)
+                .setArtifact(repo.artifacts.get(version).getFileInfo())
+                .build());
     }
 }
