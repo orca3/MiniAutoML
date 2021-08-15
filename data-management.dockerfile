@@ -5,7 +5,6 @@ COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 COPY data-management data-management/
 COPY grpc-contract grpc-contract/
-COPY metadata-store metadata-store/
 RUN ./mvnw package -DskipTests
 
 FROM openjdk:11 AS run
