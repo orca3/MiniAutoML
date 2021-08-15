@@ -1,14 +1,9 @@
-package org.orca3.miniAutoML;
+package org.orca3.miniAutoML.dataManagement;
 
 import io.minio.MinioClient;
-import org.apache.commons.lang3.NotImplementedException;
-import org.orca3.miniAutoML.transformers.DatasetTransformer;
-import org.orca3.miniAutoML.transformers.GenericTransformer;
-import org.orca3.miniAutoML.transformers.IntentTextTransformer;
-
-import java.time.Instant;
-
-import static java.time.format.DateTimeFormatter.ISO_INSTANT;
+import org.orca3.miniAutoML.dataManagement.transformers.DatasetTransformer;
+import org.orca3.miniAutoML.dataManagement.transformers.GenericTransformer;
+import org.orca3.miniAutoML.dataManagement.transformers.IntentTextTransformer;
 
 public class DatasetIngestion {
 

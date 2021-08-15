@@ -1,11 +1,11 @@
-package org.orca3.miniAutoML;
+package org.orca3.miniAutoML.dataManagement;
 
 import io.minio.MinioClient;
-import org.orca3.miniAutoML.models.Dataset;
-import org.orca3.miniAutoML.models.MemoryStore;
-import org.orca3.miniAutoML.transformers.DatasetTransformer;
-import org.orca3.miniAutoML.transformers.GenericTransformer;
-import org.orca3.miniAutoML.transformers.IntentTextTransformer;
+import org.orca3.miniAutoML.dataManagement.models.Dataset;
+import org.orca3.miniAutoML.dataManagement.models.MemoryStore;
+import org.orca3.miniAutoML.dataManagement.transformers.DatasetTransformer;
+import org.orca3.miniAutoML.dataManagement.transformers.GenericTransformer;
+import org.orca3.miniAutoML.dataManagement.transformers.IntentTextTransformer;
 
 import java.util.List;
 

@@ -1,9 +1,9 @@
-package org.orca3.miniAutoML.models;
+package org.orca3.miniAutoML.dataManagement.models;
 
-import org.orca3.miniAutoML.CommitInfo;
-import org.orca3.miniAutoML.DatasetSummary;
-import org.orca3.miniAutoML.DatasetType;
-import org.orca3.miniAutoML.VersionedSnapshot;
+import org.orca3.miniAutoML.dataManagement.CommitInfo;
+import org.orca3.miniAutoML.dataManagement.DatasetSummary;
+import org.orca3.miniAutoML.dataManagement.DatasetType;
+import org.orca3.miniAutoML.dataManagement.VersionedSnapshot;
 
 import java.time.Instant;
 import java.util.HashMap;

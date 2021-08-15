@@ -1,6 +1,5 @@
-package org.orca3.miniAutoML.transformers;
+package org.orca3.miniAutoML.dataManagement.transformers;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
@@ -15,14 +14,14 @@ import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.MinioException;
-import org.orca3.miniAutoML.CommitInfo;
-import org.orca3.miniAutoML.DatasetPart;
-import org.orca3.miniAutoML.FileInfo;
-import org.orca3.miniAutoML.SnapshotState;
-import org.orca3.miniAutoML.VersionedSnapshot;
-import org.orca3.miniAutoML.models.IntentText;
-import org.orca3.miniAutoML.models.IntentTextCollection;
-import org.orca3.miniAutoML.models.Label;
+import org.orca3.miniAutoML.dataManagement.CommitInfo;
+import org.orca3.miniAutoML.dataManagement.DatasetPart;
+import org.orca3.miniAutoML.dataManagement.FileInfo;
+import org.orca3.miniAutoML.dataManagement.SnapshotState;
+import org.orca3.miniAutoML.dataManagement.VersionedSnapshot;
+import org.orca3.miniAutoML.dataManagement.models.IntentText;
+import org.orca3.miniAutoML.dataManagement.models.IntentTextCollection;
+import org.orca3.miniAutoML.dataManagement.models.Label;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

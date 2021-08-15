@@ -9,4 +9,4 @@ echo
 echo "Creating intent dataset"
 grpcurl -plaintext \
   -d '{"name": "dataset-1", "dataset_type": "TEXT_INTENT", "bucket": "mini-automl-dm", "path": "upload/001.csv", "tags": [{"tag_key": "category", "tag_value": "test set"}]}' \
-  localhost:51001 data_management.DataManagementService/CreateDataset
+  localhost:"${DM_PORT}" data_management.DataManagementService/CreateDataset

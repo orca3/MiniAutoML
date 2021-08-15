@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.orca3.miniAutoML.metadataStore";
+option java_outer_classname = "MetadataStoreProto";
+
+import "google/protobuf/empty.proto";
+import "data_management.proto";
+
+package metadata_store;
+
+service MetadataStoreService {
+  rpc LogRunStart (LogRunStartRequest) returns (LogRunStartResponse);
+  rpc LogEpoch (LogEpochRequest) returns (LogEpochResponse);
+  rpc LogRunEnd (LogRunEndRequest) returns (LogRunEndResponse);
+  rpc GetRunStatus (GetRunStatusRequest) returns (GetRunStatusResponse);
+  rpc CreateArtifact (CreateArtifactRequest) returns (CreateArtifactResponse);
+  rpc GetArtifact (GetArtifactRequest) returns (GetArtifactResponse);
+}
+
+message LogRunStartRequest {
+  string start_time = 1;
+  string run_id = 2;
+  string run_name = 3;
+  TracingInformation tracing = 4;
+}
+
+message LogRunStartResponse {
+  RunInfo run_info = 1;
+}
+
+message LogEpochRequest {
+  EpochInfo epochInfo = 1;
+}
+
+message LogEpochResponse {
+  EpochInfo epochInfo = 1;
+}
+
+message LogRunEndRequest {
+  string run_id = 1;
+  string end_time = 2;
+  bool success = 3;
+  string message = 4;
+}
+
+message LogRunEndResponse {
+  RunInfo run_info = 1;
+}
+
+message GetRunStatusRequest {
+  string run_id = 5;
+}
+
+message GetRunStatusResponse {
+  RunInfo run_info = 1;
+}
+
+message CreateArtifactRequest {
+  data_management.FileInfo artifact = 1;
+}
+
+message CreateArtifactResponse {
+  string version = 1;
+  data_management.FileInfo artifact = 2;
+}
+
+message GetArtifactRequest {
+  string name = 1;
+  string version = 2;
+}
+
+message GetArtifactResponse {
+  string name = 1;
+  string version = 2;
+  data_management.FileInfo artifact = 3;
+}
+
+//=========
+message EpochInfo {
+  string start_time = 1;
+  string end_time = 2;
+  string run_id = 3;
+  int32 epoch_id = 4;
+  map<string, string> metrics = 5;
+
+}
+
+message RunInfo {
+  string start_time = 1;
+  string end_time = 2;
+  bool success = 3;
+  string message = 4;
+  string run_id = 5;
+  string run_name = 6;
+  TracingInformation tracing = 7;
+  map<int32, EpochInfo> epochs = 8;
+}
+
+message TracingInformation {
+  string dataset_id = 1;
+  string version_hash = 2;
+  string code_version = 3;
+}

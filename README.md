@@ -7,12 +7,12 @@ System Requirement:
 ## Data Management Example
 
 1. Start minio server using docker: `./scripts/dm-001-start-minio.sh`
+```
+Started minio docker container and listen on port 9000
+```
 2. Run data management server: `./scripts/dm-002-start-server.sh`
 ```
-...
-Starting data-management service
-23:21:49.197 [org.orca3.miniAutoML.DataManagementService.main()] INFO  org.orca3.miniAutoML.DataManagementService - Creating bucket 'mini-automl-dm'.
-Listening on port 51001
+Started data-management docker container and listen on port 5000
 ```
 3. In another tab, create a dataset: `./scripts/dm-003-create-dataset.sh`
 ```
@@ -263,7 +263,7 @@ Fetching dataset 1 with version hashBA==
 9. To inspect file content, setup mc alias first: 
 ```
 source ./scripts/dm-000-env-vars.sh
-mc alias -q set myminio http://127.0.0.1:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+mc alias -q set myminio http://127.0.0.1:"${MINIO_PORT}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
 ```
 10. Then copy file from minio to local for your inspection
 ```
