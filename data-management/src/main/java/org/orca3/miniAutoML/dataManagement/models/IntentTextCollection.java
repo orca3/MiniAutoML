@@ -1,4 +1,4 @@
-package org.orca3.miniAutoML.models;
+package org.orca3.miniAutoML.dataManagement.models;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

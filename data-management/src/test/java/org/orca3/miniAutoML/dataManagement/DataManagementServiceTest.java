@@ -1,4 +1,4 @@
-package org.orca3.miniAutoML;
+package org.orca3.miniAutoML.dataManagement;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -13,7 +13,7 @@ import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.orca3.miniAutoML.models.MemoryStore;
+import org.orca3.miniAutoML.dataManagement.models.MemoryStore;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
-import static org.orca3.miniAutoML.transformers.IntentTextTransformer.EXAMPLES_FILE_NAME;
-import static org.orca3.miniAutoML.transformers.IntentTextTransformer.LABELS_FILE_NAME;
+import static org.orca3.miniAutoML.dataManagement.transformers.IntentTextTransformer.EXAMPLES_FILE_NAME;
+import static org.orca3.miniAutoML.dataManagement.transformers.IntentTextTransformer.LABELS_FILE_NAME;
 
 public class DataManagementServiceTest {
     static final ClassLoader cl = DataManagementServiceTest.class.getClassLoader();

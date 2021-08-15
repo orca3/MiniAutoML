@@ -1,19 +1,15 @@
-package org.orca3.miniAutoML;
+package org.orca3.miniAutoML.dataManagement;
 
 import com.google.common.collect.Lists;
 import com.google.protobuf.Empty;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.Status;
-import io.grpc.health.v1.HealthCheckResponse;
-import io.grpc.protobuf.services.HealthStatusManager;
-import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.stub.StreamObserver;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import org.orca3.miniAutoML.models.Dataset;
-import org.orca3.miniAutoML.models.MemoryStore;
+import org.orca3.miniAutoML.ServiceBase;
+import org.orca3.miniAutoML.dataManagement.models.Dataset;
+import org.orca3.miniAutoML.dataManagement.models.MemoryStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +20,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
 
 public class DataManagementService extends DataManagementServiceGrpc.DataManagementServiceImplBase {
     private static final Logger logger = LoggerFactory.getLogger(DataManagementService.class);
@@ -60,31 +55,8 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
             throw new RuntimeException(e);
         }
 
-        HealthStatusManager health = new HealthStatusManager();
         DataManagementService dmService = new DataManagementService(new MemoryStore(), minioClient, config);
-
-        int port = Integer.parseInt(config.serverPort);
-        final Server server = ServerBuilder.forPort(port)
-                .addService(dmService)
-                .addService(ProtoReflectionService.newInstance())
-                .addService(health.getHealthService())
-                .build()
-                .start();
-        System.out.println("Listening on port " + port);
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            // Start graceful shutdown
-            server.shutdown();
-            try {
-                if (!server.awaitTermination(30, TimeUnit.SECONDS)) {
-                    server.shutdownNow();
-                    server.awaitTermination(5, TimeUnit.SECONDS);
-                }
-            } catch (InterruptedException ex) {
-                server.shutdownNow();
-            }
-        }));
-        health.setStatus("", HealthCheckResponse.ServingStatus.SERVING);
-        server.awaitTermination();
+        ServiceBase.startService(Integer.parseInt(config.serverPort), dmService, () -> {});
     }
 
     @Override

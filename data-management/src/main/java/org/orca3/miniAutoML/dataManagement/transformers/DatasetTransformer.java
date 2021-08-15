@@ -1,10 +1,10 @@
-package org.orca3.miniAutoML.transformers;
+package org.orca3.miniAutoML.dataManagement.transformers;
 
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import org.orca3.miniAutoML.CommitInfo;
-import org.orca3.miniAutoML.DatasetPart;
-import org.orca3.miniAutoML.VersionedSnapshot;
+import org.orca3.miniAutoML.dataManagement.CommitInfo;
+import org.orca3.miniAutoML.dataManagement.DatasetPart;
+import org.orca3.miniAutoML.dataManagement.VersionedSnapshot;
 
 import java.nio.file.Paths;
 import java.util.List;

@@ -11,10 +11,10 @@ if [ "$1" != "" ]; then
     echo "Adding new commit to dataset $1"
     grpcurl -plaintext \
       -d "{\"dataset_id\": \"$1\", \"commit_message\": \"More training data\", \"bucket\": \"${MINIO_DM_BUCKET}\", \"path\": \"upload/002.csv\", \"tags\": [{\"tag_key\": \"category\", \"tag_value\": \"training set\"}]}" \
-      localhost:51001 data_management.DataManagementService/UpdateDataset
+      localhost:"${DM_PORT}" data_management.DataManagementService/UpdateDataset
     grpcurl -plaintext \
       -d "{\"dataset_id\": \"$1\", \"commit_message\": \"More validation data\", \"bucket\": \"${MINIO_DM_BUCKET}\", \"path\": \"upload/003.csv\", \"tags\": [{\"tag_key\": \"category\", \"tag_value\": \"validation set\"}]}" \
-      localhost:51001 data_management.DataManagementService/UpdateDataset
+      localhost:"${DM_PORT}" data_management.DataManagementService/UpdateDataset
 else
     echo "Requires dataset_id as the first parameter"
 fi

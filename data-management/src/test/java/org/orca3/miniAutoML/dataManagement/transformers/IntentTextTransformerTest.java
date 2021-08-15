@@ -1,4 +1,4 @@
-package org.orca3.miniAutoML.transformers;
+package org.orca3.miniAutoML.dataManagement.transformers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -6,9 +6,9 @@ import com.google.common.collect.Lists;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import org.junit.Test;
-import org.orca3.miniAutoML.models.IntentText;
-import org.orca3.miniAutoML.models.IntentTextCollection;
-import org.orca3.miniAutoML.models.Label;
+import org.orca3.miniAutoML.dataManagement.models.IntentText;
+import org.orca3.miniAutoML.dataManagement.models.IntentTextCollection;
+import org.orca3.miniAutoML.dataManagement.models.Label;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
