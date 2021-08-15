@@ -112,6 +112,7 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
         responseObserver.onNext(LogEpochResponse.newBuilder()
                 .setEpochInfo(request.getEpochInfo())
                 .build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -146,6 +147,7 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
         responseObserver.onNext(GetRunStatusResponse.newBuilder()
                 .setRunInfo(ri)
                 .build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -188,5 +190,6 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
                 .setVersion(version)
                 .setArtifact(repo.artifacts.get(version).getFileInfo())
                 .build());
+        responseObserver.onCompleted();
     }
 }

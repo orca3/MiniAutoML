@@ -30,11 +30,11 @@ message LogRunStartResponse {
 }
 
 message LogEpochRequest {
-  EpochInfo epochInfo = 1;
+  EpochInfo epoch_info = 1;
 }
 
 message LogEpochResponse {
-  EpochInfo epochInfo = 1;
+  EpochInfo epoch_info = 1;
 }
 
 message LogRunEndRequest {
