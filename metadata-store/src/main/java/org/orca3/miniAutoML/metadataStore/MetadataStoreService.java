@@ -2,6 +2,9 @@ package org.orca3.miniAutoML.metadataStore;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
 import org.orca3.miniAutoML.ServiceBase;
 import org.orca3.miniAutoML.metadataStore.models.ArtifactInfo;
 import org.orca3.miniAutoML.metadataStore.models.ArtifactRepo;
@@ -26,6 +29,21 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
         Properties props = new Properties();
         props.load(MetadataStoreService.class.getClassLoader().getResourceAsStream("config.properties"));
         Config config = new Config(props);
+        MinioClient minioClient = MinioClient.builder()
+                .endpoint(config.minioHost)
+                .credentials(config.minioAccessKey, config.minioSecretKey)
+                .build();
+        try {
+            boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(config.minioBucketName).build());
+            if (!found) {
+                logger.info("Creating bucket '{}'.", config.minioBucketName);
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(config.minioBucketName).build());
+            } else {
+                logger.info("Bucket '{}' already exists.", config.minioBucketName);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         MetadataStoreService msService = new MetadataStoreService(new MemoryStore(), config);
         ServiceBase.startService(Integer.parseInt(config.serverPort), msService, () -> {
@@ -33,9 +51,17 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
     }
 
     static class Config {
+        final String minioBucketName;
+        final String minioAccessKey;
+        final String minioSecretKey;
+        final String minioHost;
         final String serverPort;
 
         public Config(Properties properties) {
+            this.minioBucketName = properties.getProperty("minio.bucketName");
+            this.minioAccessKey = properties.getProperty("minio.accessKey");
+            this.minioSecretKey = properties.getProperty("minio.secretKey");
+            this.minioHost = properties.getProperty("minio.host");
             this.serverPort = properties.getProperty("server.port");
         }
     }
