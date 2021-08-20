@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/dm-000-env-vars.sh"
-mc alias -q set myminio http://127.0.0.1:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+mc alias -q set myminio http://127.0.0.1:"${MS_PORT}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
 
 echo
 echo "Upload raw data to cloud object storage to get a data url. For demo purpose, we upload data to 'mini-automl-dm' bucket in the local MinIO server, data url to reference the data is 'upload/001.csv'"
