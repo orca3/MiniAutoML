@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.orca3.miniAutoML.training";
+option java_outer_classname = "TrainingServiceProto";
+
+package training;
+
+service TrainingService {
+  rpc Train(TrainRequest) returns (TrainResponse);
+  rpc GetTrainingStatus(GetTrainingStatusRequest) returns (GetTrainingStatusResponse);
+}
+
+message TrainRequest {
+  TrainingJobMetadata metadata = 1;
+}
+
+message TrainResponse {
+  int32 jobId = 1;
+}
+
+message GetTrainingStatusRequest {
+  int32 jobId = 1;
+}
+
+message GetTrainingStatusResponse {
+  TrainingStatus status = 1;
+  int32 jobId = 2;
+  string message = 3;
+  TrainingJobMetadata metadata = 4;
+  int32 positionInQueue = 5;
+}
+
+enum TrainingStatus {
+  queuing = 0;
+  launch = 1;
+  running = 2;
+  succeed = 3;
+  failure = 4;
+}
+
+message TrainingJobMetadata {
+  string algorithm = 1;
+  string datasetId = 2;
+  string name = 3;
+  string trainDataVersionHash = 4;
+  map<string, string> parameters = 5;
+}
