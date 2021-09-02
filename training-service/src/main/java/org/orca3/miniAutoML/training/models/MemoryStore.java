@@ -23,10 +23,6 @@ public class MemoryStore {
     }
 
     public int getQueuePosition(int jobId) {
-        if (jobQueue.containsKey(jobId)) {
-            return jobQueue.headMap(jobId).size();
-        } else {
-            return -1;
-        }
+        return jobQueue.headMap(jobId).size();
     }
 }

@@ -5,18 +5,22 @@ import org.orca3.miniAutoML.training.TrainingJobMetadata;
 import javax.annotation.Nullable;
 
 public class ExecutedTrainingJob {
-    private final Long launchedAt;
+    private final long launchedAt;
     private final Long finishedAt;
     private final boolean success;
     private final TrainingJobMetadata metadata;
     private final String message;
 
-    public ExecutedTrainingJob(Long launchedAt, Long finishedAt, boolean success, TrainingJobMetadata metadata, String message) {
+    ExecutedTrainingJob(long launchedAt, Long finishedAt, boolean success, TrainingJobMetadata metadata, String message) {
         this.launchedAt = launchedAt;
         this.finishedAt = finishedAt;
         this.success = success;
         this.metadata = metadata;
         this.message = message;
+    }
+
+    public ExecutedTrainingJob(Long launchedAt, TrainingJobMetadata metadata, String message) {
+        this(launchedAt, null, false, metadata, message);
     }
 
     public boolean isSuccess() {
@@ -31,7 +35,6 @@ public class ExecutedTrainingJob {
         return message;
     }
 
-    @Nullable
     public Long getLaunchedAt() {
         return launchedAt;
     }
@@ -39,5 +42,9 @@ public class ExecutedTrainingJob {
     @Nullable
     public Long getFinishedAt() {
         return finishedAt;
+    }
+
+    public ExecutedTrainingJob finished(long finishedAt, boolean success) {
+        return new ExecutedTrainingJob(this.launchedAt, finishedAt, success, this.metadata, this.message);
     }
 }

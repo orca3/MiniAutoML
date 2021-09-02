@@ -1,6 +1,6 @@
 ## Set up local python env
 conda create --name intent-pytorch python=3.7
-conda activate pytorch
+conda activate intent-pytorch
 conda install -c pytorch pytorch torchtext
 conda install -c conda-forge minio
 

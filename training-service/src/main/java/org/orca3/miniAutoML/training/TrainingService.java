@@ -3,7 +3,7 @@ package org.orca3.miniAutoML.training;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.orca3.miniAutoML.ServiceBase;
-import org.orca3.miniAutoML.metadataStore.tracker.DockerTracker;
+import org.orca3.miniAutoML.training.tracker.DockerTracker;
 import org.orca3.miniAutoML.training.models.ExecutedTrainingJob;
 import org.orca3.miniAutoML.training.models.MemoryStore;
 
@@ -30,22 +30,31 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
         Config config = new Config(props);
 
         MemoryStore store = new MemoryStore();
-        DockerTracker tracker = new DockerTracker(store);
+        if (config.backend.equals("docker")) {
+            // FIXME
+        }
+        DockerTracker tracker = new DockerTracker(store, new DockerTracker.BackendConfig(props));
         TrainingService trainingService = new TrainingService(store, config);
-        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        final ScheduledFuture<?> launchingThread =
-                scheduler.scheduleAtFixedRate(tracker::launchAll, 10, 10, SECONDS);
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+        final ScheduledFuture<?> launchingTask =
+                scheduler.scheduleAtFixedRate(tracker::launchAll, 5, 5, SECONDS);
+        final ScheduledFuture<?> refreshingTask =
+                scheduler.scheduleAtFixedRate(tracker::updateContainerStatus, 7, 5, SECONDS);
         ServiceBase.startService(Integer.parseInt(config.serverPort), trainingService, () -> {
             tracker.shutdownAll();
-            launchingThread.cancel(true);
+            launchingTask.cancel(true);
+            refreshingTask.cancel(true);
+            scheduler.shutdown();
         });
     }
 
     static class Config {
         final String serverPort;
+        final String backend;
 
         public Config(Properties properties) {
             this.serverPort = properties.getProperty("server.port");
+            this.backend = properties.getProperty("backend");
         }
     }
 
@@ -71,9 +80,9 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
             job = store.runningList.get(jobId);
             status = TrainingStatus.running;
         } else {
-            int position = store.getQueuePosition(jobId);
-            if (position != -1) {
-                TrainingJobMetadata metadata = store.jobQueue.get(jobId);
+            TrainingJobMetadata metadata = store.jobQueue.get(jobId);
+            if (metadata != null) {
+                int position = store.getQueuePosition(jobId);
                 responseObserver.onNext(GetTrainingStatusResponse.newBuilder()
                         .setJobId(jobId)
                         .setStatus(TrainingStatus.queuing)
@@ -94,7 +103,6 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
                 .setStatus(status)
                 .setMessage(job.getMessage())
                 .setMetadata(job.getMetadata())
-                .setPositionInQueue(-1)
                 .build());
         responseObserver.onCompleted();
     }
