@@ -6,6 +6,7 @@ COPY mvnw pom.xml ./
 COPY data-management/pom.xml data-management/pom.xml
 COPY grpc-contract grpc-contract/
 COPY metadata-store metadata-store/
+COPY training-service/pom.xml training-service/pom.xml
 RUN ./mvnw package -pl metadata-store -am -DskipTests
 
 FROM openjdk:11 AS run

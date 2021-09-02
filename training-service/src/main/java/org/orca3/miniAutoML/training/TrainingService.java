@@ -3,11 +3,17 @@ package org.orca3.miniAutoML.training;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.orca3.miniAutoML.ServiceBase;
+import org.orca3.miniAutoML.metadataStore.tracker.DockerTracker;
 import org.orca3.miniAutoML.training.models.ExecutedTrainingJob;
 import org.orca3.miniAutoML.training.models.MemoryStore;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase {
     private final MemoryStore store;
@@ -23,9 +29,15 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
         props.load(TrainingService.class.getClassLoader().getResourceAsStream("config.properties"));
         Config config = new Config(props);
 
-        TrainingService trainingService = new TrainingService(new MemoryStore(), config);
+        MemoryStore store = new MemoryStore();
+        DockerTracker tracker = new DockerTracker(store);
+        TrainingService trainingService = new TrainingService(store, config);
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        final ScheduledFuture<?> launchingThread =
+                scheduler.scheduleAtFixedRate(tracker::launchAll, 10, 10, SECONDS);
         ServiceBase.startService(Integer.parseInt(config.serverPort), trainingService, () -> {
-
+            tracker.shutdownAll();
+            launchingThread.cancel(true);
         });
     }
 

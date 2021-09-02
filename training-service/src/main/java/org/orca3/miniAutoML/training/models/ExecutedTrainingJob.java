@@ -2,14 +2,16 @@ package org.orca3.miniAutoML.training.models;
 
 import org.orca3.miniAutoML.training.TrainingJobMetadata;
 
+import javax.annotation.Nullable;
+
 public class ExecutedTrainingJob {
-    private final String launchedAt;
-    private final String finishedAt;
+    private final Long launchedAt;
+    private final Long finishedAt;
     private final boolean success;
     private final TrainingJobMetadata metadata;
     private final String message;
 
-    public ExecutedTrainingJob(String launchedAt, String finishedAt, boolean success, TrainingJobMetadata metadata, String message) {
+    public ExecutedTrainingJob(Long launchedAt, Long finishedAt, boolean success, TrainingJobMetadata metadata, String message) {
         this.launchedAt = launchedAt;
         this.finishedAt = finishedAt;
         this.success = success;
@@ -29,11 +31,13 @@ public class ExecutedTrainingJob {
         return message;
     }
 
-    public String getLaunchedAt() {
+    @Nullable
+    public Long getLaunchedAt() {
         return launchedAt;
     }
 
-    public String getFinishedAt() {
+    @Nullable
+    public Long getFinishedAt() {
         return finishedAt;
     }
 }
