@@ -1,6 +1,7 @@
 # MiniAutoML
 
 System Requirement:
+- JDK 11
 - Docker
 - [Minio client](https://docs.min.io/docs/minio-client-quickstart-guide.html) `brew install minio/stable/mc`
 
