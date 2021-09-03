@@ -233,6 +233,7 @@ public class IntentTextTransformer implements DatasetTransformer {
         }
         return VersionedSnapshot.newBuilder()
                 .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.READY)
+                .setRoot(versionHashRoot)
                 .addParts(FileInfo.newBuilder().setName(EXAMPLES_FILE_NAME).setPath(mergedExamplesPath).setBucket(bucketName).build())
                 .addParts(FileInfo.newBuilder().setName(LABELS_FILE_NAME).setPath(mergedLabelsPath).setBucket(bucketName).build())
                 .putAllStatistics(mergedCollection.stats())

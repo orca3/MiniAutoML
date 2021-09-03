@@ -116,8 +116,8 @@ client = Minio(
 )
 
 # download training data
-client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "examples.csv", "examples.csv")
-client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "labels.csv", "labels.csv")
+client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "/examples.csv", "examples.csv")
+client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "/labels.csv", "labels.csv")
 
 ######################################################################
 # Convert data from dataset management training data format to Pytorch dataset
@@ -147,7 +147,6 @@ def load_label_dict(path):
 # --------------------------------
 
 tokenizer = get_tokenizer('basic_english')
-print("cuda" if torch.cuda.is_available() else "cpu")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def yield_tokens(data_iter):

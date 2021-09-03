@@ -1,17 +1,20 @@
 package org.orca3.miniAutoML.training;
 
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.orca3.miniAutoML.ServiceBase;
-import org.orca3.miniAutoML.training.tracker.DockerTracker;
 import org.orca3.miniAutoML.training.models.ExecutedTrainingJob;
 import org.orca3.miniAutoML.training.models.MemoryStore;
+import org.orca3.miniAutoML.training.tracker.DockerTracker;
 
 import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -33,7 +36,9 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
         if (config.backend.equals("docker")) {
             // FIXME
         }
-        DockerTracker tracker = new DockerTracker(store, new DockerTracker.BackendConfig(props));
+        ManagedChannel dmChannel = ManagedChannelBuilder.forAddress(config.dmHost, Integer.parseInt(config.dmPort))
+                .usePlaintext().build();
+        DockerTracker tracker = new DockerTracker(store, new DockerTracker.BackendConfig(props), dmChannel);
         TrainingService trainingService = new TrainingService(store, config);
         final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
         final ScheduledFuture<?> launchingTask =
@@ -41,19 +46,25 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
         final ScheduledFuture<?> refreshingTask =
                 scheduler.scheduleAtFixedRate(tracker::updateContainerStatus, 7, 5, SECONDS);
         ServiceBase.startService(Integer.parseInt(config.serverPort), trainingService, () -> {
+            dmChannel.shutdownNow();
             tracker.shutdownAll();
             launchingTask.cancel(true);
             refreshingTask.cancel(true);
             scheduler.shutdown();
+
         });
     }
 
     static class Config {
         final String serverPort;
+        final String dmHost;
+        final String dmPort;
         final String backend;
 
         public Config(Properties properties) {
             this.serverPort = properties.getProperty("server.port");
+            this.dmPort = properties.getProperty("dm.port");
+            this.dmHost = properties.getProperty("dm.host");
             this.backend = properties.getProperty("backend");
         }
     }

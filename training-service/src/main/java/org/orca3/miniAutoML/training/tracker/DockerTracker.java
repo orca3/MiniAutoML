@@ -8,6 +8,11 @@ import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
+import io.grpc.ManagedChannel;
+import org.orca3.miniAutoML.dataManagement.DataManagementServiceGrpc;
+import org.orca3.miniAutoML.dataManagement.SnapshotState;
+import org.orca3.miniAutoML.dataManagement.VersionQuery;
+import org.orca3.miniAutoML.dataManagement.VersionedSnapshot;
 import org.orca3.miniAutoML.training.TrainingJobMetadata;
 import org.orca3.miniAutoML.training.models.ExecutedTrainingJob;
 import org.orca3.miniAutoML.training.models.MemoryStore;
@@ -16,9 +21,11 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DockerTracker {
     final DockerClient dockerClient;
@@ -26,10 +33,12 @@ public class DockerTracker {
     private MemoryStore store;
     private BackendConfig config;
     private static final Logger logger = LoggerFactory.getLogger(DockerTracker.class);
+    private final DataManagementServiceGrpc.DataManagementServiceBlockingStub dmClient;
 
-    public DockerTracker(MemoryStore store, BackendConfig config) {
+    public DockerTracker(MemoryStore store, BackendConfig config, ManagedChannel dmChannel) {
         this.store = store;
         this.config = config;
+        this.dmClient = DataManagementServiceGrpc.newBlockingStub(dmChannel);
         DockerClientConfig clientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
         DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
                 .dockerHost(clientConfig.getDockerHost())
@@ -49,9 +58,15 @@ public class DockerTracker {
     public void launchAll() {
         while (hasCapacity() && !store.jobQueue.isEmpty()) {
             int jobId = store.jobQueue.firstKey();
-            TrainingJobMetadata metadata = store.jobQueue.remove(jobId);
-            launch(jobId, metadata);
-            store.launchingList.put(jobId, new ExecutedTrainingJob(System.currentTimeMillis(), metadata, ""));
+            TrainingJobMetadata metadata = store.jobQueue.get(jobId);
+            VersionedSnapshot r = dmClient.fetchTrainingDataset(VersionQuery.newBuilder()
+                    .setDatasetId(metadata.getDatasetId()).setVersionHash(metadata.getTrainDataVersionHash())
+                    .build());
+            if (r.getState() == SnapshotState.READY) {
+                store.jobQueue.remove(jobId);
+                launch(jobId, metadata, r);
+                store.launchingList.put(jobId, new ExecutedTrainingJob(System.currentTimeMillis(), metadata, ""));
+            }
         }
     }
 
@@ -113,13 +128,23 @@ public class DockerTracker {
         }
     }
 
-    public String launch(int jobId, TrainingJobMetadata metadata) {
+    public String launch(int jobId, TrainingJobMetadata metadata, VersionedSnapshot versionedSnapshot) {
+        Map<String, String> envs = new HashMap<>();
+        envs.put("MINIO_SERVER", config.minioHost);
+        envs.put("MINIO_SERVER_ACCESS_KEY", config.minioAccessKey);
+        envs.put("MINIO_SERVER_SECRET_KEY", config.minioSecretKey);
+        envs.put("TRAINING_DATA_BUCKET", config.dmBucketName);
+        envs.put("TRAINING_DATA_PATH", versionedSnapshot.getRoot());
+        envs.putAll(metadata.getParametersMap());
+        List<String> envStrings = envs.entrySet().stream()
+                .map(kvp -> String.format("%s=%s", kvp.getKey(), kvp.getValue()))
+                .collect(Collectors.toList());
         String containerId = dockerClient.createContainerCmd(metadata.getAlgorithm())
                 .withName(String.format("%d-%d-%s", jobId, System.currentTimeMillis(), metadata.getName()))
                 .withAttachStdout(false)
                 .withAttachStderr(false)
                 .withCmd("server", "/data")
-                .withEnv("MINIO_SERVER=minio:9000")
+                .withEnv(envStrings)
                 .withHostConfig(HostConfig.newHostConfig().withNetworkMode(config.network))
                 .exec().getId();
         dockerClient.startContainerCmd(containerId).exec();
@@ -135,9 +160,17 @@ public class DockerTracker {
 
     public static class BackendConfig {
         final String network;
+        final String dmBucketName;
+        final String minioAccessKey;
+        final String minioSecretKey;
+        final String minioHost;
 
         public BackendConfig(Properties properties) {
             this.network = properties.getProperty("docker.network");
+            this.dmBucketName = properties.getProperty("minio.dm.bucketName");
+            this.minioAccessKey = properties.getProperty("minio.accessKey");
+            this.minioSecretKey = properties.getProperty("minio.secretKey");
+            this.minioHost = properties.getProperty("minio.host");
         }
 
     }
