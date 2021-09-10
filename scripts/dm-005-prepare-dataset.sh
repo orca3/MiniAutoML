@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$(dirname "$0")/dm-000-env-vars.sh"
+source "$(dirname "$0")/env-vars.sh"
 
 if [ "$1" != "" ]; then
     echo "Prepare a version of dataset $1 that contains all commits"

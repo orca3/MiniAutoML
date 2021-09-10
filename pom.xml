@@ -20,6 +20,7 @@
         <module>data-management</module>
         <module>metadata-store</module>
         <module>training-service</module>
+        <module>prediction-service</module>
     </modules>
 
     <dependencyManagement>

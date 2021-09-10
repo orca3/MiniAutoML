@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.orca3.miniAutoML.prediction";
+option java_outer_classname = "PredictionServiceProto";
+
+package prediction;
+
+service PredictionService {
+  rpc Echo(EchoRequest) returns (EchoResponse);
+}
+
+message EchoRequest {
+  string message = 1;
+}
+
+message EchoResponse {
+  string message = 1;
+}
