@@ -9,6 +9,7 @@ import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
 import org.orca3.miniAutoML.dataManagement.DataManagementServiceGrpc;
 import org.orca3.miniAutoML.dataManagement.SnapshotState;
 import org.orca3.miniAutoML.dataManagement.VersionQuery;
@@ -59,13 +60,23 @@ public class DockerTracker {
         while (hasCapacity() && !store.jobQueue.isEmpty()) {
             int jobId = store.jobQueue.firstKey();
             TrainingJobMetadata metadata = store.jobQueue.get(jobId);
-            VersionedSnapshot r = dmClient.fetchTrainingDataset(VersionQuery.newBuilder()
-                    .setDatasetId(metadata.getDatasetId()).setVersionHash(metadata.getTrainDataVersionHash())
-                    .build());
-            if (r.getState() == SnapshotState.READY) {
+            try {
+                VersionedSnapshot r = dmClient.fetchTrainingDataset(VersionQuery.newBuilder()
+                        .setDatasetId(metadata.getDatasetId()).setVersionHash(metadata.getTrainDataVersionHash())
+                        .build());
+                if (r.getState() == SnapshotState.READY) {
+                    store.jobQueue.remove(jobId);
+                    launch(jobId, metadata, r);
+                    store.launchingList.put(jobId, new ExecutedTrainingJob(System.currentTimeMillis(), metadata, ""));
+                } else {
+                    logger.info(String.format("Dataset %s of version hash %s is not ready yet. Current state: %s.",
+                            metadata.getDatasetId(), metadata.getTrainDataVersionHash(), r.getState()));
+                }
+            } catch (Exception ex) {
                 store.jobQueue.remove(jobId);
-                launch(jobId, metadata, r);
-                store.launchingList.put(jobId, new ExecutedTrainingJob(System.currentTimeMillis(), metadata, ""));
+                store.finalizedJobs.put(jobId, new ExecutedTrainingJob(System.currentTimeMillis(), metadata, "")
+                        .finished(System.currentTimeMillis(), false, String.format("Dataset not available: %s.", ex.getMessage())));
+                logger.warn(String.format("Failed to launch job %d.", jobId), ex);
             }
         }
     }
@@ -74,7 +85,7 @@ public class DockerTracker {
         Set<Integer> launchingJobs = store.launchingList.keySet();
         Set<Integer> runningJobs = store.runningList.keySet();
         logger.info(String.format("Scanning %d jobs", launchingJobs.size() + runningJobs.size()));
-        for (Integer jobId: launchingJobs) {
+        for (Integer jobId : launchingJobs) {
             String containerId = jobIdTracker.get(jobId);
             InspectContainerResponse.ContainerState state = dockerClient.inspectContainerCmd(containerId).exec().getState();
             String containerStatus = state.getStatus();
@@ -97,10 +108,11 @@ public class DockerTracker {
                 case "dead":
                     ExecutedTrainingJob stopped = store.launchingList.remove(jobId);
                     long existCode = state.getExitCodeLong() == null ? -1 : state.getExitCodeLong();
-                    store.finalizedJobs.put(jobId, stopped.finished(System.currentTimeMillis(),  existCode == 0));
+                    store.finalizedJobs.put(jobId, stopped.finished(System.currentTimeMillis(), existCode == 0,
+                            String.format("Exit code %d", existCode)));
             }
         }
-        for (Integer jobId: runningJobs) {
+        for (Integer jobId : runningJobs) {
             String containerId = jobIdTracker.get(jobId);
             InspectContainerResponse.ContainerState state = dockerClient.inspectContainerCmd(containerId).exec().getState();
             String containerStatus = state.getStatus();
@@ -123,7 +135,8 @@ public class DockerTracker {
                 case "dead":
                     ExecutedTrainingJob stopped = store.runningList.remove(jobId);
                     long existCode = state.getExitCodeLong() == null ? -1 : state.getExitCodeLong();
-                    store.finalizedJobs.put(jobId, stopped.finished(System.currentTimeMillis(),  existCode == 0));
+                    store.finalizedJobs.put(jobId, stopped.finished(System.currentTimeMillis(), existCode == 0,
+                            String.format("Exit code %d", existCode)));
             }
         }
     }

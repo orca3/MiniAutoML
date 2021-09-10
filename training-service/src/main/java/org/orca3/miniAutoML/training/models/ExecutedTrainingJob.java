@@ -44,7 +44,7 @@ public class ExecutedTrainingJob {
         return finishedAt;
     }
 
-    public ExecutedTrainingJob finished(long finishedAt, boolean success) {
-        return new ExecutedTrainingJob(this.launchedAt, finishedAt, success, this.metadata, this.message);
+    public ExecutedTrainingJob finished(long finishedAt, boolean success, String message) {
+        return new ExecutedTrainingJob(this.launchedAt, finishedAt, success, this.metadata, message);
     }
 }
