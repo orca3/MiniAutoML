@@ -4,7 +4,6 @@ option java_multiple_files = true;
 option java_package = "org.orca3.miniAutoML.metadataStore";
 option java_outer_classname = "MetadataStoreProto";
 
-import "google/protobuf/empty.proto";
 import "data_management.proto";
 
 package metadata_store;

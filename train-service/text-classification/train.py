@@ -45,24 +45,23 @@ from minio import Minio
 
 print("Training parameters")
 
-EPOCHS = os.getenv('EPOCHS')
-if EPOCHS is None:
-    EPOCHS = 20
+def int_or_default(variable, default):
+    if variable is None:
+        return default
+    else:
+        return int(variable)
+
+
+EPOCHS = int_or_default(os.getenv('EPOCHS'), 20)
 print("{}={}".format("EPOCHS", EPOCHS))
 
-LR = os.getenv('LR')
-if LR is None:
-    LR = 5
+LR = int_or_default(os.getenv('LR'), 5)
 print("{}={}".format("LR", LR))
 
-BATCH_SIZE = os.getenv('BATCH_SIZE')
-if BATCH_SIZE is None:
-    BATCH_SIZE = 64
+BATCH_SIZE = int_or_default(os.getenv('BATCH_SIZE'), 64)
 print("{}={}".format("BATCH_SIZE", BATCH_SIZE))
 
-FC_SIZE = os.getenv('FC_SIZE')
-if FC_SIZE is None:
-    FC_SIZE = 128
+FC_SIZE = int_or_default(os.getenv('FC_SIZE'), 128)
 print("{}={}".format("FC_SIZE", FC_SIZE))
 
 MINIO_SERVER = os.getenv('MINIO_SERVER')
@@ -117,8 +116,8 @@ client = Minio(
 )
 
 # download training data
-client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "examples.csv", "examples.csv")
-client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "labels.csv", "labels.csv")
+client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "/examples.csv", "examples.csv")
+client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "/labels.csv", "labels.csv")
 
 ######################################################################
 # Convert data from dataset management training data format to Pytorch dataset
@@ -144,11 +143,10 @@ def load_label_dict(path):
         return label_dict
 
 ######################################################################
-# Generate data batch and iterator 
+# Generate data batch and iterator
 # --------------------------------
 
 tokenizer = get_tokenizer('basic_english')
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def yield_tokens(data_iter):
@@ -178,14 +176,12 @@ def collate_batch(batch):
 # Define the model
 # ----------------
 class TextClassificationModel(nn.Module):
-
     def __init__(self, vocab_size, embed_dim, fc_size, num_class):
         super(TextClassificationModel, self).__init__()
         self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=True)
         self.fc1 = nn.Linear(embed_dim, fc_size)
         self.fc2 = nn.Linear(fc_size, num_class)
         self.init_weights()
-
     def init_weights(self):
         initrange = 0.5
         self.embedding.weight.data.uniform_(-initrange, initrange)
@@ -193,7 +189,6 @@ class TextClassificationModel(nn.Module):
         self.fc1.bias.data.zero_()
         self.fc2.weight.data.uniform_(-initrange, initrange)
         self.fc2.bias.data.zero_()
-
     def forward(self, text, offsets):
         embedded = self.embedding(text, offsets)
         return self.fc2(self.fc1(embedded))
@@ -243,7 +238,7 @@ def evaluate(dataloader):
             total_acc += (predicted_label.argmax(1) == label).sum().item()
             total_count += label.size(0)
     return total_acc/total_count
-  
+
 ######################################################################
 # Split the dataset and do the model training
 # -----------------------------------
