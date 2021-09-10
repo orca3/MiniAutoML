@@ -7,6 +7,7 @@ COPY data-management data-management
 COPY grpc-contract grpc-contract
 COPY metadata-store metadata-store
 COPY training-service training-service
+COPY prediction-service prediction-service
 RUN ./mvnw package -DskipTests
 
 FROM openjdk:11 AS run
@@ -17,5 +18,6 @@ RUN GRPC_HEALTH_PROBE_VERSION=v0.3.1 && \
 COPY --from=builder /app/training-service/target/training-service-1.0-SNAPSHOT.jar ./training-service.jar
 COPY --from=builder /app/data-management/target/data-management-1.0-SNAPSHOT.jar ./data-management.jar
 COPY --from=builder /app/metadata-store/target/metadata-store-1.0-SNAPSHOT.jar ./metadata-store.jar
+COPY --from=builder /app/prediction-service/target/prediction-service-1.0-SNAPSHOT.jar ./prediction-service.jar
 
 ENTRYPOINT ["java", "-jar"]

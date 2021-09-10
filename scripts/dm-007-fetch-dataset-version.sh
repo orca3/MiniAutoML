@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$(dirname "$0")/dm-000-env-vars.sh"
+source "$(dirname "$0")/env-vars.sh"
 
 if [ "$1" != "" ] && [ "$2" != "" ]; then
     echo "Fetching dataset $1 with version $2"

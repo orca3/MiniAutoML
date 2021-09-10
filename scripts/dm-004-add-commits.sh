@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$(dirname "$0")/dm-000-env-vars.sh"
+source "$(dirname "$0")/env-vars.sh"
 mc alias -q set myminio http://127.0.0.1:"${MINIO_PORT}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
 
 if [ "$1" != "" ]; then

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -10,11 +10,11 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>data-management</artifactId>
+    <artifactId>prediction-service</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <mainClass>org.orca3.miniAutoML.dataManagement.DataManagementService</mainClass>
+        <mainClass>org.orca3.miniAutoML.prediction.PredictionService</mainClass>
     </properties>
 
     <dependencies>
@@ -23,7 +23,6 @@
             <artifactId>grpc-contract</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-services</artifactId>
@@ -31,16 +30,6 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-            <version>4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.minio</groupId>
-            <artifactId>minio</artifactId>
-            <version>8.2.2</version>
         </dependency>
         <!-- test -->
         <dependency>
@@ -52,12 +41,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>RELEASE</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <version>1.15.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -110,5 +93,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

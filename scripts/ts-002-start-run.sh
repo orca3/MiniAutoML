@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$(dirname "$0")/ts-000-env-vars.sh"
+source "$(dirname "$0")/env-vars.sh"
 
 echo
 grpcurl -plaintext \

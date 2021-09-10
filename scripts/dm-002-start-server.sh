@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$(dirname "$0")/dm-000-env-vars.sh"
+source "$(dirname "$0")/env-vars.sh"
 
 if [ ! "$(docker ps -a | grep data-management)" ]; then
   # Todo: replace when we published our container

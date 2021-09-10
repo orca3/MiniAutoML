@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$(dirname "$0")/ms-000-env-vars.sh"
+source "$(dirname "$0")/env-vars.sh"
 
 if [ ! "$(docker network ls | grep orca3)" ]; then
   docker network create orca3
