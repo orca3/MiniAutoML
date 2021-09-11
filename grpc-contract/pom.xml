@@ -65,11 +65,23 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>generate-grpc-java</id>
                         <goals>
                             <goal>compile</goal>
                             <goal>compile-custom</goal>
                         </goals>
                         <phase>generate-sources</phase>
+                    </execution>
+                    <execution>
+                        <id>generate-grpc-python</id>
+                        <goals>
+                            <goal>compile-python</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/../train-service/text-classification</outputDirectory>
+                            <clearOutputDirectory>false</clearOutputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
