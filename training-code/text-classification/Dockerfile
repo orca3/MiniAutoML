@@ -1,6 +1,6 @@
 FROM pytorch/pytorch:1.9.0-cuda10.2-cudnn7-runtime
 
-RUN pip3 install minio
+RUN pip3 install minio protobuf grpcio
 
 RUN mkdir /opt/intent-classification
 COPY train.py /opt/intent-classification/
