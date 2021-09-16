@@ -28,18 +28,15 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DockerTracker {
+public class DockerTracker extends Tracker {
     final DockerClient dockerClient;
     final Map<Integer, String> jobIdTracker;
     private MemoryStore store;
     private BackendConfig config;
-    private static final Logger logger = LoggerFactory.getLogger(DockerTracker.class);
-    private final DataManagementServiceGrpc.DataManagementServiceBlockingStub dmClient;
 
-    public DockerTracker(MemoryStore store, BackendConfig config, ManagedChannel dmChannel) {
-        this.store = store;
-        this.config = config;
-        this.dmClient = DataManagementServiceGrpc.newBlockingStub(dmChannel);
+    public DockerTracker(MemoryStore store, Properties props, ManagedChannel dmChannel) {
+        super(store, dmChannel, LoggerFactory.getLogger(DockerTracker.class));
+        this.config = new BackendConfig(props);
         DockerClientConfig clientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
         DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
                 .dockerHost(clientConfig.getDockerHost())
@@ -52,35 +49,12 @@ public class DockerTracker {
         jobIdTracker = new HashMap<>();
     }
 
+    @Override
     public boolean hasCapacity() {
         return store.launchingList.size() + store.runningList.size() == 0;
     }
 
-    public void launchAll() {
-        while (hasCapacity() && !store.jobQueue.isEmpty()) {
-            int jobId = store.jobQueue.firstKey();
-            TrainingJobMetadata metadata = store.jobQueue.get(jobId);
-            try {
-                VersionedSnapshot r = dmClient.fetchTrainingDataset(VersionQuery.newBuilder()
-                        .setDatasetId(metadata.getDatasetId()).setVersionHash(metadata.getTrainDataVersionHash())
-                        .build());
-                if (r.getState() == SnapshotState.READY) {
-                    store.jobQueue.remove(jobId);
-                    launch(jobId, metadata, r);
-                    store.launchingList.put(jobId, new ExecutedTrainingJob(System.currentTimeMillis(), metadata, ""));
-                } else {
-                    logger.info(String.format("Dataset %s of version hash %s is not ready yet. Current state: %s.",
-                            metadata.getDatasetId(), metadata.getTrainDataVersionHash(), r.getState()));
-                }
-            } catch (Exception ex) {
-                store.jobQueue.remove(jobId);
-                store.finalizedJobs.put(jobId, new ExecutedTrainingJob(System.currentTimeMillis(), metadata, "")
-                        .finished(System.currentTimeMillis(), false, String.format("Dataset not available: %s.", ex.getMessage())));
-                logger.warn(String.format("Failed to launch job %d.", jobId), ex);
-            }
-        }
-    }
-
+    @Override
     public void updateContainerStatus() {
         Set<Integer> launchingJobs = store.launchingList.keySet();
         Set<Integer> runningJobs = store.runningList.keySet();
@@ -141,7 +115,8 @@ public class DockerTracker {
         }
     }
 
-    public String launch(int jobId, TrainingJobMetadata metadata, VersionedSnapshot versionedSnapshot) {
+    @Override
+    protected String launch(int jobId, TrainingJobMetadata metadata, VersionedSnapshot versionedSnapshot) {
         Map<String, String> envs = new HashMap<>();
         envs.put("MINIO_SERVER", config.minioHost);
         envs.put("MINIO_SERVER_ACCESS_KEY", config.minioAccessKey);
@@ -165,6 +140,7 @@ public class DockerTracker {
         return containerId;
     }
 
+    @Override
     public void shutdownAll() {
         jobIdTracker.values().forEach(containerId -> {
             dockerClient.removeContainerCmd(containerId).withForce(true).exec();

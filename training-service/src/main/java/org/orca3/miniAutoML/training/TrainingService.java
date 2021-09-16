@@ -8,13 +8,14 @@ import org.orca3.miniAutoML.ServiceBase;
 import org.orca3.miniAutoML.training.models.ExecutedTrainingJob;
 import org.orca3.miniAutoML.training.models.MemoryStore;
 import org.orca3.miniAutoML.training.tracker.DockerTracker;
+import org.orca3.miniAutoML.training.tracker.KubectlTracker;
+import org.orca3.miniAutoML.training.tracker.Tracker;
 
 import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -33,12 +34,16 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
         Config config = new Config(props);
 
         MemoryStore store = new MemoryStore();
-        if (config.backend.equals("docker")) {
-            // FIXME
-        }
         ManagedChannel dmChannel = ManagedChannelBuilder.forAddress(config.dmHost, Integer.parseInt(config.dmPort))
                 .usePlaintext().build();
-        DockerTracker tracker = new DockerTracker(store, new DockerTracker.BackendConfig(props), dmChannel);
+        Tracker tracker;
+        if (config.backend.equals("docker")) {
+            tracker = new DockerTracker(store, props, dmChannel);
+        } else if (config.backend.equals("kubectl")) {
+            tracker = new KubectlTracker(store, props, dmChannel);
+        } else {
+            throw new IllegalArgumentException(String.format("Unsupported backend %s", config.backend));
+        }
         TrainingService trainingService = new TrainingService(store, config);
         final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
         final ScheduledFuture<?> launchingTask =
