@@ -41,6 +41,11 @@
             <artifactId>docker-java-transport-httpclient5</artifactId>
             <version>3.2.11</version>
         </dependency>
+        <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java</artifactId>
+            <version>13.0.0</version>
+        </dependency>
         <!-- test -->
         <dependency>
             <groupId>io.grpc</groupId>

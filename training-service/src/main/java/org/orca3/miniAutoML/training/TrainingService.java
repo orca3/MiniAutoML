@@ -12,6 +12,7 @@ import org.orca3.miniAutoML.training.tracker.KubectlTracker;
 import org.orca3.miniAutoML.training.tracker.Tracker;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,14 +30,15 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        String configLocation = Optional.ofNullable(System.getenv("APP_CONFIG")).orElse("config.properties");
         Properties props = new Properties();
-        props.load(TrainingService.class.getClassLoader().getResourceAsStream("config.properties"));
+        props.load(TrainingService.class.getClassLoader().getResourceAsStream(configLocation));
         Config config = new Config(props);
 
         MemoryStore store = new MemoryStore();
         ManagedChannel dmChannel = ManagedChannelBuilder.forAddress(config.dmHost, Integer.parseInt(config.dmPort))
                 .usePlaintext().build();
-        Tracker tracker;
+        Tracker<?> tracker;
         if (config.backend.equals("docker")) {
             tracker = new DockerTracker(store, props, dmChannel);
         } else if (config.backend.equals("kubectl")) {
