@@ -146,4 +146,8 @@ public class DockerTracker extends Tracker<DockerTracker.BackendConfig> {
         }
 
     }
+
+    protected String algorithmToImage(String algorithm) {
+        return String.format("orca3/%s", algorithm);
+    }
 }

@@ -52,10 +52,6 @@ public abstract class Tracker<T extends Tracker.SharedConfig> {
         }
     }
 
-    protected String algorithmToImage(String algorithm) {
-        return String.format("localhost:3000/%s", algorithm);
-    }
-
     protected Map<String, String> containerEnvVars(TrainingJobMetadata metadata, VersionedSnapshot versionedSnapshot) {
         Map<String, String> envs = new HashMap<>();
         envs.put("MINIO_SERVER", config.minioHost);

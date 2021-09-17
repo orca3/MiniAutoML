@@ -1,6 +1,5 @@
 package org.orca3.miniAutoML.training.tracker;
 
-import com.github.dockerjava.api.command.InspectContainerResponse;
 import io.grpc.ManagedChannel;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -25,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -69,6 +67,7 @@ public class KubectlTracker extends Tracker<KubectlTracker.BackendConfig> {
         podSpec.addContainersItem(new V1Container()
                 .name("workload")
                 .image(algorithmToImage(metadata.getAlgorithm()))
+                // To work with localhost:3000 registry
                 .imagePullPolicy("Never")
                 .env(envs.entrySet().stream()
                         .map(kvp -> new V1EnvVar().name(kvp.getKey()).value(kvp.getValue()))
@@ -142,6 +141,9 @@ public class KubectlTracker extends Tracker<KubectlTracker.BackendConfig> {
                 logger.error(String.format("Failed to delete kubectl job %s in %s", jobName, config.kubeNamespace), e);
             }
         });
+    }
 
+    protected String algorithmToImage(String algorithm) {
+        return String.format("localhost:3000/orca3/%s", algorithm);
     }
 }
