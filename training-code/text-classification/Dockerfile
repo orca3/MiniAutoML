@@ -34,4 +34,4 @@ RUN chgrp -R 0 /opt/intent-classification \
   && chgrp -R 0 /logs \
   && chmod -R g+rwX /logs
 
-ENTRYPOINT ["python3", "/opt/intent-classification/train.py"]
+ENTRYPOINT ["python3", "-u", "/opt/intent-classification/train.py"]
