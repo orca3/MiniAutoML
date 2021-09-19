@@ -39,3 +39,8 @@ docker run --name trainer1 --hostname=trainer1 --rm --net orca3 -p 12356:12356 -
 
 docker run --name trainer2 --hostname=trainer2 --rm --net orca3 -e MASTER_ADDR="trainer1" -e WORLD_SIZE="2" -e RANK=1 -e MASTER_PORT=12356 -e MINIO_SERVER="minio:9000" -e TRAINING_DATA_PATH="versionedDatasets/1/hashDg==/" -it localhost:3000/orca3/intent-classification
 ```
+
+Single docker container training
+```
+docker run --name trainer1 --hostname=trainer1 --rm --net orca3 -p 12356:12356 -e WORLD_SIZE=1 -e MASTER_PORT=12356 -e MINIO_SERVER="minio:9000" -e TRAINING_DATA_PATH="versionedDatasets/1/hashDg==/" -it localhost:3000/orca3/intent-classification
+```
