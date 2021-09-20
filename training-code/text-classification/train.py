@@ -161,7 +161,7 @@ def is_distributed():
     return dist.is_available() and dist.is_initialized()
 
 if should_distribute():
-    print("Using distributed PyTorch with {0} backend, world size={1}, rank={2}".format("gloo", RANK, WORLD_SIZE))
+    print("Using distributed PyTorch with {0} backend, world size={1}, rank={2}".format("gloo", WORLD_SIZE, RANK))
     dist.init_process_group("gloo", rank=RANK, world_size=WORLD_SIZE)
 
 ######################################################################
