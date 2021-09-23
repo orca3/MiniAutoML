@@ -114,7 +114,14 @@ public class DockerTracker extends Tracker<DockerTracker.BackendConfig> {
 
     @Override
     protected String launch(int jobId, TrainingJobMetadata metadata, VersionedSnapshot versionedSnapshot) {
-        Map<String, String> envs =containerEnvVars(metadata, versionedSnapshot);
+        if (metadata.getParametersMap().containsKey("PARALLEL_INSTANCES")) {
+            int worldSize = Integer.parseInt(metadata.getParametersMap().get("PARALLEL_INSTANCES"));
+            if (worldSize > 1) {
+                throw new UnsupportedOperationException("Support for parallel training is in kubernetes backend only");
+            }
+        }
+
+        Map<String, String> envs = containerEnvVars(metadata, versionedSnapshot);
         List<String> envStrings = envs.entrySet().stream()
                 .map(kvp -> String.format("%s=%s", kvp.getKey(), kvp.getValue()))
                 .collect(Collectors.toList());

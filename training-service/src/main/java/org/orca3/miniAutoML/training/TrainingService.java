@@ -10,6 +10,8 @@ import org.orca3.miniAutoML.training.models.MemoryStore;
 import org.orca3.miniAutoML.training.tracker.DockerTracker;
 import org.orca3.miniAutoML.training.tracker.KubectlTracker;
 import org.orca3.miniAutoML.training.tracker.Tracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -23,6 +25,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase {
     private final MemoryStore store;
     private final Config config;
+    private static final Logger logger = LoggerFactory.getLogger(TrainingService.class);
 
     public TrainingService(MemoryStore store, Config config) {
         this.config = config;
@@ -40,8 +43,10 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
                 .usePlaintext().build();
         Tracker<?> tracker;
         if (config.backend.equals("docker")) {
+            logger.info("Using docker backend.");
             tracker = new DockerTracker(store, props, dmChannel);
         } else if (config.backend.equals("kubectl")) {
+            logger.info("Using kubernetes backend.");
             tracker = new KubectlTracker(store, props, dmChannel);
         } else {
             throw new IllegalArgumentException(String.format("Unsupported backend %s", config.backend));

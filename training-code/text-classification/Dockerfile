@@ -22,6 +22,10 @@ ENV TRAINING_DATA_PATH="versionedDatasets/1/hashBA=="
 ENV MODEL_BUCKET="mini-automl-serving"
 ENV MODEL_ID="aaf98dsfase"
 ENV MODEL_VERSION="1"
+ENV WORLD_SIZE="1"
+ENV RANK="0"
+ENV MASTER_ADDR="localhost"
+ENV MASTER_PORT="12356"
 
 RUN chgrp -R 0 /opt/intent-classification \
   && chmod -R g+rwX /opt/intent-classification \
@@ -30,4 +34,4 @@ RUN chgrp -R 0 /opt/intent-classification \
   && chgrp -R 0 /logs \
   && chmod -R g+rwX /logs
 
-ENTRYPOINT ["python3", "/opt/intent-classification/train.py"]
+ENTRYPOINT ["python3", "-u", "/opt/intent-classification/train.py"]
