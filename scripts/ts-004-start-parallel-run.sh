@@ -8,13 +8,14 @@ grpcurl -plaintext \
     \"algorithm\":\"intent-classification\",
     \"dataset_id\":\"1\",
     \"name\":\"test1\",
-    \"train_data_version_hash\":\"hashBA==\",
+    \"train_data_version_hash\":\"hashDg==\",
     \"parameters\": {
       \"LR\":\"4\",
-      \"EPOCHS\":\"15\",
+      \"EPOCHS\":\"10\",
       \"BATCH_SIZE\":\"64\",
+      \"PARALLEL_INSTANCES\":\"3\",
       \"FC_SIZE\":\"128\"
     }
   }
 }" \
-  localhost:"${TS_PORT}" training.TrainingService/Train
+  localhost:${TS_PORT} training.TrainingService/Train

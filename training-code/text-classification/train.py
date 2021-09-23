@@ -179,8 +179,8 @@ client = Minio(
 example_path = "{0}/{1}".format(RANK, "examples.csv")
 label_path = "{0}/{1}".format(RANK, "labels.csv")
 
-client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "examples.csv", example_path)
-client.fget_object(TRAINING_DATA_BUCKET, TRAINING_DATA_PATH + "labels.csv", label_path)
+client.fget_object(TRAINING_DATA_BUCKET, os.path.join(TRAINING_DATA_PATH, "examples.csv"), example_path)
+client.fget_object(TRAINING_DATA_BUCKET, os.path.join(TRAINING_DATA_PATH, "labels.csv"), label_path)
 
 ######################################################################
 # Convert data from dataset management training data format to Pytorch dataset

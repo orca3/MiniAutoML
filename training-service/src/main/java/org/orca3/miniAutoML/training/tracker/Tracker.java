@@ -46,7 +46,7 @@ public abstract class Tracker<T extends Tracker.SharedConfig> {
             } catch (Exception ex) {
                 store.jobQueue.remove(jobId);
                 store.finalizedJobs.put(jobId, new ExecutedTrainingJob(System.currentTimeMillis(), metadata, "")
-                        .finished(System.currentTimeMillis(), false, String.format("Dataset not available: %s.", ex.getMessage())));
+                        .finished(System.currentTimeMillis(), false, ex.getMessage()));
                 logger.warn(String.format("Failed to launch job %d.", jobId), ex);
             }
         }

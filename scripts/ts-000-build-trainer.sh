@@ -9,5 +9,9 @@ else
   echo "local-docker-registry docker container is already running"
 fi
 
-docker build -t localhost:${REGISTRY_PORT}/orca3/intent-classification -f "$(dirname "$0")/../training-code/text-classification/Dockerfile" "$(dirname "$0")/../training-code/text-classification"
+docker build \
+-t localhost:${REGISTRY_PORT}/orca3/intent-classification \
+-t orca3/intent-classification \
+-f "$(dirname "$0")/../training-code/text-classification/Dockerfile" \
+"$(dirname "$0")/../training-code/text-classification"
 docker push localhost:${REGISTRY_PORT}/orca3/intent-classification

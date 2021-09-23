@@ -1,5 +1,6 @@
 package org.orca3.miniAutoML.training.models;
 
+import com.google.common.base.Strings;
 import org.orca3.miniAutoML.training.TrainingJobMetadata;
 
 import javax.annotation.Nullable;
@@ -16,7 +17,7 @@ public class ExecutedTrainingJob {
         this.finishedAt = finishedAt;
         this.success = success;
         this.metadata = metadata;
-        this.message = message;
+        this.message = Strings.nullToEmpty(message);
     }
 
     public ExecutedTrainingJob(Long launchedAt, TrainingJobMetadata metadata, String message) {
