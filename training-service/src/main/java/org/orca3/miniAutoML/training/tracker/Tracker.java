@@ -59,6 +59,7 @@ public abstract class Tracker<T extends Tracker.SharedConfig> {
         envs.put("TRAINING_DATASET_ID", metadata.getDatasetId());
         envs.put("TRAINING_DATASET_VERSION_HASH", metadata.getTrainDataVersionHash());
         envs.put("MODEL_BUCKET", config.metadataStoreBucketName);
+        envs.put("MODEL_NAME", metadata.getOutputModelName());
         envs.put("MINIO_SERVER", config.minioHost);
         envs.put("MINIO_SERVER_ACCESS_KEY", config.minioAccessKey);
         envs.put("MINIO_SERVER_SECRET_KEY", config.minioSecretKey);

@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'\n\035org.orca3.miniAutoML.trainingB\024TrainingServiceProtoP\001',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x16training_service.proto\x12\x08training\"?\n\x0cTrainRequest\x12/\n\x08metadata\x18\x01 \x01(\x0b\x32\x1d.training.TrainingJobMetadata\"\x1f\n\rTrainResponse\x12\x0e\n\x06job_id\x18\x01 \x01(\x05\"*\n\x18GetTrainingStatusRequest\x12\x0e\n\x06job_id\x18\x01 \x01(\x05\"\xb0\x01\n\x19GetTrainingStatusResponse\x12(\n\x06status\x18\x01 \x01(\x0e\x32\x18.training.TrainingStatus\x12\x0e\n\x06job_id\x18\x02 \x01(\x05\x12\x0f\n\x07message\x18\x03 \x01(\t\x12/\n\x08metadata\x18\x04 \x01(\x0b\x32\x1d.training.TrainingJobMetadata\x12\x17\n\x0fpositionInQueue\x18\x05 \x01(\x05\"\xe1\x01\n\x13TrainingJobMetadata\x12\x11\n\talgorithm\x18\x01 \x01(\t\x12\x12\n\ndataset_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x1f\n\x17train_data_version_hash\x18\x04 \x01(\t\x12\x41\n\nparameters\x18\x05 \x03(\x0b\x32-.training.TrainingJobMetadata.ParametersEntry\x1a\x31\n\x0fParametersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01*P\n\x0eTrainingStatus\x12\x0b\n\x07queuing\x10\x00\x12\n\n\x06launch\x10\x01\x12\x0b\n\x07running\x10\x02\x12\x0b\n\x07succeed\x10\x03\x12\x0b\n\x07\x66\x61ilure\x10\x04\x32\xa9\x01\n\x0fTrainingService\x12\x38\n\x05Train\x12\x16.training.TrainRequest\x1a\x17.training.TrainResponse\x12\\\n\x11GetTrainingStatus\x12\".training.GetTrainingStatusRequest\x1a#.training.GetTrainingStatusResponseB7\n\x1dorg.orca3.miniAutoML.trainingB\x14TrainingServiceProtoP\x01\x62\x06proto3'
+  serialized_pb=b'\n\x16training_service.proto\x12\x08training\"?\n\x0cTrainRequest\x12/\n\x08metadata\x18\x01 \x01(\x0b\x32\x1d.training.TrainingJobMetadata\"\x1f\n\rTrainResponse\x12\x0e\n\x06job_id\x18\x01 \x01(\x05\"*\n\x18GetTrainingStatusRequest\x12\x0e\n\x06job_id\x18\x01 \x01(\x05\"\xb0\x01\n\x19GetTrainingStatusResponse\x12(\n\x06status\x18\x01 \x01(\x0e\x32\x18.training.TrainingStatus\x12\x0e\n\x06job_id\x18\x02 \x01(\x05\x12\x0f\n\x07message\x18\x03 \x01(\t\x12/\n\x08metadata\x18\x04 \x01(\x0b\x32\x1d.training.TrainingJobMetadata\x12\x17\n\x0fpositionInQueue\x18\x05 \x01(\x05\"\xfc\x01\n\x13TrainingJobMetadata\x12\x11\n\talgorithm\x18\x01 \x01(\t\x12\x12\n\ndataset_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x1f\n\x17train_data_version_hash\x18\x04 \x01(\t\x12\x41\n\nparameters\x18\x05 \x03(\x0b\x32-.training.TrainingJobMetadata.ParametersEntry\x12\x19\n\x11output_model_name\x18\x06 \x01(\t\x1a\x31\n\x0fParametersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01*P\n\x0eTrainingStatus\x12\x0b\n\x07queuing\x10\x00\x12\n\n\x06launch\x10\x01\x12\x0b\n\x07running\x10\x02\x12\x0b\n\x07succeed\x10\x03\x12\x0b\n\x07\x66\x61ilure\x10\x04\x32\xa9\x01\n\x0fTrainingService\x12\x38\n\x05Train\x12\x16.training.TrainRequest\x1a\x17.training.TrainResponse\x12\\\n\x11GetTrainingStatus\x12\".training.GetTrainingStatusRequest\x1a#.training.GetTrainingStatusResponseB7\n\x1dorg.orca3.miniAutoML.trainingB\x14TrainingServiceProtoP\x01\x62\x06proto3'
 )
 
 _TRAININGSTATUS = _descriptor.EnumDescriptor(
@@ -58,8 +58,8 @@ _TRAININGSTATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=585,
-  serialized_end=665,
+  serialized_start=612,
+  serialized_end=692,
 )
 _sym_db.RegisterEnumDescriptor(_TRAININGSTATUS)
 
@@ -262,8 +262,8 @@ _TRAININGJOBMETADATA_PARAMETERSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=534,
-  serialized_end=583,
+  serialized_start=561,
+  serialized_end=610,
 )
 
 _TRAININGJOBMETADATA = _descriptor.Descriptor(
@@ -309,6 +309,13 @@ _TRAININGJOBMETADATA = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='output_model_name', full_name='training.TrainingJobMetadata.output_model_name', index=5,
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -322,7 +329,7 @@ _TRAININGJOBMETADATA = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=358,
-  serialized_end=583,
+  serialized_end=610,
 )
 
 _TRAINREQUEST.fields_by_name['metadata'].message_type = _TRAININGJOBMETADATA
@@ -392,8 +399,8 @@ _TRAININGSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=668,
-  serialized_end=837,
+  serialized_start=695,
+  serialized_end=864,
   methods=[
   _descriptor.MethodDescriptor(
     name='Train',

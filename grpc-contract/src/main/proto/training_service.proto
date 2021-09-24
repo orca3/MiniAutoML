@@ -45,4 +45,5 @@ message TrainingJobMetadata {
   string name = 3;
   string train_data_version_hash = 4;
   map<string, string> parameters = 5;
+  string output_model_name = 6;
 }
