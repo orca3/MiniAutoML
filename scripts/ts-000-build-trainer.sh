@@ -9,6 +9,8 @@ else
   echo "local-docker-registry docker container is already running"
 fi
 
+echo "gitsha=\"$(git rev-parse --short HEAD)\"" > "$(dirname "$0")/../training-code/text-classification/version.py"
+
 docker build \
 -t localhost:${REGISTRY_PORT}/orca3/intent-classification \
 -t orca3/intent-classification \

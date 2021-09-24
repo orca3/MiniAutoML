@@ -3,9 +3,13 @@ package org.orca3.miniAutoML.metadataStore;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.minio.BucketExistsArgs;
+import io.minio.CopyObjectArgs;
+import io.minio.CopySource;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import io.minio.errors.MinioException;
 import org.orca3.miniAutoML.ServiceBase;
+import org.orca3.miniAutoML.dataManagement.FileInfo;
 import org.orca3.miniAutoML.metadataStore.models.ArtifactInfo;
 import org.orca3.miniAutoML.metadataStore.models.ArtifactRepo;
 import org.orca3.miniAutoML.metadataStore.models.MemoryStore;
@@ -13,21 +17,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
 public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStoreServiceImplBase {
     private static final Logger logger = LoggerFactory.getLogger(MetadataStoreService.class);
     private final MemoryStore store;
-    private Config config;
+    private final MinioClient minioClient;
+    private final Config config;
 
-    public MetadataStoreService(MemoryStore store, Config config) {
+    public MetadataStoreService(MemoryStore store, MinioClient minioClient, Config config) {
+        this.minioClient = minioClient;
         this.config = config;
         this.store = store;
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Properties props = new Properties();
-        props.load(MetadataStoreService.class.getClassLoader().getResourceAsStream("config.properties"));
+        Properties props = ServiceBase.getConfigProperties();
         Config config = new Config(props);
         MinioClient minioClient = MinioClient.builder()
                 .endpoint(config.minioHost)
@@ -45,7 +53,7 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
             throw new RuntimeException(e);
         }
 
-        MetadataStoreService msService = new MetadataStoreService(new MemoryStore(), config);
+        MetadataStoreService msService = new MetadataStoreService(new MemoryStore(), minioClient, config);
         ServiceBase.startService(Integer.parseInt(config.serverPort), msService, () -> {
         });
     }
@@ -86,6 +94,8 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
 
         responseObserver.onNext(LogRunStartResponse.newBuilder()
                 .setRunInfo(runInfo)
+                .setBucket(config.minioBucketName)
+                .setPath(String.format("run_%s", runId))
                 .build());
         responseObserver.onCompleted();
     }
@@ -99,7 +109,7 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
                     .asException());
         }
         RunInfo ri = store.runInfoMap.get(runId);
-        Integer epochId = request.getEpochInfo().getEpochId();
+        String epochId = request.getEpochInfo().getEpochId();
         if (ri.getEpochsMap().containsKey(epochId)) {
             responseObserver.onError(Status.ALREADY_EXISTS
                     .withDescription(String.format("Epoch %s in Run %s already exists", epochId, runId))
@@ -162,10 +172,27 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
             store.artifactRepos.put(artifactName, repo);
         }
         version = Integer.toString(repo.getSeed());
-        repo.artifacts.put(version, new ArtifactInfo(request.getArtifact()));
+        FileInfo destination = FileInfo.newBuilder().setName(artifactName)
+                .setBucket(config.minioBucketName)
+                .setPath(Paths.get(artifactName, String.format("version-%s", version)).toString())
+                .build();
+        try {
+            minioClient.copyObject(CopyObjectArgs.builder()
+                    .bucket(destination.getBucket())
+                    .object(destination.getPath())
+                    .source(CopySource.builder().bucket(request.getArtifact().getBucket())
+                            .object(request.getArtifact().getPath()).build())
+                    .build());
+        } catch (InvalidKeyException | IOException | NoSuchAlgorithmException | MinioException e) {
+            throw new RuntimeException(e);
+        }
+
+        repo.artifacts.put(version, new ArtifactInfo(destination, request.getRunId()));
         responseObserver.onNext(CreateArtifactResponse.newBuilder()
                 .setVersion(version)
-                .setArtifact(request.getArtifact())
+                .setRunId(request.getRunId())
+                .setArtifact(destination)
+                .setName(artifactName)
                 .build());
         responseObserver.onCompleted();
     }
@@ -185,10 +212,12 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
                     .withDescription(String.format("Version %s of Artifact %s doesn't exist", version, artifactName))
                     .asException());
         }
+        ArtifactInfo artifact = repo.artifacts.get(version);
         responseObserver.onNext(GetArtifactResponse.newBuilder()
                 .setName(artifactName)
                 .setVersion(version)
-                .setArtifact(repo.artifacts.get(version).getFileInfo())
+                .setRunId(artifact.getRunId())
+                .setArtifact(artifact.getFileInfo())
                 .build());
         responseObserver.onCompleted();
     }

@@ -1,5 +1,6 @@
 package org.orca3.miniAutoML.training;
 
+import com.google.common.base.Strings;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,9 +33,7 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        String configLocation = Optional.ofNullable(System.getenv("APP_CONFIG")).orElse("config.properties");
-        Properties props = new Properties();
-        props.load(TrainingService.class.getClassLoader().getResourceAsStream(configLocation));
+        Properties props = ServiceBase.getConfigProperties();
         Config config = new Config(props);
 
         MemoryStore store = new MemoryStore();
@@ -83,6 +81,30 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
 
     @Override
     public void train(TrainRequest request, StreamObserver<TrainResponse> responseObserver) {
+        if (Strings.isNullOrEmpty(request.getMetadata().getOutputModelName())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("\"outputModelName\" is required.")
+                    .asException());
+            return;
+        }
+        if (Strings.isNullOrEmpty(request.getMetadata().getDatasetId())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("\"datasetId\" is required.")
+                    .asException());
+            return;
+        }
+        if (Strings.isNullOrEmpty(request.getMetadata().getTrainDataVersionHash())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("\"trainDataVersionHash\" is required.")
+                    .asException());
+            return;
+        }
+        if (Strings.isNullOrEmpty(request.getMetadata().getAlgorithm())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("\"algorithm\" is required.")
+                    .asException());
+            return;
+        }
         int jobId = store.offer(request);
         responseObserver.onNext(TrainResponse.newBuilder().setJobId(jobId).build());
         responseObserver.onCompleted();

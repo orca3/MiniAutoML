@@ -15,6 +15,7 @@
 
     <properties>
         <protoc.version>3.12.0</protoc.version>
+        <skipGrpcPython>false</skipGrpcPython>
     </properties>
     <dependencies>
         <dependency>
@@ -65,11 +66,30 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>generate-grpc-java</id>
                         <goals>
                             <goal>compile</goal>
                             <goal>compile-custom</goal>
                         </goals>
                         <phase>generate-sources</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>exec-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <executions>
+                    <execution>
+                        <id>generate-grpc-python</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipGrpcPython}</skip>
+                            <executable>${project.build.scriptSourceDirectory}/python_code_gen.sh</executable>
+                            <workingDirectory>${project.build.scriptSourceDirectory}</workingDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

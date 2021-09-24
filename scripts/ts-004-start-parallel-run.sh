@@ -9,6 +9,7 @@ grpcurl -plaintext \
     \"dataset_id\":\"1\",
     \"name\":\"test1\",
     \"train_data_version_hash\":\"hashDg==\",
+    \"output_model_name\":\"my-parallel-intent-classification-model\",
     \"parameters\": {
       \"LR\":\"4\",
       \"EPOCHS\":\"10\",

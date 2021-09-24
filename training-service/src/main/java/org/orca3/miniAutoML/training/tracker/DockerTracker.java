@@ -121,7 +121,7 @@ public class DockerTracker extends Tracker<DockerTracker.BackendConfig> {
             }
         }
 
-        Map<String, String> envs = containerEnvVars(metadata, versionedSnapshot);
+        Map<String, String> envs = containerEnvVars(jobId, metadata, versionedSnapshot);
         List<String> envStrings = envs.entrySet().stream()
                 .map(kvp -> String.format("%s=%s", kvp.getKey(), kvp.getValue()))
                 .collect(Collectors.toList());

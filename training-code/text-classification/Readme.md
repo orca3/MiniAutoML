@@ -29,6 +29,7 @@ Then start minio server by running `scripts/ms-001-start-minio.sh`. And upload t
 
 ```
 mc mb minio/mini-automl-dm
+mc mb minio/mini-automl-ms
 mc cp examples.csv minio/mini-automl-dm/versionedDatasets/1/hashDg==/examples.csv
 mc cp labels.csv minio/mini-automl-dm/versionedDatasets/1/hashDg==/labels.csv
 ```
