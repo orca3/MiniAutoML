@@ -15,6 +15,7 @@ By using this sample code, I will show you how a mode training code can be integ
 """
 
 import csv
+import datetime
 import io
 import os
 import time
@@ -68,8 +69,14 @@ def is_distributed():
     return dist.is_available() and dist.is_initialized()
 
 
+orca3_utils = Orca3Utils(config.METADATA_STORE_SERVER, config.JOB_ID, config.RANK,
+                         config.TRAINING_DATASET_ID, config.TRAINING_DATASET_VERSION_HASH, config.MODEL_ID)
+
+orca3_utils.log_run_start()
+
 if should_distribute():
-    print("Using distributed PyTorch with {0} backend, world size={1}, rank={2}".format("gloo", config.WORLD_SIZE, config.RANK))
+    print("Using distributed PyTorch with {0} backend, world size={1}, rank={2}".format("gloo", config.WORLD_SIZE,
+                                                                                        config.RANK))
     dist.init_process_group("gloo", rank=config.RANK, world_size=config.WORLD_SIZE)
 
 ######################################################################
@@ -274,7 +281,7 @@ else:
                                  shuffle=True, collate_fn=collate_batch)
 
 for epoch in range(1, config.EPOCHS + 1):
-    epoch_start_time = time.time()
+    epoch_start_time = datetime.datetime.now()
     train(train_dataloader)
     accu_val = evaluate(valid_dataloader)
     if total_accu is not None and total_accu > accu_val:
@@ -284,9 +291,13 @@ for epoch in range(1, config.EPOCHS + 1):
     print('-' * 59)
     print('| end of epoch {:3d} | time: {:5.2f}s | '
           'valid accuracy {:8.3f} '.format(epoch,
-                                           time.time() - epoch_start_time,
+                                           (datetime.datetime.now() - epoch_start_time).seconds,
                                            accu_val))
     print('-' * 59)
+    metrics = {
+        "accuracy": str(accu_val)
+    }
+    orca3_utils.log_epoch(epoch_start_time.isoformat(), epoch, metrics)
 
 if config.RANK == 0:
     print('Checking the results of test dataset.')
@@ -312,3 +323,4 @@ if config.RANK == 0:
     if not client.bucket_exists(config.MODEL_BUCKET):
         client.make_bucket(config.MODEL_BUCKET)
     client.fput_object(config.MODEL_BUCKET, config.model_path, config.model_path)
+    orca3_utils.log_run_end(True, 'test accuracy {:8.3f}'.format(accu_test))

@@ -99,7 +99,7 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
                     .asException());
         }
         RunInfo ri = store.runInfoMap.get(runId);
-        Integer epochId = request.getEpochInfo().getEpochId();
+        String epochId = request.getEpochInfo().getEpochId();
         if (ri.getEpochsMap().containsKey(epochId)) {
             responseObserver.onError(Status.ALREADY_EXISTS
                     .withDescription(String.format("Epoch %s in Run %s already exists", epochId, runId))

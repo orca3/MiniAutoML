@@ -52,8 +52,13 @@ public abstract class Tracker<T extends Tracker.SharedConfig> {
         }
     }
 
-    protected Map<String, String> containerEnvVars(TrainingJobMetadata metadata, VersionedSnapshot versionedSnapshot) {
+    protected Map<String, String> containerEnvVars(int jobId, TrainingJobMetadata metadata, VersionedSnapshot versionedSnapshot) {
         Map<String, String> envs = new HashMap<>();
+        envs.put("JOB_ID", Integer.toString(jobId));
+        envs.put("METADATA_STORE_SERVER", config.metadataStoreHost);
+        envs.put("TRAINING_DATASET_ID", metadata.getDatasetId());
+        envs.put("TRAINING_DATASET_VERSION_HASH", metadata.getTrainDataVersionHash());
+        envs.put("MODEL_BUCKET", config.metadataStoreBucketName);
         envs.put("MINIO_SERVER", config.minioHost);
         envs.put("MINIO_SERVER_ACCESS_KEY", config.minioAccessKey);
         envs.put("MINIO_SERVER_SECRET_KEY", config.minioSecretKey);
@@ -76,13 +81,16 @@ public abstract class Tracker<T extends Tracker.SharedConfig> {
         final String minioSecretKey;
         final String minioHost;
         final String dmBucketName;
+        final String metadataStoreBucketName;
+        final String metadataStoreHost;
 
         SharedConfig(Properties props) {
-            this.dmBucketName = props.getProperty("minio.dm.bucketName");
-            this.minioAccessKey = props.getProperty("minio.accessKey");
-            this.minioSecretKey = props.getProperty("minio.secretKey");
-            this.minioHost = props.getProperty("minio.host");
-
+            this.dmBucketName = props.getProperty("trainer.minio.dm.bucketName");
+            this.minioAccessKey = props.getProperty("trainer.minio.accessKey");
+            this.minioSecretKey = props.getProperty("trainer.minio.secretKey");
+            this.minioHost = props.getProperty("trainer.minio.host");
+            this.metadataStoreHost = props.getProperty("trainer.metadataStore.host");
+            this.metadataStoreBucketName = props.getProperty("trainer.minio.metadataStore.bucketName");
         }
     }
 }

@@ -58,7 +58,7 @@ public class KubectlTracker extends Tracker<KubectlTracker.BackendConfig> {
     }
 
     protected List<String> launchTrainingPods(int jobId, int worldSize, TrainingJobMetadata metadata, VersionedSnapshot versionedSnapshot) {
-        Map<String, String> envs = containerEnvVars(metadata, versionedSnapshot);
+        Map<String, String> envs = containerEnvVars(jobId, metadata, versionedSnapshot);
         CoreV1Api api = new CoreV1Api();
         long now = System.currentTimeMillis();
         int masterPort = 12356;

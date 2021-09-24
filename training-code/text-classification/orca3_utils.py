@@ -1,19 +1,21 @@
 import os
 import sys
 from datetime import datetime
+from typing import Dict
 
 import grpc
 
 import metadata_store_pb2
 import metadata_store_pb2_grpc
+from version import gitsha
 
 
 class Orca3Utils:
-    def __init__(self, host: str, port: int, run_id: str, rank: int, dataset_id: str, version_hash: str,
+    def __init__(self, metadata_store_url: str, job_id: str, rank: int, dataset_id: str, version_hash: str,
                  code_version: str):
-        channel = grpc.insecure_channel('%s:%d'.format(host, port))
+        channel = grpc.insecure_channel(metadata_store_url)
         self.stub = metadata_store_pb2_grpc.MetadataStoreServiceStub(channel)
-        self.run_id = run_id
+        self.run_id = job_id
         self.rank = rank
         self.tracing = metadata_store_pb2.TracingInformation(
             dataset_id=dataset_id,
@@ -22,12 +24,32 @@ class Orca3Utils:
         )
 
     def log_run_start(self):
-        self.stub.LogRunStart(metadata_store_pb2.LogRunStartRequest(
-            start_time=datetime.now().isoformat(),
-            run_id=self.run_id,
-            run_name="master" if self.rank == 0 else "worker-%d".format(self.rank),
-            tracing=self.tracing
-        ))
+        if self.rank == 0:
+            self.stub.LogRunStart(metadata_store_pb2.LogRunStartRequest(
+                start_time=datetime.now().isoformat(),
+                run_id=self.run_id,
+                run_name="training job {}".format(self.run_id),
+                tracing=self.tracing
+            ))
+
+    def log_run_end(self, is_success: bool, message: str):
+        if self.rank == 0:
+            self.stub.LogRunEnd(metadata_store_pb2.LogRunEndRequest(
+                run_id=self.run_id,
+                end_time=datetime.now().isoformat(),
+                success=is_success,
+                message=message,
+            ))
+
+    def log_epoch(self, started: str, epoch_id: int, metrics: Dict[str, str]):
+        self.stub.LogEpoch(metadata_store_pb2.LogEpochRequest(
+            epoch_info=metadata_store_pb2.EpochInfo(
+                start_time=started,
+                end_time=datetime.now().isoformat(),
+                run_id=self.run_id,
+                epoch_id="{}-{}".format(self.rank, epoch_id),
+                metrics=metrics
+            )))
 
 
 class TrainingConfig:
@@ -43,11 +65,15 @@ class TrainingConfig:
             "{}={}".format("EPOCHS", self.EPOCHS), "{}={}".format("LR", self.LR),
             "{}={}".format("BATCH_SIZE", self.BATCH_SIZE),
             "{}={}".format("FC_SIZE", self.FC_SIZE),
+            "{}={}".format("METADATA_STORE_SERVER", self.METADATA_STORE_SERVER),
             "{}={}".format("MINIO_SERVER", self.MINIO_SERVER),
             "{}={}".format("MINIO_SERVER_ACCESS_KEY", self.MINIO_SERVER_ACCESS_KEY),
             "{}={}".format("MINIO_SERVER_SECRET_KEY", self.MINIO_SERVER_SECRET_KEY),
+            "{}={}".format("TRAINING_DATASET_ID", self.TRAINING_DATASET_ID),
+            "{}={}".format("TRAINING_DATASET_VERSION_HASH", self.TRAINING_DATASET_VERSION_HASH),
             "{}={}".format("TRAINING_DATA_BUCKET", self.TRAINING_DATA_BUCKET),
             "{}={}".format("TRAINING_DATA_PATH", self.TRAINING_DATA_PATH),
+            "{}={}".format("JOB_ID", self.JOB_ID),
             "{}={}".format("MODEL_BUCKET", self.MODEL_BUCKET),
             "{}={}".format("MODEL_ID", self.MODEL_ID),
             "{}={}".format("MODEL_VERSION", self.MODEL_VERSION),
@@ -63,13 +89,17 @@ class TrainingConfig:
         self.LR = self.int_or_default(os.getenv('LR'), 5)
         self.BATCH_SIZE = self.int_or_default(os.getenv('BATCH_SIZE'), 64)
         self.FC_SIZE = self.int_or_default(os.getenv('FC_SIZE'), 128)
+        self.METADATA_STORE_SERVER = os.getenv('METADATA_STORE_SERVER') or "127.0.0.1:5002"
+        self.JOB_ID = os.getenv('JOB_ID') or "42"
         self.MINIO_SERVER = os.getenv('MINIO_SERVER') or "127.0.0.1:9000"
         self.MINIO_SERVER_ACCESS_KEY = os.getenv('MINIO_SERVER_ACCESS_KEY') or "foooo"
         self.MINIO_SERVER_SECRET_KEY = os.getenv('MINIO_SERVER_SECRET_KEY') or "barbarbar"
+        self.TRAINING_DATASET_ID = os.getenv('TRAINING_DATASET_ID') or "1"
+        self.TRAINING_DATASET_VERSION_HASH = os.getenv('TRAINING_DATASET_VERSION_HASH') or "hashDg=="
         self.TRAINING_DATA_BUCKET = os.getenv('TRAINING_DATA_BUCKET') or "mini-automl-dm"
         self.TRAINING_DATA_PATH = os.getenv('TRAINING_DATA_PATH') or "versionedDatasets/1/hashDg=="
         self.MODEL_BUCKET = os.getenv('MODEL_BUCKET') or "mini-automl-serving"
-        self.MODEL_ID = os.getenv('MODEL_ID') or "aaf98dsfase"
+        self.MODEL_ID = gitsha
         self.MODEL_VERSION = os.getenv('MODEL_VERSION') or "1"
         self.model_path = "{0}/{1}".format(self.MODEL_ID, self.MODEL_VERSION)
         # distributed training related settings

@@ -80,7 +80,7 @@ message EpochInfo {
   string start_time = 1;
   string end_time = 2;
   string run_id = 3;
-  int32 epoch_id = 4;
+  string epoch_id = 4;
   map<string, string> metrics = 5;
 
 }
@@ -93,7 +93,7 @@ message RunInfo {
   string run_id = 5;
   string run_name = 6;
   TracingInformation tracing = 7;
-  map<int32, EpochInfo> epochs = 8;
+  map<string, EpochInfo> epochs = 8;
 }
 
 message TracingInformation {
