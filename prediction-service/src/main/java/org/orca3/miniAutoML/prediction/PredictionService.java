@@ -5,7 +5,6 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import org.orca3.miniAutoML.ServiceBase;
 import org.orca3.miniAutoML.metadataStore.MetadataStoreServiceGrpc;
-import org.orca3.miniAutoML.training.TrainResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +22,7 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Properties props = new Properties();
-        props.load(PredictionService.class.getClassLoader().getResourceAsStream("config.properties"));
+        Properties props = ServiceBase.getConfigProperties();
         Config config = new Config(props);
         ManagedChannel msChannel = ManagedChannelBuilder.forAddress(config.msHost, Integer.parseInt(config.msPort))
                 .usePlaintext().build();

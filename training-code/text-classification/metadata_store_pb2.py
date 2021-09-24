@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'\n\"org.orca3.miniAutoML.metadataStoreB\022MetadataStoreProtoP\001',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x14metadata_store.proto\x12\x0emetadata_store\x1a\x15\x64\x61ta_management.proto\"\x7f\n\x12LogRunStartRequest\x12\x12\n\nstart_time\x18\x01 \x01(\t\x12\x0e\n\x06run_id\x18\x02 \x01(\t\x12\x10\n\x08run_name\x18\x03 \x01(\t\x12\x33\n\x07tracing\x18\x04 \x01(\x0b\x32\".metadata_store.TracingInformation\"@\n\x13LogRunStartResponse\x12)\n\x08run_info\x18\x01 \x01(\x0b\x32\x17.metadata_store.RunInfo\"@\n\x0fLogEpochRequest\x12-\n\nepoch_info\x18\x01 \x01(\x0b\x32\x19.metadata_store.EpochInfo\"A\n\x10LogEpochResponse\x12-\n\nepoch_info\x18\x01 \x01(\x0b\x32\x19.metadata_store.EpochInfo\"V\n\x10LogRunEndRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\t\x12\x0f\n\x07success\x18\x03 \x01(\x08\x12\x0f\n\x07message\x18\x04 \x01(\t\">\n\x11LogRunEndResponse\x12)\n\x08run_info\x18\x01 \x01(\x0b\x32\x17.metadata_store.RunInfo\"%\n\x13GetRunStatusRequest\x12\x0e\n\x06run_id\x18\x05 \x01(\t\"A\n\x14GetRunStatusResponse\x12)\n\x08run_info\x18\x01 \x01(\x0b\x32\x17.metadata_store.RunInfo\"D\n\x15\x43reateArtifactRequest\x12+\n\x08\x61rtifact\x18\x01 \x01(\x0b\x32\x19.data_management.FileInfo\"V\n\x16\x43reateArtifactResponse\x12\x0f\n\x07version\x18\x01 \x01(\t\x12+\n\x08\x61rtifact\x18\x02 \x01(\x0b\x32\x19.data_management.FileInfo\"3\n\x12GetArtifactRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\t\"a\n\x13GetArtifactResponse\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\t\x12+\n\x08\x61rtifact\x18\x03 \x01(\x0b\x32\x19.data_management.FileInfo\"\xbc\x01\n\tEpochInfo\x12\x12\n\nstart_time\x18\x01 \x01(\t\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\t\x12\x0e\n\x06run_id\x18\x03 \x01(\t\x12\x10\n\x08\x65poch_id\x18\x04 \x01(\t\x12\x37\n\x07metrics\x18\x05 \x03(\x0b\x32&.metadata_store.EpochInfo.MetricsEntry\x1a.\n\x0cMetricsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xa7\x02\n\x07RunInfo\x12\x12\n\nstart_time\x18\x01 \x01(\t\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\t\x12\x0f\n\x07success\x18\x03 \x01(\x08\x12\x0f\n\x07message\x18\x04 \x01(\t\x12\x0e\n\x06run_id\x18\x05 \x01(\t\x12\x10\n\x08run_name\x18\x06 \x01(\t\x12\x33\n\x07tracing\x18\x07 \x01(\x0b\x32\".metadata_store.TracingInformation\x12\x33\n\x06\x65pochs\x18\x08 \x03(\x0b\x32#.metadata_store.RunInfo.EpochsEntry\x1aH\n\x0b\x45pochsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12(\n\x05value\x18\x02 \x01(\x0b\x32\x19.metadata_store.EpochInfo:\x02\x38\x01\"T\n\x12TracingInformation\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x14\n\x0cversion_hash\x18\x02 \x01(\t\x12\x14\n\x0c\x63ode_version\x18\x03 \x01(\t2\xa3\x04\n\x14MetadataStoreService\x12V\n\x0bLogRunStart\x12\".metadata_store.LogRunStartRequest\x1a#.metadata_store.LogRunStartResponse\x12M\n\x08LogEpoch\x12\x1f.metadata_store.LogEpochRequest\x1a .metadata_store.LogEpochResponse\x12P\n\tLogRunEnd\x12 .metadata_store.LogRunEndRequest\x1a!.metadata_store.LogRunEndResponse\x12Y\n\x0cGetRunStatus\x12#.metadata_store.GetRunStatusRequest\x1a$.metadata_store.GetRunStatusResponse\x12_\n\x0e\x43reateArtifact\x12%.metadata_store.CreateArtifactRequest\x1a&.metadata_store.CreateArtifactResponse\x12V\n\x0bGetArtifact\x12\".metadata_store.GetArtifactRequest\x1a#.metadata_store.GetArtifactResponseB:\n\"org.orca3.miniAutoML.metadataStoreB\x12MetadataStoreProtoP\x01\x62\x06proto3'
+  serialized_pb=b'\n\x14metadata_store.proto\x12\x0emetadata_store\x1a\x15\x64\x61ta_management.proto\"\x7f\n\x12LogRunStartRequest\x12\x12\n\nstart_time\x18\x01 \x01(\t\x12\x0e\n\x06run_id\x18\x02 \x01(\t\x12\x10\n\x08run_name\x18\x03 \x01(\t\x12\x33\n\x07tracing\x18\x04 \x01(\x0b\x32\".metadata_store.TracingInformation\"^\n\x13LogRunStartResponse\x12)\n\x08run_info\x18\x01 \x01(\x0b\x32\x17.metadata_store.RunInfo\x12\x0e\n\x06\x62ucket\x18\x02 \x01(\t\x12\x0c\n\x04path\x18\x03 \x01(\t\"@\n\x0fLogEpochRequest\x12-\n\nepoch_info\x18\x01 \x01(\x0b\x32\x19.metadata_store.EpochInfo\"A\n\x10LogEpochResponse\x12-\n\nepoch_info\x18\x01 \x01(\x0b\x32\x19.metadata_store.EpochInfo\"V\n\x10LogRunEndRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\t\x12\x0f\n\x07success\x18\x03 \x01(\x08\x12\x0f\n\x07message\x18\x04 \x01(\t\">\n\x11LogRunEndResponse\x12)\n\x08run_info\x18\x01 \x01(\x0b\x32\x17.metadata_store.RunInfo\"%\n\x13GetRunStatusRequest\x12\x0e\n\x06run_id\x18\x05 \x01(\t\"A\n\x14GetRunStatusResponse\x12)\n\x08run_info\x18\x01 \x01(\x0b\x32\x17.metadata_store.RunInfo\"T\n\x15\x43reateArtifactRequest\x12+\n\x08\x61rtifact\x18\x01 \x01(\x0b\x32\x19.data_management.FileInfo\x12\x0e\n\x06run_id\x18\x02 \x01(\t\"t\n\x16\x43reateArtifactResponse\x12\x0f\n\x07version\x18\x01 \x01(\t\x12+\n\x08\x61rtifact\x18\x02 \x01(\x0b\x32\x19.data_management.FileInfo\x12\x0e\n\x06run_id\x18\x03 \x01(\t\x12\x0c\n\x04name\x18\x04 \x01(\t\"3\n\x12GetArtifactRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\t\"q\n\x13GetArtifactResponse\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\t\x12+\n\x08\x61rtifact\x18\x03 \x01(\x0b\x32\x19.data_management.FileInfo\x12\x0e\n\x06run_id\x18\x04 \x01(\t\"\xbc\x01\n\tEpochInfo\x12\x12\n\nstart_time\x18\x01 \x01(\t\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\t\x12\x0e\n\x06run_id\x18\x03 \x01(\t\x12\x10\n\x08\x65poch_id\x18\x04 \x01(\t\x12\x37\n\x07metrics\x18\x05 \x03(\x0b\x32&.metadata_store.EpochInfo.MetricsEntry\x1a.\n\x0cMetricsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xa7\x02\n\x07RunInfo\x12\x12\n\nstart_time\x18\x01 \x01(\t\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\t\x12\x0f\n\x07success\x18\x03 \x01(\x08\x12\x0f\n\x07message\x18\x04 \x01(\t\x12\x0e\n\x06run_id\x18\x05 \x01(\t\x12\x10\n\x08run_name\x18\x06 \x01(\t\x12\x33\n\x07tracing\x18\x07 \x01(\x0b\x32\".metadata_store.TracingInformation\x12\x33\n\x06\x65pochs\x18\x08 \x03(\x0b\x32#.metadata_store.RunInfo.EpochsEntry\x1aH\n\x0b\x45pochsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12(\n\x05value\x18\x02 \x01(\x0b\x32\x19.metadata_store.EpochInfo:\x02\x38\x01\"T\n\x12TracingInformation\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x14\n\x0cversion_hash\x18\x02 \x01(\t\x12\x14\n\x0c\x63ode_version\x18\x03 \x01(\t2\xa3\x04\n\x14MetadataStoreService\x12V\n\x0bLogRunStart\x12\".metadata_store.LogRunStartRequest\x1a#.metadata_store.LogRunStartResponse\x12M\n\x08LogEpoch\x12\x1f.metadata_store.LogEpochRequest\x1a .metadata_store.LogEpochResponse\x12P\n\tLogRunEnd\x12 .metadata_store.LogRunEndRequest\x1a!.metadata_store.LogRunEndResponse\x12Y\n\x0cGetRunStatus\x12#.metadata_store.GetRunStatusRequest\x1a$.metadata_store.GetRunStatusResponse\x12_\n\x0e\x43reateArtifact\x12%.metadata_store.CreateArtifactRequest\x1a&.metadata_store.CreateArtifactResponse\x12V\n\x0bGetArtifact\x12\".metadata_store.GetArtifactRequest\x1a#.metadata_store.GetArtifactResponseB:\n\"org.orca3.miniAutoML.metadataStoreB\x12MetadataStoreProtoP\x01\x62\x06proto3'
   ,
   dependencies=[data__management__pb2.DESCRIPTOR,])
 
@@ -95,6 +95,20 @@ _LOGRUNSTARTRESPONSE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='bucket', full_name='metadata_store.LogRunStartResponse.bucket', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='path', full_name='metadata_store.LogRunStartResponse.path', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -108,7 +122,7 @@ _LOGRUNSTARTRESPONSE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=192,
-  serialized_end=256,
+  serialized_end=286,
 )
 
 
@@ -139,8 +153,8 @@ _LOGEPOCHREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=258,
-  serialized_end=322,
+  serialized_start=288,
+  serialized_end=352,
 )
 
 
@@ -171,8 +185,8 @@ _LOGEPOCHRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=324,
-  serialized_end=389,
+  serialized_start=354,
+  serialized_end=419,
 )
 
 
@@ -224,8 +238,8 @@ _LOGRUNENDREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=391,
-  serialized_end=477,
+  serialized_start=421,
+  serialized_end=507,
 )
 
 
@@ -256,8 +270,8 @@ _LOGRUNENDRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=479,
-  serialized_end=541,
+  serialized_start=509,
+  serialized_end=571,
 )
 
 
@@ -288,8 +302,8 @@ _GETRUNSTATUSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=543,
-  serialized_end=580,
+  serialized_start=573,
+  serialized_end=610,
 )
 
 
@@ -320,8 +334,8 @@ _GETRUNSTATUSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=582,
-  serialized_end=647,
+  serialized_start=612,
+  serialized_end=677,
 )
 
 
@@ -340,6 +354,13 @@ _CREATEARTIFACTREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='run_id', full_name='metadata_store.CreateArtifactRequest.run_id', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -352,8 +373,8 @@ _CREATEARTIFACTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=649,
-  serialized_end=717,
+  serialized_start=679,
+  serialized_end=763,
 )
 
 
@@ -379,6 +400,20 @@ _CREATEARTIFACTRESPONSE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='run_id', full_name='metadata_store.CreateArtifactResponse.run_id', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='name', full_name='metadata_store.CreateArtifactResponse.name', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -391,8 +426,8 @@ _CREATEARTIFACTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=719,
-  serialized_end=805,
+  serialized_start=765,
+  serialized_end=881,
 )
 
 
@@ -430,8 +465,8 @@ _GETARTIFACTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=807,
-  serialized_end=858,
+  serialized_start=883,
+  serialized_end=934,
 )
 
 
@@ -464,6 +499,13 @@ _GETARTIFACTRESPONSE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='run_id', full_name='metadata_store.GetArtifactResponse.run_id', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -476,8 +518,8 @@ _GETARTIFACTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=860,
-  serialized_end=957,
+  serialized_start=936,
+  serialized_end=1049,
 )
 
 
@@ -515,8 +557,8 @@ _EPOCHINFO_METRICSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1102,
-  serialized_end=1148,
+  serialized_start=1194,
+  serialized_end=1240,
 )
 
 _EPOCHINFO = _descriptor.Descriptor(
@@ -574,8 +616,8 @@ _EPOCHINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=960,
-  serialized_end=1148,
+  serialized_start=1052,
+  serialized_end=1240,
 )
 
 
@@ -613,8 +655,8 @@ _RUNINFO_EPOCHSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1374,
-  serialized_end=1446,
+  serialized_start=1466,
+  serialized_end=1538,
 )
 
 _RUNINFO = _descriptor.Descriptor(
@@ -693,8 +735,8 @@ _RUNINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1151,
-  serialized_end=1446,
+  serialized_start=1243,
+  serialized_end=1538,
 )
 
 
@@ -739,8 +781,8 @@ _TRACINGINFORMATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1448,
-  serialized_end=1532,
+  serialized_start=1540,
+  serialized_end=1624,
 )
 
 _LOGRUNSTARTREQUEST.fields_by_name['tracing'].message_type = _TRACINGINFORMATION
@@ -908,8 +950,8 @@ _METADATASTORESERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1535,
-  serialized_end=2082,
+  serialized_start=1627,
+  serialized_end=2174,
   methods=[
   _descriptor.MethodDescriptor(
     name='LogRunStart',

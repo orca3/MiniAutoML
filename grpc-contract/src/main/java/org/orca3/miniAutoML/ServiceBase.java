@@ -8,9 +8,18 @@ import io.grpc.protobuf.services.HealthStatusManager;
 import io.grpc.protobuf.services.ProtoReflectionService;
 
 import java.io.IOException;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public class ServiceBase {
+    public static Properties getConfigProperties() throws IOException {
+        String configLocation = Optional.ofNullable(System.getenv("APP_CONFIG")).orElse("config.properties");
+        Properties props = new Properties();
+        props.load(ServiceBase.class.getClassLoader().getResourceAsStream(configLocation));
+        return props;
+    }
+
     public static void startService(int port, BindableService service, Runnable shutdownHook) throws IOException, InterruptedException {
         HealthStatusManager health = new HealthStatusManager();
         final Server server = ServerBuilder.forPort(port)

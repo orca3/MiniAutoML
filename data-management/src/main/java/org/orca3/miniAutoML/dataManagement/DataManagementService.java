@@ -36,8 +36,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Properties props = new Properties();
-        props.load(DataManagementService.class.getClassLoader().getResourceAsStream("config.properties"));
+        Properties props = ServiceBase.getConfigProperties();
         Config config = new Config(props);
         MinioClient minioClient = MinioClient.builder()
                 .endpoint(config.minioHost)

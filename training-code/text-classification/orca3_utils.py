@@ -5,6 +5,7 @@ from typing import Dict
 
 import grpc
 
+import data_management_pb2
 import metadata_store_pb2
 import metadata_store_pb2_grpc
 from version import gitsha
@@ -12,7 +13,7 @@ from version import gitsha
 
 class Orca3Utils:
     def __init__(self, metadata_store_url: str, job_id: str, rank: int, dataset_id: str, version_hash: str,
-                 code_version: str):
+                 code_version: str, model_name: str):
         channel = grpc.insecure_channel(metadata_store_url)
         self.stub = metadata_store_pb2_grpc.MetadataStoreServiceStub(channel)
         self.run_id = job_id
@@ -22,27 +23,36 @@ class Orca3Utils:
             version_hash=version_hash,
             code_version=code_version
         )
+        self.model_name = model_name
 
     def log_run_start(self):
-        if self.rank == 0:
-            self.stub.LogRunStart(metadata_store_pb2.LogRunStartRequest(
-                start_time=datetime.now().isoformat(),
-                run_id=self.run_id,
-                run_name="training job {}".format(self.run_id),
-                tracing=self.tracing
-            ))
+        return self.stub.LogRunStart(metadata_store_pb2.LogRunStartRequest(
+            start_time=datetime.now().isoformat(),
+            run_id=self.run_id,
+            run_name="training job {}".format(self.run_id),
+            tracing=self.tracing
+        ))
 
     def log_run_end(self, is_success: bool, message: str):
-        if self.rank == 0:
-            self.stub.LogRunEnd(metadata_store_pb2.LogRunEndRequest(
-                run_id=self.run_id,
-                end_time=datetime.now().isoformat(),
-                success=is_success,
-                message=message,
-            ))
+        return self.stub.LogRunEnd(metadata_store_pb2.LogRunEndRequest(
+            run_id=self.run_id,
+            end_time=datetime.now().isoformat(),
+            success=is_success,
+            message=message,
+        ))
+
+    def create_artifact(self, model_bucket: str, model_object_name: str):
+        return self.stub.CreateArtifact(metadata_store_pb2.CreateArtifactRequest(
+            artifact=data_management_pb2.FileInfo(
+                name=self.model_name,
+                bucket=model_bucket,
+                path=model_object_name,
+            ),
+            run_id=self.run_id,
+        ))
 
     def log_epoch(self, started: str, epoch_id: int, metrics: Dict[str, str]):
-        self.stub.LogEpoch(metadata_store_pb2.LogEpochRequest(
+        return self.stub.LogEpoch(metadata_store_pb2.LogEpochRequest(
             epoch_info=metadata_store_pb2.EpochInfo(
                 start_time=started,
                 end_time=datetime.now().isoformat(),
@@ -74,8 +84,8 @@ class TrainingConfig:
             "{}={}".format("TRAINING_DATA_BUCKET", self.TRAINING_DATA_BUCKET),
             "{}={}".format("TRAINING_DATA_PATH", self.TRAINING_DATA_PATH),
             "{}={}".format("JOB_ID", self.JOB_ID),
+            "{}={}".format("MODEL_NAME", self.MODEL_NAME),
             "{}={}".format("MODEL_BUCKET", self.MODEL_BUCKET),
-            "{}={}".format("MODEL_ID", self.MODEL_ID),
             "{}={}".format("MODEL_VERSION", self.MODEL_VERSION),
             "{}={}".format("WORLD_SIZE", self.WORLD_SIZE),
             "{}={}".format("RANK", self.RANK),
@@ -98,10 +108,10 @@ class TrainingConfig:
         self.TRAINING_DATASET_VERSION_HASH = os.getenv('TRAINING_DATASET_VERSION_HASH') or "hashDg=="
         self.TRAINING_DATA_BUCKET = os.getenv('TRAINING_DATA_BUCKET') or "mini-automl-dm"
         self.TRAINING_DATA_PATH = os.getenv('TRAINING_DATA_PATH') or "versionedDatasets/1/hashDg=="
-        self.MODEL_BUCKET = os.getenv('MODEL_BUCKET') or "mini-automl-serving"
-        self.MODEL_ID = gitsha
-        self.MODEL_VERSION = os.getenv('MODEL_VERSION') or "1"
-        self.model_path = "{0}/{1}".format(self.MODEL_ID, self.MODEL_VERSION)
+        self.MODEL_NAME = os.getenv('MODEL_NAME') or "text-classification-model"
+        self.MODEL_BUCKET = os.getenv('MODEL_BUCKET') or "mini-automl-ms"
+        self.MODEL_VERSION = gitsha
+        self.MODEL_OBJECT_NAME = "model"
         # distributed training related settings
         self.WORLD_SIZE = self.int_or_default(os.getenv('WORLD_SIZE'), 1)
         self.RANK = self.int_or_default(os.getenv('RANK'), 0)

@@ -26,6 +26,8 @@ message LogRunStartRequest {
 
 message LogRunStartResponse {
   RunInfo run_info = 1;
+  string bucket = 2;
+  string path = 3;
 }
 
 message LogEpochRequest {
@@ -57,11 +59,14 @@ message GetRunStatusResponse {
 
 message CreateArtifactRequest {
   data_management.FileInfo artifact = 1;
+  string run_id = 2;
 }
 
 message CreateArtifactResponse {
   string version = 1;
   data_management.FileInfo artifact = 2;
+  string run_id = 3;
+  string name = 4;
 }
 
 message GetArtifactRequest {
@@ -73,6 +78,7 @@ message GetArtifactResponse {
   string name = 1;
   string version = 2;
   data_management.FileInfo artifact = 3;
+  string run_id = 4;
 }
 
 //=========

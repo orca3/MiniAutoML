@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,9 +32,7 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        String configLocation = Optional.ofNullable(System.getenv("APP_CONFIG")).orElse("config.properties");
-        Properties props = new Properties();
-        props.load(TrainingService.class.getClassLoader().getResourceAsStream(configLocation));
+        Properties props = ServiceBase.getConfigProperties();
         Config config = new Config(props);
 
         MemoryStore store = new MemoryStore();

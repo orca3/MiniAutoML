@@ -70,9 +70,13 @@ def is_distributed():
 
 
 orca3_utils = Orca3Utils(config.METADATA_STORE_SERVER, config.JOB_ID, config.RANK,
-                         config.TRAINING_DATASET_ID, config.TRAINING_DATASET_VERSION_HASH, config.MODEL_ID)
+                         config.TRAINING_DATASET_ID, config.TRAINING_DATASET_VERSION_HASH, config.MODEL_VERSION,
+                         config.MODEL_NAME)
 
-orca3_utils.log_run_start()
+if config.RANK == 0:
+    run_started = orca3_utils.log_run_start()
+    config.MODEL_BUCKET = run_started.bucket
+    config.MODEL_OBJECT_NAME = run_started.path
 
 if should_distribute():
     print("Using distributed PyTorch with {0} backend, world size={1}, rank={2}".format("gloo", config.WORLD_SIZE,
@@ -315,12 +319,14 @@ if config.RANK == 0:
         print(var_name, "\t", optimizer.state_dict()[var_name])
 
     # save model
-    if not os.path.exists(config.MODEL_ID):
-        os.makedirs(config.MODEL_ID)
-    torch.save(model.state_dict(), config.model_path)
+    if not os.path.exists(config.JOB_ID):
+        os.makedirs(config.JOB_ID)
+    model_local_path = os.path.join(config.JOB_ID, "model_file")
+    torch.save(model.state_dict(), model_local_path)
 
     # upload model to minio storage
-    if not client.bucket_exists(config.MODEL_BUCKET):
-        client.make_bucket(config.MODEL_BUCKET)
-    client.fput_object(config.MODEL_BUCKET, config.model_path, config.model_path)
+    client.fput_object(config.MODEL_BUCKET, config.MODEL_OBJECT_NAME, model_local_path)
+    artifact = orca3_utils.create_artifact(config.MODEL_BUCKET, config.MODEL_OBJECT_NAME)
+    print("saved model file as artifact {} version {} at {}/{}".format(artifact.artifact.name, artifact.version,
+                                                                       config.MODEL_BUCKET, config.MODEL_OBJECT_NAME))
     orca3_utils.log_run_end(True, 'test accuracy {:8.3f}'.format(accu_test))
