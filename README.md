@@ -1,186 +1,39 @@
 # MiniAutoML
 
-System Requirement:
-- JDK 11
-- Docker
-- [Minio client](https://docs.min.io/docs/minio-client-quickstart-guide.html) `brew install minio/stable/mc`
+This repository contains source code examples for `<<bookname>>`.
+
+## System Requirement
+The installation of system requirements are not included in the `scripts` folder. Please make sure those requirements are met before executing scripts in the `scripts` folder.
+
+- **Operating system**: MacOs or Linux or WSL (Windows Subsystem for Linux).
+- **Java JDK 11+**: 
+  - Use `java --version` command to confirm your Java version.
+  - Apache maven is not required to run the examples. We've bundled [Maven wrapper](https://github.com/takari/maven-wrapper) `mvnw` so that all the build commands we used in this repo depends only on `mvnw`.
+- **Docker**: docker community edition can be downloaded from https://docs.docker.com/get-docker/. 
+  - Use `docker version` command to verify both the client and the server are available/running.
+- **Kubernetes**: docker community edition provides a standalone node kubernetes installation. You can enable it by following [official doc](https://docs.docker.com/desktop/kubernetes).
+  - Use `kubectl version` command to verify both the client and the server are available/running.
+- **Minio**: this is a storage system that we used in our examples to provide a shared file system for all our microservices. **Only the client is needed** (we will take care of starting/stopping server later in examples).
+[The official doc](https://docs.min.io/docs/minio-client-quickstart-guide.html) talks about several ways to install it. We need the binary version (so that `mc` command is available).
+  - For mac, do `brew install minio/stable/mc`.
+  - For linux, follow the official doc to download the right minio client binary for your platform.
+  - Use `mc --version` command to verify it has been successfully installed.
+- **Grpcurl**: we found this [grpcurl](https://github.com/fullstorydev/grpcurl) tool a great way to demo grpc services in the commandline environment, so our example scripts use it extensively.
+  - For mac, do `brew install grpcurl`
+  - For linux, follow the project documentation to download the right binary
+  - Use `grpcurl --version` command to verify it has been successfully installed.
+
+## Module list
+
+In the root folder you'll find a Maven project description file `pom.xml`, which describes a multi-module Java project. 
+- `grpc-contract` module contains shared microservices grpc definitions as well as code generation automations.
+- `data-management`, `metadata-store`, `prediction-service`, `training-service` each contains a runnable service comprising the Deep Learning System introduced in the book. The readme in the corresponding module talks about how to use it.
+- `training-code` contains deep learning model training code for text classification, written in Python. [training-code/text-classification/Readme.md](training-code/text-classification/) talks about how to setup the Python environment.
+- `scripts` contains demo bash scripts used in the `<<lab chapter>>` as well as individual module's readme file. We expect those scripts to be executed using repository root as the working directory.
+- Dockerfile (`services.dockerfile`) builds all these microservices, producing ONE image that is capable of starting multiple services. Providing `<<module-name>>.jar` to the argument section of the `docker run` command can start the corresponding microservice. You can see example `docker run` command in [scripts/dm-002-start-server.sh](scripts/dm-002-start-server.sh).
 
 ## Data Management Example
 
-1. Start minio server using docker: `./scripts/dm-001-start-minio.sh`
-```
-Started minio docker container and listen on port 9000
-```
-2. Run data management server: `./scripts/dm-002-start-server.sh`
-```
-Started data-management docker container and listen on port 5000
-```
-3. In another tab, create a dataset: `./scripts/dm-003-create-dataset.sh`
-```
-Upload dataset
-`data-management/src/test/resources/datasets/test.csv` -> `myminio/mini-automl-dm/upload/001.csv`
-Total: 0 B, Transferred: 281.90 KiB, Speed: 14.64 MiB/s
-
-Creating intent dataset
-{
-  "datasetId": "1",
-  "name": "dataset-1",
-  "dataset_type": "TEXT_INTENT",
-  "last_updated_at": "2021-07-14T06:23:20.814986Z",
-  "commits": [
-    {
-      "dataset_id": "1",
-      "commit_id": "1",
-      "created_at": "2021-07-14T06:23:21.517873Z",
-      "commit_message": "Initial commit",
-      "tags": [
-        {
-          "tag_key": "category",
-          "tag_value": "test set"
-        }
-      ],
-      "path": "dataset/1/commit/1",
-      "statistics": {
-        "numExamples": "5500",
-        "numLabels": "151"
-      }
-    }
-  ]
-}
-```
-4. Add more commits to dataset: `./scripts/dm-004-add-commits.sh 1`
-```
-Uploading new data file
-`data-management/src/test/resources/datasets/train.csv` -> `myminio/mini-automl-dm/upload/002.csv`
-Total: 0 B, Transferred: 398.27 KiB, Speed: 20.82 MiB/s
-`data-management/src/test/resources/datasets/validation.csv` -> `myminio/mini-automl-dm/upload/003.csv`
-Total: 0 B, Transferred: 161.40 KiB, Speed: 12.72 MiB/s
-
-Adding new commit to dataset 1
-...
-{
-  "datasetId": "1",
-  "name": "dataset-1",
-  "dataset_type": "TEXT_INTENT",
-  "last_updated_at": "2021-07-14T06:23:20.814986Z",
-  "commits": [
-    {
-      "dataset_id": "1",
-      "commit_id": "1",
-      "created_at": "2021-07-14T06:23:21.517873Z",
-      "commit_message": "Initial commit",
-      "tags": [
-        {
-          "tag_key": "category",
-          "tag_value": "test set"
-        }
-      ],
-      "path": "dataset/1/commit/1",
-      "statistics": {
-        "numExamples": "5500",
-        "numLabels": "151"
-      }
-    },
-    {
-      "dataset_id": "1",
-      "commit_id": "2",
-      "created_at": "2021-07-14T06:24:52.973920Z",
-      "commit_message": "More training data",
-      "tags": [
-        {
-          "tag_key": "category",
-          "tag_value": "training set"
-        }
-      ],
-      "path": "dataset/1/commit/2",
-      "statistics": {
-        "numExamples": "7600",
-        "numLabels": "151"
-      }
-    },
-    {
-      "dataset_id": "1",
-      "commit_id": "3",
-      "created_at": "2021-07-14T06:24:53.215104Z",
-      "commit_message": "More validation data",
-      "tags": [
-        {
-          "tag_key": "category",
-          "tag_value": "validation set"
-        }
-      ],
-      "path": "dataset/1/commit/3",
-      "statistics": {
-        "numExamples": "3100",
-        "numLabels": "151"
-      }
-    }
-  ]
-}
-```
-5. Prepare a version of dataset 1 with all commits: `./scripts/dm-005-prepare-dataset.sh 1`
-```
-{
-  "dataset_id": "1",
-  "name": "dataset-1",
-  "dataset_type": "TEXT_INTENT",
-  "last_updated_at": "2021-07-14T06:23:20.814986Z",
-  "version_hash": "hashDg==",
-  "commits": [
-    {
-      "dataset_id": "1",
-      "commit_id": "1",
-      "created_at": "2021-07-14T06:23:21.517873Z",
-      "commit_message": "Initial commit",
-      "tags": [
-        {
-          "tag_key": "category",
-          "tag_value": "test set"
-        }
-      ],
-      "path": "dataset/1/commit/1",
-      "statistics": {
-        "numExamples": "5500",
-        "numLabels": "151"
-      }
-    },
-    {
-      "dataset_id": "1",
-      "commit_id": "2",
-      "created_at": "2021-07-14T06:24:52.973920Z",
-      "commit_message": "More training data",
-      "tags": [
-        {
-          "tag_key": "category",
-          "tag_value": "training set"
-        }
-      ],
-      "path": "dataset/1/commit/2",
-      "statistics": {
-        "numExamples": "7600",
-        "numLabels": "151"
-      }
-    },
-    {
-      "dataset_id": "1",
-      "commit_id": "3",
-      "created_at": "2021-07-14T06:24:53.215104Z",
-      "commit_message": "More validation data",
-      "tags": [
-        {
-          "tag_key": "category",
-          "tag_value": "validation set"
-        }
-      ],
-      "path": "dataset/1/commit/3",
-      "statistics": {
-        "numExamples": "3100",
-        "numLabels": "151"
-      }
-    }
-  ]
-}
-```
 6. Get the file link for version `hashDg==`: `./scripts/dm-007-fetch-dataset-version.sh 1 hashDg==`
 ```
 Fetching dataset 1 with version hashDg==
@@ -206,7 +59,8 @@ Fetching dataset 1 with version hashDg==
   }
 }
 ```
-7. Prepare a version of dataset 1 using tag filters: `./scripts/dm-006-prepare-partial-dataset.sh 1 "training set"`
+7. 
+8. Prepare a version of dataset 1 using tag filters: `./scripts/dm-006-prepare-partial-dataset.sh 1 "training set"`
 ```
 Prepare a version of dataset 1 that contains only training data with tag category:training set
 {
