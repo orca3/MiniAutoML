@@ -31,3 +31,8 @@ In the root folder you'll find a Maven project description file `pom.xml`, which
 - `training-code` contains deep learning model training code for text classification, written in Python. [training-code/text-classification/Readme.md](training-code/text-classification/) talks about how to setup the Python environment.
 - `scripts` contains demo bash scripts used in the `<<lab chapter>>` as well as individual module's readme file. We expect those scripts to be executed using repository root as the working directory.
 - Dockerfile (`services.dockerfile`) builds all these microservices, producing ONE image that is capable of starting multiple services. Providing `<<module-name>>.jar` to the argument section of the `docker run` command can start the corresponding microservice. You can see example `docker run` command in [scripts/dm-002-start-server.sh](scripts/dm-002-start-server.sh).
+
+## Next step
+1. Look at the service definitions in [grpc-contract](grpc-contract)
+2. Play with [data-management](data-management)
+3. Play with [training-service](training-service)
