@@ -325,3 +325,15 @@ Fetching dataset 1 with version hashDg==
   }
 }
 ```
+
+### Inspect the repackaged file content
+Execute `mc ls myminio/mini-automl-dm/versionedDatasets/1/hashDg==/` to look at the files, or use `mc cp myminio/mini-automl-dm/versionedDatasets/1/hashDg==/examples.csv examples.csv` to download the file to current working directly
+
+This will:
+1. Copy the output of the data preparation task from the `mini-automl-dm` bucket in `myminio` connection (set up already in previous commends)
+
+If for some reason `myminio` alias has not been set up yet, you can manually set it up using
+```
+source ./scripts/env-vars.sh
+mc alias -q set myminio http://127.0.0.1:"${MINIO_PORT}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+```
