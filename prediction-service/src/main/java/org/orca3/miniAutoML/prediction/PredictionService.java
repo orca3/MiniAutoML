@@ -22,6 +22,7 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        logger.info("Hello, Prediction Service!");
         Properties props = ServiceBase.getConfigProperties();
         Config config = new Config(props);
         ManagedChannel msChannel = ManagedChannelBuilder.forAddress(config.msHost, Integer.parseInt(config.msPort))

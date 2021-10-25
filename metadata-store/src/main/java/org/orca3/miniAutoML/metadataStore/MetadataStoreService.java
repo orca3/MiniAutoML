@@ -35,6 +35,7 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        logger.info("Hello, Metadata Store Service!");
         Properties props = ServiceBase.getConfigProperties();
         Config config = new Config(props);
         MinioClient minioClient = MinioClient.builder()

@@ -14,3 +14,6 @@ fi
 if [ "$(docker ps -a | grep training-service)" ]; then
   docker stop training-service
 fi
+if [ "$(docker ps -a | grep local-docker-registry)" ]; then
+  docker stop local-docker-registry
+fi

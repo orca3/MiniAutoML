@@ -36,6 +36,7 @@ public class DataManagementService extends DataManagementServiceGrpc.DataManagem
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        logger.info("Hello, Data Management Service!");
         Properties props = ServiceBase.getConfigProperties();
         Config config = new Config(props);
         MinioClient minioClient = MinioClient.builder()

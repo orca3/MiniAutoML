@@ -9,6 +9,7 @@ import io.minio.errors.MinioException;
 import io.minio.messages.Item;
 import org.orca3.miniAutoML.dataManagement.CommitInfo;
 import org.orca3.miniAutoML.dataManagement.DatasetPart;
+import org.orca3.miniAutoML.dataManagement.FileInfo;
 import org.orca3.miniAutoML.dataManagement.SnapshotState;
 import org.orca3.miniAutoML.dataManagement.VersionedSnapshot;
 
@@ -26,23 +27,27 @@ public class GenericTransformer implements DatasetTransformer {
     @Override
     public VersionedSnapshot compress(List<DatasetPart> parts, String datasetId, String versionHash, String bucketName, MinioClient minioClient) throws MinioException {
         String versionHashRoot = DatasetTransformer.getVersionHashRoot(datasetId, versionHash);
+        VersionedSnapshot.Builder versionSnapshotBuilder = VersionedSnapshot.newBuilder()
+                .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.READY)
+                .setRoot(FileInfo.newBuilder().setName("root").setBucket(bucketName).setPath(versionHashRoot).build());
         for (int i = 0; i < parts.size(); i++) {
             int j = 0;
             for (Result<Item> r : minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).prefix(parts.get(i).getPathPrefix()).build())) {
-                String newPath = Paths.get(versionHashRoot, String.format("part-%d-%d", i, j)).toString();
+                String newFilename = String.format("part-%d-%d", i, j);
+                String newPath = Paths.get(versionHashRoot, newFilename).toString();
                 try {
                     minioClient.copyObject(CopyObjectArgs.builder()
                             .bucket(bucketName).object(newPath)
                             .source(CopySource.builder().bucket(bucketName).object(r.get().objectName()).build())
                             .build());
+                    versionSnapshotBuilder.addParts(FileInfo.newBuilder().setName(newFilename).setPath(newPath).setBucket(bucketName).build());
                 } catch (InvalidKeyException | IOException | NoSuchAlgorithmException e) {
                     throw new RuntimeException(e);
                 }
                 j++;
             }
         }
-        return VersionedSnapshot.newBuilder()
-                .setDatasetId(datasetId).setVersionHash(versionHash).setState(SnapshotState.READY)
+        return versionSnapshotBuilder
                 .build();
     }
 

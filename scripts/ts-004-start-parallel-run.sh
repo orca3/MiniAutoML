@@ -7,7 +7,7 @@ grpcurl -plaintext \
   \"metadata\": {
     \"algorithm\":\"intent-classification\",
     \"dataset_id\":\"1\",
-    \"name\":\"test1\",
+    \"name\":\"test-parallel\",
     \"train_data_version_hash\":\"hashDg==\",
     \"output_model_name\":\"my-parallel-intent-classification-model\",
     \"parameters\": {
