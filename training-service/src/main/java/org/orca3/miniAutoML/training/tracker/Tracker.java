@@ -63,8 +63,8 @@ public abstract class Tracker<T extends Tracker.SharedConfig> {
         envs.put("MINIO_SERVER", config.minioHost);
         envs.put("MINIO_SERVER_ACCESS_KEY", config.minioAccessKey);
         envs.put("MINIO_SERVER_SECRET_KEY", config.minioSecretKey);
-        envs.put("TRAINING_DATA_BUCKET", config.dmBucketName);
-        envs.put("TRAINING_DATA_PATH", versionedSnapshot.getRoot());
+        envs.put("TRAINING_DATA_BUCKET", versionedSnapshot.getRoot().getBucket());
+        envs.put("TRAINING_DATA_PATH", versionedSnapshot.getRoot().getPath());
         envs.putAll(metadata.getParametersMap());
         return envs;
     }
@@ -81,12 +81,10 @@ public abstract class Tracker<T extends Tracker.SharedConfig> {
         final String minioAccessKey;
         final String minioSecretKey;
         final String minioHost;
-        final String dmBucketName;
         final String metadataStoreBucketName;
         final String metadataStoreHost;
 
         SharedConfig(Properties props) {
-            this.dmBucketName = props.getProperty("trainer.minio.dm.bucketName");
             this.minioAccessKey = props.getProperty("trainer.minio.accessKey");
             this.minioSecretKey = props.getProperty("trainer.minio.secretKey");
             this.minioHost = props.getProperty("trainer.minio.host");

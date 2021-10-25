@@ -1,49 +1,37 @@
 # Dataset Management (DM) Service 
 Dataset management service is a sample Java (GRPC) webservice for demonstrating the design principles introduced in the chapter 4 of book - ``<<Deep learning Engineering>>``. 
-We write this service in minimalism, so the code is simple to read, and the local setup is easy. The only external dependency this service take is MinIO, we use it to mimic cloud 
-blob storage, such as (AWS S3 or Azure blob).
+This service is written in minimalism (for example persisting data in memory instead of a database) so the code is simple to read, and the local setup is easy. The only external dependency this service take is **Minio**, which we used to mimic cloud 
+blob storage, such as `AWS S3` or `Azure blob`. Please make sure the minio client has been installed already by typing `mc --version` 
 
-By reading these few thousand lines of code, you will obtain a concrete feeling of how the dataset management design concept
-could be implemented.   
+By reading these code, you will obtain a concrete feeling of how the dataset management design concept could be implemented.
 
-## Demo (GIF)
-// TODO, @Robert
-### Generic Dataset
-1. create a dataset (Text)
-2. get status (summary)
-3. update a dataset 
-4. get status (summary)
-5. fetch training dataset by filter - time
-6. fetch training dataset by filter - latest 3 commits
+## Function demo
 
-### Language Intent Dataset
-1. create a dataset (Text)
-2. get status (summary)
-3. update a dataset
-4. get status (summary)
-5. fetch training dataset by filter - time
-6. fetch training dataset by filter - latest 3 commits
+See [demo.md](demo.md)
 
-## Setup (MinIO)
-1. Install MinIO Server, by following https://docs.min.io/docs/minio-quickstart-guide.html
-2. Pick a directory on your local to store DM data, such as ``~/data/dm/storage``
-3. Start minIO server with default username and password by running: 
-   
-   ``minio server ~/data/dm/storage``
-   
-   You will see something like ```mc alias set myminio http://xxx.xxx.xxx.xxx:9000 minioadmin minioadmin``` in the stdout, 
-   it means minio start a server named - "myminio", minio client use it as the target name to select which server to talks to. 
-   It will start a minio file server on your local, you can also view it by visiting http://localhost:9000/, use "minioadmin" for access key and secret key.
-   
-4. Test the server by using minio client, 
-   1. Install mc client by following https://docs.min.io/docs/minio-client-quickstart-guide.html
-   2. Test to list files of minIO play environment by ``mc ls play``
-   3. Test to cp file form your local to ``mc cp README.md myminio/dm/``
+--------
 
-## Build 
+## Build and play with DM locally
 
+### Understand the config file
+The DM server takes a few configuration items on startup. This can be found at [config.properties](src/main/resources/config.properties)
+- `minio.bucketName`: The minio bucket name we want to use for DM service to store its file.
+- `minio.accessKey` & `minio.secretKey`: The credential used to access the minio server.
+- `minio.host`: The address of the minio server. 
+- `server.port` The port number that this server listens to.
 
-## Run Test
+### Start dependency minio
+This can be taken care of by our script [dm-001-start-minio.sh](../scripts/dm-001-start-minio.sh)
 
+### Build and run using docker (recommended)
+1. Modify config if needed. Set `minio.host` to `http://minio:9000` 
+2. The [dockerfile](../services.dockerfile) in the root folder can be used to build the data-management service directly. Execute `docker build -t orca3/services:latest -f services.dockerfile .` in the root directly will build a docker image called `orca3/services` with `latest` tag.
+3. Start the service using `docker run --name data-management --network orca3 --rm -d -p 5000:51001 orca3/services:latest data-management.jar`.
+4. Now the service can be reached at `localhost:5000`. Try `grpcurl -plaintext localhost:5000 grpc.health.v1.Health/Check` or look at examples in [scripts](../scripts) folder to interact with the service
+5. Everything above has the same effect as running our [dm-002-start-server.sh](../scripts/dm-002-start-server.sh)
 
-## 
+### Build and run using java (for experienced Java developer)
+1. Modify config if needed. Set `minio.host` to `http://localhost:9000`. Set `server.port` to an unoccupied port number.
+2. Use maven to build the project and produce a runnable Jar `./mvnw clean package -pl data-management -am`
+3. Run the jar using command `java -jar data-management/target/data-management-1.0-SNAPSHOT.jar`
+4. Now the service can be reached at `localhost:51001`. Try open a new terminal tab and execute `grpcurl -plaintext localhost:51001 grpc.health.v1.Health/Check` or look at examples in [scripts](../scripts) folder to interact with the service 

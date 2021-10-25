@@ -87,7 +87,7 @@ message VersionedSnapshot {
   string version_hash = 2;
   SnapshotState state = 3;
   repeated FileInfo parts = 4;
-  string root = 5;
+  FileInfo root = 5;
   map<string, string> statistics = 7;
 }
 

@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'\n#org.orca3.miniAutoML.dataManagementB\023DataManagementProtoP\001',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x15\x64\x61ta_management.proto\x12\x0f\x64\x61ta_management\x1a\x1bgoogle/protobuf/empty.proto\"\xaf\x01\n\x14\x43reateDatasetRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x32\n\x0c\x64\x61taset_type\x18\x03 \x01(\x0e\x32\x1c.data_management.DatasetType\x12\x0e\n\x06\x62ucket\x18\x04 \x01(\t\x12\x0c\n\x04path\x18\x05 \x01(\t\x12\"\n\x04tags\x18\x06 \x03(\x0b\x32\x14.data_management.Tag\"0\n\x10ListQueryOptions\x12\r\n\x05limit\x18\x01 \x01(\x05\x12\r\n\x05index\x18\x02 \x01(\x05\"\x83\x01\n\x13\x43reateCommitRequest\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x16\n\x0e\x63ommit_message\x18\x02 \x01(\t\x12\x0e\n\x06\x62ucket\x18\x03 \x01(\t\x12\x0c\n\x04path\x18\x04 \x01(\t\x12\"\n\x04tags\x18\x05 \x03(\x0b\x32\x14.data_management.Tag\"Y\n\x0c\x44\x61tasetQuery\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x11\n\tcommit_id\x18\x02 \x01(\t\x12\"\n\x04tags\x18\x03 \x03(\x0b\x32\x14.data_management.Tag\"8\n\x0cVersionQuery\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x14\n\x0cversion_hash\x18\x02 \x01(\t\"$\n\x0e\x44\x61tasetPointer\x12\x12\n\ndataset_id\x18\x01 \x01(\t\"\xc1\x01\n\x0e\x44\x61tasetSummary\x12\x11\n\tdatasetId\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x32\n\x0c\x64\x61taset_type\x18\x04 \x01(\x0e\x32\x1c.data_management.DatasetType\x12\x17\n\x0flast_updated_at\x18\x05 \x01(\t\x12,\n\x07\x63ommits\x18\x06 \x03(\x0b\x32\x1b.data_management.CommitInfo\"\xd9\x01\n\x0fSnapshotVersion\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x32\n\x0c\x64\x61taset_type\x18\x04 \x01(\x0e\x32\x1c.data_management.DatasetType\x12\x17\n\x0flast_updated_at\x18\x05 \x01(\t\x12\x14\n\x0cversion_hash\x18\x06 \x01(\t\x12,\n\x07\x63ommits\x18\x07 \x03(\x0b\x32\x1b.data_management.CommitInfo\"Y\n\x0b\x44\x61tasetPart\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x11\n\tcommit_id\x18\x02 \x01(\t\x12\x0e\n\x06\x62ucket\x18\x03 \x01(\t\x12\x13\n\x0bpath_prefix\x18\x04 \x01(\t\"\x9f\x02\n\x11VersionedSnapshot\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x14\n\x0cversion_hash\x18\x02 \x01(\t\x12-\n\x05state\x18\x03 \x01(\x0e\x32\x1e.data_management.SnapshotState\x12(\n\x05parts\x18\x04 \x03(\x0b\x32\x19.data_management.FileInfo\x12\x0c\n\x04root\x18\x05 \x01(\t\x12\x46\n\nstatistics\x18\x07 \x03(\x0b\x32\x32.data_management.VersionedSnapshot.StatisticsEntry\x1a\x31\n\x0fStatisticsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x85\x02\n\nCommitInfo\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x11\n\tcommit_id\x18\x02 \x01(\t\x12\x12\n\ncreated_at\x18\x03 \x01(\t\x12\x16\n\x0e\x63ommit_message\x18\x04 \x01(\t\x12\"\n\x04tags\x18\x05 \x03(\x0b\x32\x14.data_management.Tag\x12\x0c\n\x04path\x18\x06 \x01(\t\x12?\n\nstatistics\x18\x07 \x03(\x0b\x32+.data_management.CommitInfo.StatisticsEntry\x1a\x31\n\x0fStatisticsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\")\n\x03Tag\x12\x0f\n\x07tag_key\x18\x01 \x01(\t\x12\x11\n\ttag_value\x18\x02 \x01(\t\"6\n\x08\x46ileInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x62ucket\x18\x02 \x01(\t\x12\x0c\n\x04path\x18\x03 \x01(\t*+\n\x0b\x44\x61tasetType\x12\x0b\n\x07GENERIC\x10\x00\x12\x0f\n\x0bTEXT_INTENT\x10\x01*3\n\rSnapshotState\x12\x0b\n\x07RUNNING\x10\x00\x12\t\n\x05READY\x10\x01\x12\n\n\x06\x46\x41ILED\x10\x02\x32\xf5\x04\n\x15\x44\x61taManagementService\x12U\n\x11GetDatasetSummary\x12\x1f.data_management.DatasetPointer\x1a\x1f.data_management.DatasetSummary\x12T\n\x0cListDatasets\x12!.data_management.ListQueryOptions\x1a\x1f.data_management.DatasetPointer0\x01\x12W\n\rCreateDataset\x12%.data_management.CreateDatasetRequest\x1a\x1f.data_management.DatasetSummary\x12V\n\rUpdateDataset\x12$.data_management.CreateCommitRequest\x1a\x1f.data_management.DatasetSummary\x12Y\n\x16PrepareTrainingDataset\x12\x1d.data_management.DatasetQuery\x1a .data_management.SnapshotVersion\x12Y\n\x14\x46\x65tchTrainingDataset\x12\x1d.data_management.VersionQuery\x1a\".data_management.VersionedSnapshot\x12H\n\rDeleteDataset\x12\x1f.data_management.DatasetPointer\x1a\x16.google.protobuf.EmptyB<\n#org.orca3.miniAutoML.dataManagementB\x13\x44\x61taManagementProtoP\x01\x62\x06proto3'
+  serialized_pb=b'\n\x15\x64\x61ta_management.proto\x12\x0f\x64\x61ta_management\x1a\x1bgoogle/protobuf/empty.proto\"\xaf\x01\n\x14\x43reateDatasetRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x32\n\x0c\x64\x61taset_type\x18\x03 \x01(\x0e\x32\x1c.data_management.DatasetType\x12\x0e\n\x06\x62ucket\x18\x04 \x01(\t\x12\x0c\n\x04path\x18\x05 \x01(\t\x12\"\n\x04tags\x18\x06 \x03(\x0b\x32\x14.data_management.Tag\"0\n\x10ListQueryOptions\x12\r\n\x05limit\x18\x01 \x01(\x05\x12\r\n\x05index\x18\x02 \x01(\x05\"\x83\x01\n\x13\x43reateCommitRequest\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x16\n\x0e\x63ommit_message\x18\x02 \x01(\t\x12\x0e\n\x06\x62ucket\x18\x03 \x01(\t\x12\x0c\n\x04path\x18\x04 \x01(\t\x12\"\n\x04tags\x18\x05 \x03(\x0b\x32\x14.data_management.Tag\"Y\n\x0c\x44\x61tasetQuery\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x11\n\tcommit_id\x18\x02 \x01(\t\x12\"\n\x04tags\x18\x03 \x03(\x0b\x32\x14.data_management.Tag\"8\n\x0cVersionQuery\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x14\n\x0cversion_hash\x18\x02 \x01(\t\"$\n\x0e\x44\x61tasetPointer\x12\x12\n\ndataset_id\x18\x01 \x01(\t\"\xc1\x01\n\x0e\x44\x61tasetSummary\x12\x11\n\tdatasetId\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x32\n\x0c\x64\x61taset_type\x18\x04 \x01(\x0e\x32\x1c.data_management.DatasetType\x12\x17\n\x0flast_updated_at\x18\x05 \x01(\t\x12,\n\x07\x63ommits\x18\x06 \x03(\x0b\x32\x1b.data_management.CommitInfo\"\xd9\x01\n\x0fSnapshotVersion\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x32\n\x0c\x64\x61taset_type\x18\x04 \x01(\x0e\x32\x1c.data_management.DatasetType\x12\x17\n\x0flast_updated_at\x18\x05 \x01(\t\x12\x14\n\x0cversion_hash\x18\x06 \x01(\t\x12,\n\x07\x63ommits\x18\x07 \x03(\x0b\x32\x1b.data_management.CommitInfo\"Y\n\x0b\x44\x61tasetPart\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x11\n\tcommit_id\x18\x02 \x01(\t\x12\x0e\n\x06\x62ucket\x18\x03 \x01(\t\x12\x13\n\x0bpath_prefix\x18\x04 \x01(\t\"\xba\x02\n\x11VersionedSnapshot\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x14\n\x0cversion_hash\x18\x02 \x01(\t\x12-\n\x05state\x18\x03 \x01(\x0e\x32\x1e.data_management.SnapshotState\x12(\n\x05parts\x18\x04 \x03(\x0b\x32\x19.data_management.FileInfo\x12\'\n\x04root\x18\x05 \x01(\x0b\x32\x19.data_management.FileInfo\x12\x46\n\nstatistics\x18\x07 \x03(\x0b\x32\x32.data_management.VersionedSnapshot.StatisticsEntry\x1a\x31\n\x0fStatisticsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x85\x02\n\nCommitInfo\x12\x12\n\ndataset_id\x18\x01 \x01(\t\x12\x11\n\tcommit_id\x18\x02 \x01(\t\x12\x12\n\ncreated_at\x18\x03 \x01(\t\x12\x16\n\x0e\x63ommit_message\x18\x04 \x01(\t\x12\"\n\x04tags\x18\x05 \x03(\x0b\x32\x14.data_management.Tag\x12\x0c\n\x04path\x18\x06 \x01(\t\x12?\n\nstatistics\x18\x07 \x03(\x0b\x32+.data_management.CommitInfo.StatisticsEntry\x1a\x31\n\x0fStatisticsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\")\n\x03Tag\x12\x0f\n\x07tag_key\x18\x01 \x01(\t\x12\x11\n\ttag_value\x18\x02 \x01(\t\"6\n\x08\x46ileInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x62ucket\x18\x02 \x01(\t\x12\x0c\n\x04path\x18\x03 \x01(\t*+\n\x0b\x44\x61tasetType\x12\x0b\n\x07GENERIC\x10\x00\x12\x0f\n\x0bTEXT_INTENT\x10\x01*3\n\rSnapshotState\x12\x0b\n\x07RUNNING\x10\x00\x12\t\n\x05READY\x10\x01\x12\n\n\x06\x46\x41ILED\x10\x02\x32\xf5\x04\n\x15\x44\x61taManagementService\x12U\n\x11GetDatasetSummary\x12\x1f.data_management.DatasetPointer\x1a\x1f.data_management.DatasetSummary\x12T\n\x0cListDatasets\x12!.data_management.ListQueryOptions\x1a\x1f.data_management.DatasetPointer0\x01\x12W\n\rCreateDataset\x12%.data_management.CreateDatasetRequest\x1a\x1f.data_management.DatasetSummary\x12V\n\rUpdateDataset\x12$.data_management.CreateCommitRequest\x1a\x1f.data_management.DatasetSummary\x12Y\n\x16PrepareTrainingDataset\x12\x1d.data_management.DatasetQuery\x1a .data_management.SnapshotVersion\x12Y\n\x14\x46\x65tchTrainingDataset\x12\x1d.data_management.VersionQuery\x1a\".data_management.VersionedSnapshot\x12H\n\rDeleteDataset\x12\x1f.data_management.DatasetPointer\x1a\x16.google.protobuf.EmptyB<\n#org.orca3.miniAutoML.dataManagementB\x13\x44\x61taManagementProtoP\x01\x62\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_empty__pb2.DESCRIPTOR,])
 
@@ -45,8 +45,8 @@ _DATASETTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1780,
-  serialized_end=1823,
+  serialized_start=1807,
+  serialized_end=1850,
 )
 _sym_db.RegisterEnumDescriptor(_DATASETTYPE)
 
@@ -76,8 +76,8 @@ _SNAPSHOTSTATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1825,
-  serialized_end=1876,
+  serialized_start=1852,
+  serialized_end=1903,
 )
 _sym_db.RegisterEnumDescriptor(_SNAPSHOTSTATE)
 
@@ -601,8 +601,8 @@ _VERSIONEDSNAPSHOT_STATISTICSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1366,
-  serialized_end=1415,
+  serialized_start=1393,
+  serialized_end=1442,
 )
 
 _VERSIONEDSNAPSHOT = _descriptor.Descriptor(
@@ -643,8 +643,8 @@ _VERSIONEDSNAPSHOT = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='root', full_name='data_management.VersionedSnapshot.root', index=4,
-      number=5, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -668,7 +668,7 @@ _VERSIONEDSNAPSHOT = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=1128,
-  serialized_end=1415,
+  serialized_end=1442,
 )
 
 
@@ -706,8 +706,8 @@ _COMMITINFO_STATISTICSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1366,
-  serialized_end=1415,
+  serialized_start=1393,
+  serialized_end=1442,
 )
 
 _COMMITINFO = _descriptor.Descriptor(
@@ -779,8 +779,8 @@ _COMMITINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1418,
-  serialized_end=1679,
+  serialized_start=1445,
+  serialized_end=1706,
 )
 
 
@@ -818,8 +818,8 @@ _TAG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1681,
-  serialized_end=1722,
+  serialized_start=1708,
+  serialized_end=1749,
 )
 
 
@@ -864,8 +864,8 @@ _FILEINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1724,
-  serialized_end=1778,
+  serialized_start=1751,
+  serialized_end=1805,
 )
 
 _CREATEDATASETREQUEST.fields_by_name['dataset_type'].enum_type = _DATASETTYPE
@@ -879,6 +879,7 @@ _SNAPSHOTVERSION.fields_by_name['commits'].message_type = _COMMITINFO
 _VERSIONEDSNAPSHOT_STATISTICSENTRY.containing_type = _VERSIONEDSNAPSHOT
 _VERSIONEDSNAPSHOT.fields_by_name['state'].enum_type = _SNAPSHOTSTATE
 _VERSIONEDSNAPSHOT.fields_by_name['parts'].message_type = _FILEINFO
+_VERSIONEDSNAPSHOT.fields_by_name['root'].message_type = _FILEINFO
 _VERSIONEDSNAPSHOT.fields_by_name['statistics'].message_type = _VERSIONEDSNAPSHOT_STATISTICSENTRY
 _COMMITINFO_STATISTICSENTRY.containing_type = _COMMITINFO
 _COMMITINFO.fields_by_name['tags'].message_type = _TAG
@@ -1019,8 +1020,8 @@ _DATAMANAGEMENTSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1879,
-  serialized_end=2508,
+  serialized_start=1906,
+  serialized_end=2535,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetDatasetSummary',

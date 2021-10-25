@@ -33,6 +33,7 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        logger.info("Hello, Training Service!");
         Properties props = ServiceBase.getConfigProperties();
         Config config = new Config(props);
 

@@ -8,7 +8,7 @@ grpcurl -plaintext \
     \"algorithm\":\"intent-classification\",
     \"dataset_id\":\"1\",
     \"name\":\"test1\",
-    \"train_data_version_hash\":\"hashBA==\",
+    \"train_data_version_hash\":\"hashDg==\",
     \"output_model_name\":\"my-intent-classification-model\",
     \"parameters\": {
       \"LR\":\"4\",
