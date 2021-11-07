@@ -3,6 +3,10 @@ training-code/text-classification/version.py
 
 .idea
 *.iml
+.project
+.settings/
+.classpath
+
 ### Maven template
 target/
 pom.xml.tag
