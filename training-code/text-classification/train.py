@@ -332,6 +332,7 @@ if config.RANK == 0:
         "Framework": "Pytorch",
         "FrameworkVersion": "1.9.0",
         "ModelName": config.MODEL_NAME,
+        "CodeVersion": config.MODEL_VERSION,
         "ModelVersion": config.MODEL_SERVING_VERSION,
         "classes": labels
     }
@@ -346,7 +347,7 @@ if config.RANK == 0:
     # archive model files for torch serving
     handler = os.path.join(pathlib.Path(__file__).parent.resolve(), 'torchserve_handler.py')
     extra_files = model_manifest_path + "," + model_vocab_path
-    archive_model_name = 'model'
+    archive_model_name = config.MODEL_NAME + "_" + config.MODEL_VERSION
     archive_model_file = os.path.join(config.JOB_ID, archive_model_name + ".mar")
     if os.path.exists(archive_model_file):
         os.remove(archive_model_file)
