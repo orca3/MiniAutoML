@@ -19,9 +19,11 @@ import datetime
 import io
 import os
 import time
+import json
 
 import torch
 import torch.distributed as dist
+import pathlib
 from minio import Minio
 from torch import nn
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -35,8 +37,7 @@ from torchtext.data.utils import get_tokenizer
 from torchtext.utils import unicode_csv_reader
 from torchtext.vocab import build_vocab_from_iterator
 
-from orca3_utils import Orca3Utils, TrainingConfig
-
+from orca3_utils import Orca3Utils, TrainingConfig, TorchModelArchiver
 
 class MapStyleDataset(torch.utils.data.Dataset):
     def __init__(self, iter_data):
@@ -72,6 +73,7 @@ def is_distributed():
 orca3_utils = Orca3Utils(config.METADATA_STORE_SERVER, config.JOB_ID, config.RANK,
                          config.TRAINING_DATASET_ID, config.TRAINING_DATASET_VERSION_HASH, config.MODEL_VERSION,
                          config.MODEL_NAME)
+model_archiver = TorchModelArchiver()
 
 if config.RANK == 0:
     run_started = orca3_utils.log_run_start()
@@ -124,7 +126,7 @@ def get_dataset_iter(datasetname, path):
 def load_label_dict(path):
     with open(path, mode='r') as infile:
         reader = csv.reader(infile)
-        label_dict = {int(rows[0]): rows[1] for rows in reader}
+        label_dict = {int(rows[0]) - 1: rows[1] for rows in reader}
         return label_dict
 
 
@@ -133,9 +135,7 @@ def load_label_dict(path):
 # --------------------------------
 
 tokenizer = get_tokenizer('basic_english')
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = "cpu"
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def yield_tokens(data_iter):
     for _, text in data_iter:
@@ -318,15 +318,53 @@ if config.RANK == 0:
     for var_name in optimizer.state_dict():
         print(var_name, "\t", optimizer.state_dict()[var_name])
 
-    # save model
+    # save model weights and bias
     if not os.path.exists(config.JOB_ID):
         os.makedirs(config.JOB_ID)
-    model_local_path = os.path.join(config.JOB_ID, "model_file")
+    model_local_path = os.path.join(config.JOB_ID, "model.pth")
     torch.save(model.state_dict(), model_local_path)
+    
+    # save manifest file
+    # TODO: save manifest (except classes) as metadata in metastore.
+    model_manifest_path = os.path.join(config.JOB_ID, 'manifest.json')
+    modelManifest = {
+        "Algorithm": "intent-classification",
+        "Framework": "Pytorch",
+        "FrameworkVersion": "1.9.0",
+        "ModelName": config.MODEL_NAME,
+        "CodeVersion": config.MODEL_VERSION,
+        "ModelVersion": config.MODEL_SERVING_VERSION,
+        "classes": labels
+    }
 
-    # upload model to minio storage
-    client.fput_object(config.MODEL_BUCKET, config.MODEL_OBJECT_NAME, model_local_path)
-    artifact = orca3_utils.create_artifact(config.MODEL_BUCKET, config.MODEL_OBJECT_NAME)
+    with open(model_manifest_path, 'w') as fp:
+        json.dump(modelManifest, fp)
+
+    # save vocabulary file
+    model_vocab_path = os.path.join(config.JOB_ID, "vocab.pth")
+    torch.save(vocab, model_vocab_path)
+
+    # archive model files for torch serving
+    handler = os.path.join(pathlib.Path(__file__).parent.resolve(), 'torchserve_handler.py')
+    extra_files = model_manifest_path + "," + model_vocab_path
+    archive_model_name = config.MODEL_NAME + "_" + config.MODEL_VERSION
+    archive_model_file = os.path.join(config.JOB_ID, archive_model_name + ".mar")
+    if os.path.exists(archive_model_file):
+        os.remove(archive_model_file)
+
+    model_archiver.archive(model_name=archive_model_name, handler_file=handler, model_state_file=model_local_path, 
+        extra_files=extra_files, model_version= config.MODEL_SERVING_VERSION, dest_path=config.JOB_ID)
+
+    # upload model files to minio storage, mini-automl-ms/run_{jobId}/...
+    # store four files per model: model.pth, vocab.pth, manifest.json and model.mar.
+    client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "model.pth"), model_local_path)
+    client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "vocab.pth"), model_vocab_path)
+    client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "manifest.json"), model_manifest_path)
+    client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "model.mar"), archive_model_file)
+    
+    # TODO, create artifact for above all four files.
+    artifact = orca3_utils.create_artifact(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "model.pth"))
+    
     print("saved model file as artifact {} version {} at {}/{}".format(artifact.artifact.name, artifact.version,
                                                                        config.MODEL_BUCKET, config.MODEL_OBJECT_NAME))
     orca3_utils.log_run_end(True, 'test accuracy {:8.3f}'.format(accu_test))

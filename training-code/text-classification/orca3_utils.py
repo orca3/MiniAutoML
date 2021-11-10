@@ -10,6 +10,10 @@ import metadata_store_pb2
 import metadata_store_pb2_grpc
 from version import gitsha
 
+from model_archiver.manifest_components.manifest import RuntimeType
+from model_archiver.model_packaging import generate_model_archive, package_model
+from model_archiver.model_packaging_utils import ModelExportUtils
+
 
 class Orca3Utils:
     def __init__(self, metadata_store_url: str, job_id: str, rank: int, dataset_id: str, version_hash: str,
@@ -87,6 +91,7 @@ class TrainingConfig:
             "{}={}".format("MODEL_NAME", self.MODEL_NAME),
             "{}={}".format("MODEL_BUCKET", self.MODEL_BUCKET),
             "{}={}".format("MODEL_VERSION", self.MODEL_VERSION),
+            "{}={}".format("MODEL_SERVING_VERSION", self.MODEL_SERVING_VERSION),
             "{}={}".format("WORLD_SIZE", self.WORLD_SIZE),
             "{}={}".format("RANK", self.RANK),
             "{}={}".format("MASTER_ADDR", self.MASTER_ADDR),
@@ -108,9 +113,10 @@ class TrainingConfig:
         self.TRAINING_DATASET_VERSION_HASH = os.getenv('TRAINING_DATASET_VERSION_HASH') or "hashDg=="
         self.TRAINING_DATA_BUCKET = os.getenv('TRAINING_DATA_BUCKET') or "mini-automl-dm"
         self.TRAINING_DATA_PATH = os.getenv('TRAINING_DATA_PATH') or "versionedDatasets/1/hashDg=="
-        self.MODEL_NAME = os.getenv('MODEL_NAME') or "text-classification-model"
+        self.MODEL_NAME = os.getenv('MODEL_NAME') or "intent"
         self.MODEL_BUCKET = os.getenv('MODEL_BUCKET') or "mini-automl-ms"
         self.MODEL_VERSION = gitsha
+        self.MODEL_SERVING_VERSION = os.getenv('MODEL_SERVING_VERSION') or "1.0"
         self.MODEL_OBJECT_NAME = "model"
         # distributed training related settings
         self.WORLD_SIZE = self.int_or_default(os.getenv('WORLD_SIZE'), 1)
@@ -122,3 +128,22 @@ class TrainingConfig:
         if len(sys.argv) == 3:
             self.RANK = int(sys.argv[1])
             self.WORLD_SIZE = int(sys.argv[2])
+
+class TorchModelArchiver:
+    class TorchArchiveArgs:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+        def update(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+    def archive(self, model_name, handler_file, model_state_file, extra_files, model_version, dest_path) -> None:
+        args = self.TorchArchiveArgs(model_name=model_name, handler=handler_file, runtime=RuntimeType.PYTHON.value, model_file=None,
+                serialized_file=model_state_file, extra_files=extra_files, export_path=dest_path, force=False,
+                archive_format="default", convert=False, version=model_version, source_vocab=None,
+                requirements_file=None)
+
+        return package_model(args, ModelExportUtils.generate_manifest_json(args))
+ 
+
+
