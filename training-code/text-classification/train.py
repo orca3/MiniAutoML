@@ -56,7 +56,7 @@ class MapStyleDataset(torch.utils.data.Dataset):
 # Launch training with two process, first value is RANK, second is WORLD_SIZE
 # train.py 0 2
 # train.py 1 2
-
+algorithm_name = "intent-classification"
 config = TrainingConfig()
 print("Training parameters")
 print(str(config))
@@ -323,7 +323,7 @@ if config.RANK == 0:
         os.makedirs(config.JOB_ID)
     model_local_path = os.path.join(config.JOB_ID, "model.pth")
     torch.save(model.state_dict(), model_local_path)
-    
+
     # save manifest file
     # TODO: save manifest (except classes) as metadata in metastore.
     model_manifest_path = os.path.join(config.JOB_ID, 'manifest.json')
@@ -352,7 +352,7 @@ if config.RANK == 0:
     if os.path.exists(archive_model_file):
         os.remove(archive_model_file)
 
-    model_archiver.archive(model_name=archive_model_name, handler_file=handler, model_state_file=model_local_path, 
+    model_archiver.archive(model_name=archive_model_name, handler_file=handler, model_state_file=model_local_path,
         extra_files=extra_files, model_version= config.MODEL_SERVING_VERSION, dest_path=config.JOB_ID)
 
     # upload model files to minio storage, mini-automl-ms/run_{jobId}/...
@@ -361,10 +361,11 @@ if config.RANK == 0:
     client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "vocab.pth"), model_vocab_path)
     client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "manifest.json"), model_manifest_path)
     client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "model.mar"), archive_model_file)
-    
+
     # TODO, create artifact for above all four files.
-    artifact = orca3_utils.create_artifact(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "model.pth"))
-    
+    artifact = orca3_utils.create_artifact(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "model.pth"),
+                                           algorithm_name)
+
     print("saved model file as artifact {} version {} at {}/{}".format(artifact.artifact.name, artifact.version,
                                                                        config.MODEL_BUCKET, config.MODEL_OBJECT_NAME))
     orca3_utils.log_run_end(True, 'test accuracy {:8.3f}'.format(accu_test))
