@@ -1,13 +1,15 @@
 package org.orca3.miniAutoML.prediction;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
+import io.grpc.health.v1.HealthCheckRequest;
+import io.grpc.health.v1.HealthCheckResponse;
+import io.grpc.health.v1.HealthGrpc;
 import io.grpc.stub.StreamObserver;
+import io.minio.MinioClient;
 import org.orca3.miniAutoML.ServiceBase;
-import org.orca3.miniAutoML.dataManagement.FileInfo;
 import org.orca3.miniAutoML.metadataStore.GetArtifactRequest;
 import org.orca3.miniAutoML.metadataStore.GetArtifactResponse;
 import org.orca3.miniAutoML.metadataStore.MetadataStoreServiceGrpc;
@@ -15,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
 
 public class PredictionService extends PredictionServiceGrpc.PredictionServiceImplBase {
@@ -26,9 +27,13 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
     private final PredictorConnectionManager connectionManager;
 
     public PredictionService(ManagedChannel msChannel, PredictorConnectionManager connectionManager, Config config) {
+        MinioClient minioClient = MinioClient.builder()
+                .endpoint(config.minioHost)
+                .credentials(config.minioAccessKey, config.minioSecretKey)
+                .build();
         this.config = config;
         this.msClient = MetadataStoreServiceGrpc.newBlockingStub(msChannel);
-        this.modelManager = new ModelManager(config.modelCachePath);
+        this.modelManager = new ModelManager(config.modelCachePath, minioClient);
         this.connectionManager = connectionManager;
     }
 
@@ -39,8 +44,6 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
         ManagedChannel msChannel = ManagedChannelBuilder.forAddress(config.msHost, Integer.parseInt(config.msPort))
                 .usePlaintext().build();
         PredictorConnectionManager connectionManager = new PredictorConnectionManager();
-        // FIXME: remove me once service registry is done
-        connectionManager.put("intent-classification", "localhost", 50051);
         PredictionService psService = new PredictionService(msChannel, connectionManager, config);
         ServiceBase.startService(Integer.parseInt(config.serverPort), psService, () -> {
             // Graceful shutdown
@@ -53,56 +56,24 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
     @Override
     public void predict(PredictRequest request, StreamObserver<PredictResponse> responseObserver) {
         String runId;
-        FileInfo artifactRoot = null;
         String algorithm;
-        if (Strings.isNullOrEmpty(request.getRunId())) {
-            if (Strings.isNullOrEmpty(request.getModelName()) || Strings.isNullOrEmpty(request.getVersion())) {
-                responseObserver.onError(Status.INVALID_ARGUMENT
-                        .withDescription("Neither runId nor (modelName, version) were given.")
-                        .asException());
-                return;
-            }
+        runId = request.getRunId();
+        if (modelManager.contains(runId)) {
+            algorithm = modelManager.getAlgorithm(runId);
+        } else {
             try {
                 GetArtifactResponse artifactResponse = msClient.getArtifact(GetArtifactRequest.newBuilder()
-                        .setName(request.getModelName())
-                        .setVersion(request.getVersion()).build());
-                runId = artifactResponse.getRunId();
-                artifactRoot = artifactResponse.getArtifact();
+                        .setRunId(runId).build());
+                modelManager.set(runId, artifactResponse);
                 algorithm = artifactResponse.getAlgorithm();
             } catch (Exception ex) {
-                String msg = String.format("Cannot locate model artifact for name %s version %s.",
-                        request.getModelName(), request.getVersion());
+                String msg = String.format("Cannot locate model artifact for runId %s.", runId);
                 logger.error(msg, ex);
                 responseObserver.onError(Status.NOT_FOUND
                         .withDescription(msg)
                         .asException());
                 return;
             }
-        } else {
-            runId = request.getRunId();
-        }
-        if (!modelManager.contains(runId)) {
-            if (artifactRoot == null) {
-                try {
-                    GetArtifactResponse artifactResponse = msClient.getArtifact(GetArtifactRequest.newBuilder()
-                                    .setName(runId).build());
-                    artifactRoot = artifactResponse.getArtifact();
-                    algorithm = artifactResponse.getAlgorithm();
-                } catch (Exception ex) {
-                    String msg = String.format("Cannot locate model artifact for runId %s.", runId);
-                    logger.error(msg, ex);
-                    responseObserver.onError(Status.NOT_FOUND
-                            .withDescription(msg)
-                            .asException());
-                    return;
-                }
-            }
-            modelManager.set(runId, artifactRoot);
-            // FIXME
-            algorithm = "intent-classification";
-        } else {
-            // FIXME
-            algorithm = "intent-classification";
         }
         if (!connectionManager.contains(algorithm)) {
             responseObserver.onError(Status.FAILED_PRECONDITION
@@ -125,9 +96,58 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
 
     }
 
+    @Override
+    public void registerPredictor(RegisterPredictorRequest request, StreamObserver<RegisterPredictorResponse> responseObserver) {
+        if (Strings.isNullOrEmpty(request.getAlgorithm())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("algorithm is required.")
+                    .asException());
+            return;
+        }
+        if (Strings.isNullOrEmpty(request.getHost())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("host is required.")
+                    .asException());
+            return;
+        }
+        if (request.getPort() == 0) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("port is required and cannot be 0.")
+                    .asException());
+            return;
+        }
+        ManagedChannel channel;
+        try {
+            channel = ManagedChannelBuilder.forAddress(request.getHost(), request.getPort())
+                    .usePlaintext().build();
+            HealthCheckResponse a = HealthGrpc.newBlockingStub(channel).check(HealthCheckRequest.newBuilder().build());
+            boolean up = HealthCheckResponse.ServingStatus.SERVING.equals(a.getStatus());
+            if (up) {
+                connectionManager.put(request.getAlgorithm(), request.getHost(), request.getPort());
+            }
+            responseObserver.onNext(RegisterPredictorResponse.newBuilder()
+                    .setAlgorithm(request.getAlgorithm())
+                    .setSuccess(up)
+                    .build());
+            responseObserver.onCompleted();
+        } catch (Exception ex) {
+            String msg = String.format("Cannot connect with predictor on %s:%d", request.getHost(), request.getPort());
+            logger.warn(msg, ex);
+            responseObserver.onNext(RegisterPredictorResponse.newBuilder()
+                    .setAlgorithm(request.getAlgorithm())
+                    .setSuccess(false)
+                    .build());
+            responseObserver.onCompleted();
+        }
+    }
+
     static class Config {
         final String msPort;
         final String msHost;
+        final String minioBucketName;
+        final String minioAccessKey;
+        final String minioSecretKey;
+        final String minioHost;
         final String serverPort;
         final String modelCachePath;
 
@@ -135,6 +155,10 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
         public Config(Properties properties) {
             this.msPort = properties.getProperty("ms.port");
             this.msHost = properties.getProperty("ms.host");
+            this.minioBucketName = properties.getProperty("minio.bucketName");
+            this.minioAccessKey = properties.getProperty("minio.accessKey");
+            this.minioSecretKey = properties.getProperty("minio.secretKey");
+            this.minioHost = properties.getProperty("minio.host");
             this.serverPort = properties.getProperty("server.port");
             this.modelCachePath = properties.getProperty("server.modelCachePath");
         }

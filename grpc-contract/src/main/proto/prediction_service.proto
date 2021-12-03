@@ -8,6 +8,7 @@ package prediction;
 
 service PredictionService {
   rpc Predict(PredictRequest) returns (PredictResponse);
+  rpc RegisterPredictor(RegisterPredictorRequest) returns (RegisterPredictorResponse);
 }
 
 service Predictor {
@@ -15,14 +16,24 @@ service Predictor {
 }
 
 message PredictRequest {
-  string modelName = 1;
-  string version = 2;
   string runId = 3;
   string document = 4;
 }
 
 message PredictResponse {
   string response = 1;
+}
+
+message RegisterPredictorRequest {
+  string algorithm = 1;
+  string host = 2;
+  uint32 port = 3;
+  string backend = 4;
+}
+
+message RegisterPredictorResponse {
+  string algorithm = 1;
+  bool success = 2;
 }
 
 message PredictorPredictRequest {

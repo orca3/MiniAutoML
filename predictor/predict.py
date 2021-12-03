@@ -162,9 +162,9 @@ def serve():
         PredictorServicer(model_manager), server)
     health_servicer = health.HealthServicer(
         experimental_non_blocking=True,
-        experimental_thread_pool=server)
+        experimental_thread_pool=futures.ThreadPoolExecutor(max_workers=10))
     health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port('0.0.0.0:51001')
     server.start()
     server.wait_for_termination()
 

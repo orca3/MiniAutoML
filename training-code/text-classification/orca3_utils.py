@@ -130,6 +130,7 @@ class TrainingConfig:
             self.RANK = int(sys.argv[1])
             self.WORLD_SIZE = int(sys.argv[2])
 
+
 class TorchModelArchiver:
     class TorchArchiveArgs:
         def __init__(self, **kwargs):

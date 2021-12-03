@@ -20,6 +20,7 @@ import io
 import os
 import time
 import json
+from zipfile import ZipFile
 
 import torch
 import torch.distributed as dist
@@ -353,18 +354,17 @@ if config.RANK == 0:
         os.remove(archive_model_file)
 
     model_archiver.archive(model_name=archive_model_name, handler_file=handler, model_state_file=model_local_path,
-        extra_files=extra_files, model_version= config.MODEL_SERVING_VERSION, dest_path=config.JOB_ID)
+        extra_files=extra_files, model_version=config.MODEL_SERVING_VERSION, dest_path=config.JOB_ID)
 
     # upload model files to minio storage, mini-automl-ms/run_{jobId}/...
     # store four files per model: model.pth, vocab.pth, manifest.json and model.mar.
-    client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "model.pth"), model_local_path)
-    client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "vocab.pth"), model_vocab_path)
-    client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "manifest.json"), model_manifest_path)
-    client.fput_object(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "model.mar"), archive_model_file)
+    zip_path = os.path.join(config.JOB_ID, "artifact.zip")
+    with ZipFile(zip_path, "w") as zip:
+        for name in [model_local_path, model_vocab_path, model_manifest_path, archive_model_file]:
+            zip.write(name)
+    client.fput_object(config.MODEL_BUCKET, config.MODEL_OBJECT_NAME, archive_model_file)
 
-    # TODO, create artifact for above all four files.
-    artifact = orca3_utils.create_artifact(config.MODEL_BUCKET, os.path.join(config.MODEL_OBJECT_NAME, "model.pth"),
-                                           algorithm_name)
+    artifact = orca3_utils.create_artifact(config.MODEL_BUCKET, config.MODEL_OBJECT_NAME, algorithm_name)
 
     print("saved model file as artifact {} version {} at {}/{}".format(artifact.artifact.name, artifact.version,
                                                                        config.MODEL_BUCKET, config.MODEL_OBJECT_NAME))

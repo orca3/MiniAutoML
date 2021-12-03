@@ -36,6 +36,11 @@
                 <version>1.2.3</version>
             </dependency>
             <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>8.2.2</version>
+            </dependency>
+            <dependency>
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-testing</artifactId>
                 <version>${grpc.version}</version>

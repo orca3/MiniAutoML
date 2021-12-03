@@ -19,12 +19,23 @@ class PredictionServiceStub(object):
                 request_serializer=prediction__service__pb2.PredictRequest.SerializeToString,
                 response_deserializer=prediction__service__pb2.PredictResponse.FromString,
                 )
+        self.RegisterPredictor = channel.unary_unary(
+                '/prediction.PredictionService/RegisterPredictor',
+                request_serializer=prediction__service__pb2.RegisterPredictorRequest.SerializeToString,
+                response_deserializer=prediction__service__pb2.RegisterPredictorResponse.FromString,
+                )
 
 
 class PredictionServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Predict(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RegisterPredictor(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -37,6 +48,11 @@ def add_PredictionServiceServicer_to_server(servicer, server):
                     servicer.Predict,
                     request_deserializer=prediction__service__pb2.PredictRequest.FromString,
                     response_serializer=prediction__service__pb2.PredictResponse.SerializeToString,
+            ),
+            'RegisterPredictor': grpc.unary_unary_rpc_method_handler(
+                    servicer.RegisterPredictor,
+                    request_deserializer=prediction__service__pb2.RegisterPredictorRequest.FromString,
+                    response_serializer=prediction__service__pb2.RegisterPredictorResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -62,6 +78,23 @@ class PredictionService(object):
         return grpc.experimental.unary_unary(request, target, '/prediction.PredictionService/Predict',
             prediction__service__pb2.PredictRequest.SerializeToString,
             prediction__service__pb2.PredictResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def RegisterPredictor(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/prediction.PredictionService/RegisterPredictor',
+            prediction__service__pb2.RegisterPredictorRequest.SerializeToString,
+            prediction__service__pb2.RegisterPredictorResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

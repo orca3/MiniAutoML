@@ -197,35 +197,20 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
 
     @Override
     public void getArtifact(GetArtifactRequest request, StreamObserver<GetArtifactResponse> responseObserver) {
-        String artifactName = request.getName();
-        ArtifactInfo artifact;
-        if (!Strings.isNullOrEmpty(request.getRunId())) {
-            String runId = request.getRunId();
-            if (store.runIdLookup.containsKey(runId)) {
-                artifact = store.runIdLookup.get(runId);
-            } else {
-                responseObserver.onError(Status.NOT_FOUND
-                        .withDescription(String.format("Artifact with runId %s doesn't exist", runId))
-                        .asException());
-                return;
-            }
-        } else {
-            if (!store.artifactRepos.containsKey(artifactName)) {
-                responseObserver.onError(Status.NOT_FOUND
-                        .withDescription(String.format("Artifact %s doesn't exist", artifactName))
-                        .asException());
-                return;
-            }
-            ArtifactRepo repo = store.artifactRepos.get(artifactName);
-            String version = request.getVersion();
-            if (!repo.artifacts.containsKey(version)) {
-                responseObserver.onError(Status.NOT_FOUND
-                        .withDescription(String.format("Version %s of Artifact %s doesn't exist", version, artifactName))
-                        .asException());
-                return;
-            }
-            artifact = repo.artifacts.get(version);
+        if (Strings.isNullOrEmpty(request.getRunId())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("RunId required.")
+                    .asException());
+            return;
         }
+        String runId = request.getRunId();
+        if (!store.runIdLookup.containsKey(runId)) {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription(String.format("Artifact with runId %s doesn't exist", runId))
+                    .asException());
+            return;
+        }
+        ArtifactInfo artifact = store.runIdLookup.get(runId);
         responseObserver.onNext(GetArtifactResponse.newBuilder()
                 .setName(artifact.getArtifactName())
                 .setVersion(artifact.getVersion())

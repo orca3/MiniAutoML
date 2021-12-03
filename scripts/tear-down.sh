@@ -14,6 +14,9 @@ fi
 if [ "$(docker ps -a | grep training-service)" ]; then
   docker stop training-service
 fi
+if [ "$(docker ps -a | grep intent-classification-predictor)" ]; then
+  docker stop intent-classification-predictor
+fi
 if [ "$(docker ps -a | grep local-docker-registry)" ]; then
   docker stop local-docker-registry
 fi

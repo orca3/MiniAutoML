@@ -11,7 +11,7 @@ RUN mkdir /models
 RUN mkdir /logs
 
 ENV MODEL_DIR=/models
-EXPOSE 50051
+EXPOSE 51001
 
 RUN chgrp -R 0 /opt/intent-predictor \
   && chmod -R g+rwX /opt/intent-predictor \

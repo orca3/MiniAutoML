@@ -2,7 +2,7 @@
 ```
 conda create --name intent-pytorch python=3.7
 conda activate intent-pytorch
-conda install -c pytorch pytorch torchtext
+conda install -c pytorch pytorch torchtext torch-model-archiver
 conda install -c conda-forge minio
 
 conda activate pytorch-p3.8
