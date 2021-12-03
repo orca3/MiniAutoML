@@ -60,6 +60,7 @@ message GetRunStatusResponse {
 message CreateArtifactRequest {
   data_management.FileInfo artifact = 1;
   string run_id = 2;
+  string algorithm = 3;
 }
 
 message CreateArtifactResponse {
@@ -67,11 +68,11 @@ message CreateArtifactResponse {
   data_management.FileInfo artifact = 2;
   string run_id = 3;
   string name = 4;
+  string algorithm = 5;
 }
 
 message GetArtifactRequest {
-  string name = 1;
-  string version = 2;
+  string run_id = 3;
 }
 
 message GetArtifactResponse {
@@ -79,6 +80,7 @@ message GetArtifactResponse {
   string version = 2;
   data_management.FileInfo artifact = 3;
   string run_id = 4;
+  string algorithm = 5;
 }
 
 //=========

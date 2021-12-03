@@ -1,5 +1,6 @@
 package org.orca3.miniAutoML.metadataStore;
 
+import com.google.common.base.Strings;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.minio.BucketExistsArgs;
@@ -165,13 +166,7 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
     public void createArtifact(CreateArtifactRequest request, StreamObserver<CreateArtifactResponse> responseObserver) {
         String artifactName = request.getArtifact().getName();
         String version;
-        ArtifactRepo repo;
-        if (store.artifactRepos.containsKey(artifactName)) {
-            repo = store.artifactRepos.get(artifactName);
-        } else {
-            repo = new ArtifactRepo(artifactName);
-            store.artifactRepos.put(artifactName, repo);
-        }
+        ArtifactRepo repo = store.getRepo(artifactName);
         version = Integer.toString(repo.getSeed());
         FileInfo destination = FileInfo.newBuilder().setName(artifactName)
                 .setBucket(config.minioBucketName)
@@ -188,37 +183,40 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
             throw new RuntimeException(e);
         }
 
-        repo.artifacts.put(version, new ArtifactInfo(destination, request.getRunId()));
+        store.put(artifactName, version, new ArtifactInfo(destination, request.getRunId(), artifactName, version,
+                request.getAlgorithm()));
         responseObserver.onNext(CreateArtifactResponse.newBuilder()
                 .setVersion(version)
                 .setRunId(request.getRunId())
                 .setArtifact(destination)
                 .setName(artifactName)
+                .setAlgorithm(request.getAlgorithm())
                 .build());
         responseObserver.onCompleted();
     }
 
     @Override
     public void getArtifact(GetArtifactRequest request, StreamObserver<GetArtifactResponse> responseObserver) {
-        String artifactName = request.getName();
-        if (!store.artifactRepos.containsKey(artifactName)) {
-            responseObserver.onError(Status.NOT_FOUND
-                    .withDescription(String.format("Artifact %s doesn't exist", artifactName))
+        if (Strings.isNullOrEmpty(request.getRunId())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("RunId required.")
                     .asException());
+            return;
         }
-        ArtifactRepo repo = store.artifactRepos.get(artifactName);
-        String version = request.getVersion();
-        if (!repo.artifacts.containsKey(version)) {
+        String runId = request.getRunId();
+        if (!store.runIdLookup.containsKey(runId)) {
             responseObserver.onError(Status.NOT_FOUND
-                    .withDescription(String.format("Version %s of Artifact %s doesn't exist", version, artifactName))
+                    .withDescription(String.format("Artifact with runId %s doesn't exist", runId))
                     .asException());
+            return;
         }
-        ArtifactInfo artifact = repo.artifacts.get(version);
+        ArtifactInfo artifact = store.runIdLookup.get(runId);
         responseObserver.onNext(GetArtifactResponse.newBuilder()
-                .setName(artifactName)
-                .setVersion(version)
+                .setName(artifact.getArtifactName())
+                .setVersion(artifact.getVersion())
                 .setRunId(artifact.getRunId())
                 .setArtifact(artifact.getFileInfo())
+                .setAlgorithm(artifact.getAlgorithm())
                 .build());
         responseObserver.onCompleted();
     }

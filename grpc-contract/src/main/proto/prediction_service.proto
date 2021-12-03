@@ -7,13 +7,40 @@ option java_outer_classname = "PredictionServiceProto";
 package prediction;
 
 service PredictionService {
-  rpc Echo(EchoRequest) returns (EchoResponse);
+  rpc Predict(PredictRequest) returns (PredictResponse);
+  rpc RegisterPredictor(RegisterPredictorRequest) returns (RegisterPredictorResponse);
 }
 
-message EchoRequest {
-  string message = 1;
+service Predictor {
+  rpc PredictorPredict(PredictorPredictRequest) returns (PredictorPredictResponse);
 }
 
-message EchoResponse {
-  string message = 1;
+message PredictRequest {
+  string runId = 3;
+  string document = 4;
+}
+
+message PredictResponse {
+  string response = 1;
+}
+
+message RegisterPredictorRequest {
+  string algorithm = 1;
+  string host = 2;
+  uint32 port = 3;
+  string backend = 4;
+}
+
+message RegisterPredictorResponse {
+  string algorithm = 1;
+  bool success = 2;
+}
+
+message PredictorPredictRequest {
+  string runId = 1;
+  string document = 2;
+}
+
+message PredictorPredictResponse {
+  string response = 1;
 }

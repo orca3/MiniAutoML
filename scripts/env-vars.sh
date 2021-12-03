@@ -7,4 +7,5 @@ export DM_PORT=5000
 export PS_PORT=5001
 export MS_PORT=5002
 export TS_PORT=5003
+export ICP_PORT=5101
 export REGISTRY_PORT=3000

@@ -1,6 +1,6 @@
 FROM pytorch/pytorch:1.9.0-cuda10.2-cudnn7-runtime
 
-RUN pip3 install Flask==2.0.1
+RUN pip3 install grpcio protobuf grpcio-health-checking
 
 RUN mkdir /opt/intent-predictor
 COPY *.py /opt/intent-predictor
@@ -11,7 +11,7 @@ RUN mkdir /models
 RUN mkdir /logs
 
 ENV MODEL_DIR=/models
-EXPOSE 5000
+EXPOSE 51001
 
 RUN chgrp -R 0 /opt/intent-predictor \
   && chmod -R g+rwX /opt/intent-predictor \

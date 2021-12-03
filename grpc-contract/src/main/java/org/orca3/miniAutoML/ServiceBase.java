@@ -1,8 +1,14 @@
 package org.orca3.miniAutoML;
 
 import io.grpc.BindableService;
+import io.grpc.Metadata;
+import io.grpc.MethodDescriptor;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerCall;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptor;
+import io.grpc.Status;
 import io.grpc.health.v1.HealthCheckResponse;
 import io.grpc.protobuf.services.HealthStatusManager;
 import io.grpc.protobuf.services.ProtoReflectionService;
@@ -32,6 +38,7 @@ public class ServiceBase {
                 .addService(service)
                 .addService(ProtoReflectionService.newInstance())
                 .addService(health.getHealthService())
+                .intercept(new GrpcInterceptor())
                 .build()
                 .start();
         logger.info("Listening on port " + port);
@@ -53,4 +60,76 @@ public class ServiceBase {
         server.awaitTermination();
 
     }
+
+    static class GrpcInterceptor implements ServerInterceptor {
+
+        @Override
+        public <M, R> ServerCall.Listener<M> interceptCall(
+                ServerCall<M, R> call, Metadata headers, ServerCallHandler<M, R> next) {
+            GrpcServerCall<M, R> grpcServerCall = new GrpcServerCall<>(call);
+
+            ServerCall.Listener<M> listener = next.startCall(grpcServerCall, headers);
+
+            return new GrpcForwardingServerCallListener<>(call.getMethodDescriptor(), listener) {
+                @Override
+                public void onMessage(M message) {
+                    logger.info("Method: {}, Message: {}", methodName, message);
+                    super.onMessage(message);
+                }
+            };
+        }
+
+
+    }
+
+    private static class GrpcServerCall<M, R> extends ServerCall<M, R> {
+
+        ServerCall<M, R> serverCall;
+
+        protected GrpcServerCall(ServerCall<M, R> serverCall) {
+            this.serverCall = serverCall;
+        }
+
+        @Override
+        public void request(int numMessages) {
+            serverCall.request(numMessages);
+        }
+
+        @Override
+        public void sendHeaders(Metadata headers) {
+            serverCall.sendHeaders(headers);
+        }
+
+        @Override
+        public void sendMessage(R message) {
+            logger.info("Method: {}, Response: {}", serverCall.getMethodDescriptor().getFullMethodName(), message);
+            serverCall.sendMessage(message);
+        }
+
+        @Override
+        public void close(Status status, Metadata trailers) {
+            serverCall.close(status, trailers);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return serverCall.isCancelled();
+        }
+
+        @Override
+        public MethodDescriptor<M, R> getMethodDescriptor() {
+            return serverCall.getMethodDescriptor();
+        }
+    }
+
+    private static class GrpcForwardingServerCallListener<M> extends io.grpc.ForwardingServerCallListener.SimpleForwardingServerCallListener<M> {
+
+        String methodName;
+
+        protected GrpcForwardingServerCallListener(MethodDescriptor<?, ?> method, ServerCall.Listener<M> listener) {
+            super(listener);
+            methodName = method.getFullMethodName();
+        }
+    }
 }
+

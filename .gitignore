@@ -1,3 +1,5 @@
+# used in demo
+model_cache/
 # will be updated by build scripts automatically
 training-code/text-classification/version.py
 

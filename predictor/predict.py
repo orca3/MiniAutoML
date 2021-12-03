@@ -15,14 +15,19 @@ By using this sample code, I will show you how a mode training code can be integ
 """
 
 import json
-import torch
 import os
+from concurrent import futures
 from os.path import exists
-from flask import Flask, jsonify, request, abort
-from torch import nn
 
+import grpc
+import torch
+from grpc_health.v1 import health_pb2_grpc, health
+from torch import nn
 from torchtext.data.utils import get_tokenizer
+
+import prediction_service_pb2_grpc, prediction_service_pb2
 from utils import PredictorConfig
+
 
 ######################################################################
 # Define the model architecture
@@ -47,14 +52,18 @@ class TextClassificationModel(nn.Module):
         embedded = self.embedding(text, offsets)
         return self.fc2(self.fc1(embedded))
 
+
 ######################################################################
 # Define model serving logic
 # Model manager will keep all loaded models in memory
 # ----------------
-class ModelManager():
-    def __init__(self, model_dir):
-        self.model_dir = model_dir
+class ModelManager:
+    def __init__(self, config, tokenizer, device):
+        self.model_dir = config.MODEL_DIR
         self.models = {}
+        self.config = config
+        self.tokenizer = tokenizer
+        self.device = device
 
     def model_key(self, model_id):
         return model_id + "_model"
@@ -69,26 +78,26 @@ class ModelManager():
         if model_id in self.models:
             return
 
-        # load model files, including vocabulary, prediction class mapping. 
+        # load model files, including vocabulary, prediction class mapping.
         vacab_path = os.path.join(self.model_dir, model_id, "vocab.pth")
         manifest_path = os.path.join(self.model_dir, model_id, "manifest.json")
         model_path = os.path.join(self.model_dir, model_id, "model.pth")
 
         if not exists(vacab_path):
-            abort(404, description= model_id + ", model vocabulary not found")
+            raise ModelLoadingError(grpc.StatusCode.NOT_FOUND, model_id + ", model vocabulary not found")
         if not exists(manifest_path):
-            abort(404, description= model_id + ", model class not found")
+            raise ModelLoadingError(grpc.StatusCode.NOT_FOUND, ", model class not found")
         if not exists(model_path):
-            abort(404, description= model_id + ", model file not found")   
+            raise ModelLoadingError(grpc.StatusCode.NOT_FOUND, ", model file not found")
 
         vocab = torch.load(vacab_path)
         with open(manifest_path, 'r') as f:
             manifest = json.loads(f.read())
         classes = manifest['classes']
-        
+
         # initialize model and load model weights
         num_class, vocab_size, emsize = len(classes), len(vocab), 64
-        model = TextClassificationModel(vocab_size, emsize, config.FC_SIZE, num_class).to(device)
+        model = TextClassificationModel(vocab_size, emsize, self.config.FC_SIZE, num_class).to(self.device)
         model.load_state_dict(torch.load(model_path))
         model.eval()
 
@@ -98,22 +107,22 @@ class ModelManager():
 
     def predict(self, model_id, document):
         if self.model_key(model_id) not in self.models:
-            abort(404, description= model_id + ", model not found")
+            raise ModelLoadingError(grpc.StatusCode.NOT_FOUND, model_id + ", model not found")
 
         if self.model_vocab_key(model_id) not in self.models:
-            abort(404, description= model_id + ", model vocabulary not found")
+            raise ModelLoadingError(grpc.StatusCode.NOT_FOUND, model_id + ", model vocabulary not found")
 
         if self.model_classes(model_id) not in self.models:
-            abort(404, description= model_id + ", model classes not found")    
-        
+            raise ModelLoadingError(grpc.StatusCode.NOT_FOUND, model_id + ", model classes not found")
+
         model = self.models[self.model_key(model_id)]
         vocab = self.models[self.model_vocab_key(model_id)]
         classes = self.models[self.model_classes(model_id)]
 
-        text_pipeline = lambda x: vocab(tokenizer(x))
+        def text_pipeline(x):
+            return vocab(self.tokenizer(x))
 
-        user_input = " ".join(document.decode("utf-8"))
-        processed_text = torch.tensor(text_pipeline(user_input), dtype=torch.int64)
+        processed_text = torch.tensor(text_pipeline(document), dtype=torch.int64)
         offsets = [0, processed_text.size(0)]
         offsets = torch.tensor(offsets[:-1]).cumsum(dim=0)
         val = model(processed_text, offsets)
@@ -124,31 +133,45 @@ class ModelManager():
         return res
 
 
+class ModelLoadingError(Exception):
+    def __init__(self, status_code, message):
+        self.status_code = status_code
+        self.message = message
+
+
+class PredictorServicer(prediction_service_pb2_grpc.PredictorServicer):
+    def __init__(self, model_manager):
+        self.model_manager = model_manager
+
+    def PredictorPredict(self, request, context: grpc.ServicerContext):
+        try:
+            self.model_manager.load_model(model_id=request.runId)
+            class_name = self.model_manager.predict(request.runId, request.document)
+            return prediction_service_pb2.PredictorPredictResponse(response=json.dumps({'res': class_name}))
+        except ModelLoadingError as ex:
+            context.abort(ex.status_code, ex.message)
+
+
+def serve():
+    config = PredictorConfig()
+    print("Predictor parameters")
+    print(str(config))
+    model_manager = ModelManager(config, tokenizer=get_tokenizer('basic_english'), device="cpu")
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    prediction_service_pb2_grpc.add_PredictorServicer_to_server(
+        PredictorServicer(model_manager), server)
+    health_servicer = health.HealthServicer(
+        experimental_non_blocking=True,
+        experimental_thread_pool=futures.ThreadPoolExecutor(max_workers=10))
+    health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
+    server.add_insecure_port('0.0.0.0:51001')
+    server.start()
+    server.wait_for_termination()
+
+
 ######################################################################
 # Start the inference serve
 # ----------------
-config = PredictorConfig()
-print("Predictor parameters")
-print(str(config))
-
-tokenizer = get_tokenizer('basic_english')
-device = "cpu"
-
-app = Flask(__name__)
-model_manager = ModelManager(config.MODEL_DIR)
-
-@app.route('/predictions/<model_id>', methods=['GET'])
-def predict(model_id):
-    if request.method == 'GET':
-        model_manager.load_model(model_id=model_id)
-        class_name = model_manager.predict(model_id, request.get_data())
-        return jsonify({'res': class_name})
-
-@app.errorhandler(404)
-def model_not_found(e):
-    return jsonify(error=str(e)), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
-
-
+    serve()

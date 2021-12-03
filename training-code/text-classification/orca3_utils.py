@@ -45,7 +45,7 @@ class Orca3Utils:
             message=message,
         ))
 
-    def create_artifact(self, model_bucket: str, model_object_name: str):
+    def create_artifact(self, model_bucket: str, model_object_name: str, algorithm: str):
         return self.stub.CreateArtifact(metadata_store_pb2.CreateArtifactRequest(
             artifact=data_management_pb2.FileInfo(
                 name=self.model_name,
@@ -53,6 +53,7 @@ class Orca3Utils:
                 path=model_object_name,
             ),
             run_id=self.run_id,
+            algorithm=algorithm,
         ))
 
     def log_epoch(self, started: str, epoch_id: int, metrics: Dict[str, str]):
@@ -129,6 +130,7 @@ class TrainingConfig:
             self.RANK = int(sys.argv[1])
             self.WORLD_SIZE = int(sys.argv[2])
 
+
 class TorchModelArchiver:
     class TorchArchiveArgs:
         def __init__(self, **kwargs):
@@ -144,6 +146,6 @@ class TorchModelArchiver:
                 requirements_file=None)
 
         return package_model(args, ModelExportUtils.generate_manifest_json(args))
- 
+
 
 
