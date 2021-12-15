@@ -2,19 +2,15 @@ package org.orca3.miniAutoML.prediction;
 
 import com.google.common.collect.Maps;
 import io.minio.DownloadObjectArgs;
+import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
-import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.utils.IOUtils;
+import io.minio.Result;
+import io.minio.messages.Item;
 import org.orca3.miniAutoML.metadataStore.GetArtifactResponse;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class ModelManager {
     private final String modelCachePath;
@@ -32,17 +28,21 @@ public class ModelManager {
     }
 
     public void set(String runId, GetArtifactResponse artifactResponse) {
+        final String bucket = artifactResponse.getArtifact().getBucket();
         try {
-            File tarFile = new File(modelCachePath, String.format("%s.zip", runId));
-            File untarDir = new File(modelCachePath, runId);
-            untarDir.mkdir();
-            minioClient.downloadObject(DownloadObjectArgs.builder()
-                    .bucket(artifactResponse.getArtifact().getBucket())
-                    .object(artifactResponse.getArtifact().getPath())
-                    .filename(tarFile.getAbsolutePath())
-                    .build());
-            unTar(tarFile, untarDir);
-            algorithmCache.put(runId, artifactResponse.getAlgorithm());
+            for (Result<Item> item : minioClient.listObjects(ListObjectsArgs.builder()
+                    .bucket(bucket)
+                    .prefix(artifactResponse.getArtifact().getPath())
+
+                    .build())) {
+                String objectName = item.get().objectName();
+                String fileName = Paths.get(objectName).getFileName().toString();
+                minioClient.downloadObject(DownloadObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(item.get().objectName())
+                        .filename(new File(modelCachePath, fileName).getAbsolutePath())
+                        .build());
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -50,44 +50,5 @@ public class ModelManager {
 
     public String getAlgorithm(String runId) {
         return algorithmCache.get(runId);
-    }
-
-    private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
-        File destFile = new File(destinationDir, zipEntry.getName());
-
-        String destDirPath = destinationDir.getCanonicalPath();
-        String destFilePath = destFile.getCanonicalPath();
-
-        if (!destFilePath.startsWith(destDirPath + File.separator)) {
-            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
-        }
-
-        return destFile;
-    }
-
-    private static void unTar(final File inputFile, final File outputDir) throws FileNotFoundException, IOException, ArchiveException {
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(inputFile));
-        ZipEntry zipEntry = zis.getNextEntry();
-        while (zipEntry != null) {
-            File newFile = newFile(outputDir, zipEntry);
-            if (zipEntry.isDirectory()) {
-                if (!newFile.isDirectory() && !newFile.mkdirs()) {
-                    throw new IOException("Failed to create directory " + newFile);
-                }
-            } else {
-                // fix for Windows-created archives
-                File parent = newFile.getParentFile();
-                if (!parent.isDirectory() && !parent.mkdirs()) {
-                    throw new IOException("Failed to create directory " + parent);
-                }
-
-                // write file content
-                FileOutputStream fos = new FileOutputStream(newFile);
-                IOUtils.copy(zis, fos);
-            }
-            zipEntry = zis.getNextEntry();
-        }
-        zis.closeEntry();
-        zis.close();
     }
 }
