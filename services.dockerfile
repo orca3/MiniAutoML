@@ -19,5 +19,7 @@ COPY --from=builder /app/training-service/target/training-service-1.0-SNAPSHOT.j
 COPY --from=builder /app/data-management/target/data-management-1.0-SNAPSHOT.jar ./data-management.jar
 COPY --from=builder /app/metadata-store/target/metadata-store-1.0-SNAPSHOT.jar ./metadata-store.jar
 COPY --from=builder /app/prediction-service/target/prediction-service-1.0-SNAPSHOT.jar ./prediction-service.jar
+COPY config ./config
+ENV APP_CONFIG config/config-docker.properties
 
 ENTRYPOINT ["java", "-jar"]

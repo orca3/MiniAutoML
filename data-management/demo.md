@@ -22,11 +22,11 @@ Execute: `./scripts/dm-002-start-server.sh`
 
 This will:
 1. Build a docker image using `services.dockerfile` in the root directory
-2. Start a data-management server with name `data-management` in docker joining network `orca3` and bind to port 5000. Data management server is now accessible at `localhost:5000` from your machine, or `data-management:51001` from other containers connected to docker network `orca3`.
+2. Start a data-management server with name `data-management` in docker joining network `orca3` and bind to port 6000. Data management server is now accessible at `localhost:6000` from your machine, or `data-management:51001` from other containers connected to docker network `orca3`.
 
 Expected output:
 ```
-Started data-management docker container and listen on port 5000
+Started data-management docker container and listen on port 6000
 ```
 
 ### Create intent dataset

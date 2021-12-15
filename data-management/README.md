@@ -26,8 +26,8 @@ This can be taken care of by our script [dm-001-start-minio.sh](../scripts/dm-00
 ### Build and run using docker (recommended)
 1. Modify config if needed. Set `minio.host` to `http://minio:9000` 
 2. The [dockerfile](../services.dockerfile) in the root folder can be used to build the data-management service directly. Execute `docker build -t orca3/services:latest -f services.dockerfile .` in the root directly will build a docker image called `orca3/services` with `latest` tag.
-3. Start the service using `docker run --name data-management --network orca3 --rm -d -p 5000:51001 orca3/services:latest data-management.jar`.
-4. Now the service can be reached at `localhost:5000`. Try `grpcurl -plaintext localhost:5000 grpc.health.v1.Health/Check` or look at examples in [scripts](../scripts) folder to interact with the service
+3. Start the service using `docker run --name data-management --network orca3 --rm -d -p 6000:51001 orca3/services:latest data-management.jar`.
+4. Now the service can be reached at `localhost:6000`. Try `grpcurl -plaintext localhost:6000 grpc.health.v1.Health/Check` or look at examples in [scripts](../scripts) folder to interact with the service
 5. Everything above has the same effect as running our [dm-002-start-server.sh](../scripts/dm-002-start-server.sh)
 
 ### Build and run using java (for experienced Java developer)

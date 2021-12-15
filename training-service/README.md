@@ -52,7 +52,7 @@ Rest assure there will be **no actual network traffic** involved in this process
 5. Now the service can be reached at `localhost:5003`. Try `grpcurl -plaintext localhost:5003 grpc.health.v1.Health/Check` or look at examples in [scripts](../scripts) folder to interact with the service
 
 ### Build and run using java (for experienced Java developer)
-1. Modify config if needed. Set `dm.host` to `localhost`. Set `dm.port` to `5000`. Set `kubectl.configFile` to your kube config. It is either the value of environment variable `KUBECONFIG` or by default `${HOME}/.kube/config`. Please use an absolute path (i.e in my case on a MacOS it is `/Users/robert.xue/.kube/config`)
+1. Modify config if needed. Set `dm.host` to `localhost`. Set `dm.port` to `6000`. Set `kubectl.configFile` to your kube config. It is either the value of environment variable `KUBECONFIG` or by default `${HOME}/.kube/config`. Please use an absolute path (i.e in my case on a MacOS it is `/Users/robert.xue/.kube/config`)
 2. Use maven to build the project and produce a runnable Jar `./mvnw clean package -pl training-service -am`.
 3. **Using docker training backend**: Run the jar using command `java -jar training-service/target/training-service-1.0-SNAPSHOT.jar`
 4. **Using kubernetes training backend**: Run the jar using command `APP_CONFIG=config-kube.properties java -jar training-service/target/training-service-1.0-SNAPSHOT.jar`

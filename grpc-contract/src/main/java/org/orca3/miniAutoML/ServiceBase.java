@@ -15,6 +15,7 @@ import io.grpc.protobuf.services.ProtoReflectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Properties;
@@ -24,10 +25,10 @@ public class ServiceBase {
     private static final Logger logger = LoggerFactory.getLogger(ServiceBase.class);
 
     public static Properties getConfigProperties() throws IOException {
-        String configLocation = Optional.ofNullable(System.getenv("APP_CONFIG")).orElse("config.properties");
-        logger.info(String.format("Reading config from %s in the jar (customizable by modifying environment variable APP_CONFIG)", configLocation));
+        String configLocation = Optional.ofNullable(System.getenv("APP_CONFIG")).orElse("config/config.properties");
+        logger.info(String.format("Reading config from %s on the file system (customizable by modifying environment variable APP_CONFIG)", configLocation));
         Properties props = new Properties();
-        props.load(ServiceBase.class.getClassLoader().getResourceAsStream(configLocation));
+        props.load(new FileInputStream(configLocation));
         return props;
     }
 
