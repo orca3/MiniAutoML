@@ -1,6 +1,5 @@
 package org.orca3.miniAutoML.prediction;
 
-import com.google.common.base.Strings;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
@@ -45,6 +44,7 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
                 .usePlaintext().build();
         PredictorConnectionManager connectionManager = new PredictorConnectionManager();
         PredictionService psService = new PredictionService(msChannel, connectionManager, config);
+        psService.registerPredictor("intent-classification", props);
         ServiceBase.startService(Integer.parseInt(config.serverPort), psService, () -> {
             // Graceful shutdown
             msChannel.shutdown();
@@ -96,55 +96,29 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
 
     }
 
-    @Override
-    public void registerPredictor(RegisterPredictorRequest request, StreamObserver<RegisterPredictorResponse> responseObserver) {
-        if (Strings.isNullOrEmpty(request.getAlgorithm())) {
-            responseObserver.onError(Status.INVALID_ARGUMENT
-                    .withDescription("algorithm is required.")
-                    .asException());
-            return;
-        }
-        if (Strings.isNullOrEmpty(request.getHost())) {
-            responseObserver.onError(Status.INVALID_ARGUMENT
-                    .withDescription("host is required.")
-                    .asException());
-            return;
-        }
-        if (request.getPort() == 0) {
-            responseObserver.onError(Status.INVALID_ARGUMENT
-                    .withDescription("port is required and cannot be 0.")
-                    .asException());
-            return;
-        }
+    public void registerPredictor(String algorithmName, Properties properties) {
         ManagedChannel channel;
+        String host = properties.getProperty(String.format("predictors.%s.host", algorithmName));
+        int port = Integer.parseInt(properties.getProperty(String.format("predictors.%s.port", algorithmName)));
+        logger.info(String.format("Trying to register predictor %s on %s:%d", algorithmName, host, port));
         try {
-            channel = ManagedChannelBuilder.forAddress(request.getHost(), request.getPort())
-                    .usePlaintext().build();
+            channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
             HealthCheckResponse a = HealthGrpc.newBlockingStub(channel).check(HealthCheckRequest.newBuilder().build());
             boolean up = HealthCheckResponse.ServingStatus.SERVING.equals(a.getStatus());
             if (up) {
-                connectionManager.put(request.getAlgorithm(), request.getHost(), request.getPort());
+                connectionManager.put(algorithmName, host, port);
+                logger.info(String.format("Registered predictor %s on %s:%d", algorithmName, host, port));
             }
-            responseObserver.onNext(RegisterPredictorResponse.newBuilder()
-                    .setAlgorithm(request.getAlgorithm())
-                    .setSuccess(up)
-                    .build());
-            responseObserver.onCompleted();
         } catch (Exception ex) {
-            String msg = String.format("Cannot connect with predictor on %s:%d", request.getHost(), request.getPort());
+            String msg = String.format("Cannot connect with predictor on %s:%d", host, port);
             logger.warn(msg, ex);
-            responseObserver.onNext(RegisterPredictorResponse.newBuilder()
-                    .setAlgorithm(request.getAlgorithm())
-                    .setSuccess(false)
-                    .build());
-            responseObserver.onCompleted();
+            throw new RuntimeException(ex);
         }
     }
 
     static class Config {
         final String msPort;
         final String msHost;
-        final String minioBucketName;
         final String minioAccessKey;
         final String minioSecretKey;
         final String minioHost;
@@ -153,14 +127,13 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
 
 
         public Config(Properties properties) {
-            this.msPort = properties.getProperty("ms.port");
-            this.msHost = properties.getProperty("ms.host");
-            this.minioBucketName = properties.getProperty("minio.bucketName");
+            this.msPort = properties.getProperty("ms.server.port");
+            this.msHost = properties.getProperty("ms.server.host");
             this.minioAccessKey = properties.getProperty("minio.accessKey");
             this.minioSecretKey = properties.getProperty("minio.secretKey");
             this.minioHost = properties.getProperty("minio.host");
-            this.serverPort = properties.getProperty("server.port");
-            this.modelCachePath = properties.getProperty("server.modelCachePath");
+            this.serverPort = properties.getProperty("ps.server.port");
+            this.modelCachePath = properties.getProperty("ps.server.modelCachePath");
         }
     }
 }

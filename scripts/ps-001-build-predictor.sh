@@ -13,11 +13,3 @@ else
   echo "intent-classification-predictor docker container is already running"
 fi
 
-grpcurl -plaintext \
-  -d "{
-    \"algorithm\": \"intent-classification\",
-    \"backend\": \"orca3\",
-    \"host\": \"localhost\",
-    \"port\": ${ICP_PORT}
-  }" \
-  localhost:"${PS_PORT}" prediction.PredictionService/RegisterPredictor

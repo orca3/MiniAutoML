@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'\n\037org.orca3.miniAutoML.predictionB\026PredictionServiceProtoP\001',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x18prediction_service.proto\x12\nprediction\"1\n\x0ePredictRequest\x12\r\n\x05runId\x18\x03 \x01(\t\x12\x10\n\x08\x64ocument\x18\x04 \x01(\t\"#\n\x0fPredictResponse\x12\x10\n\x08response\x18\x01 \x01(\t\"Z\n\x18RegisterPredictorRequest\x12\x11\n\talgorithm\x18\x01 \x01(\t\x12\x0c\n\x04host\x18\x02 \x01(\t\x12\x0c\n\x04port\x18\x03 \x01(\r\x12\x0f\n\x07\x62\x61\x63kend\x18\x04 \x01(\t\"?\n\x19RegisterPredictorResponse\x12\x11\n\talgorithm\x18\x01 \x01(\t\x12\x0f\n\x07success\x18\x02 \x01(\x08\":\n\x17PredictorPredictRequest\x12\r\n\x05runId\x18\x01 \x01(\t\x12\x10\n\x08\x64ocument\x18\x02 \x01(\t\",\n\x18PredictorPredictResponse\x12\x10\n\x08response\x18\x01 \x01(\t2\xb9\x01\n\x11PredictionService\x12\x42\n\x07Predict\x12\x1a.prediction.PredictRequest\x1a\x1b.prediction.PredictResponse\x12`\n\x11RegisterPredictor\x12$.prediction.RegisterPredictorRequest\x1a%.prediction.RegisterPredictorResponse2j\n\tPredictor\x12]\n\x10PredictorPredict\x12#.prediction.PredictorPredictRequest\x1a$.prediction.PredictorPredictResponseB;\n\x1forg.orca3.miniAutoML.predictionB\x16PredictionServiceProtoP\x01\x62\x06proto3'
+  serialized_pb=b'\n\x18prediction_service.proto\x12\nprediction\"1\n\x0ePredictRequest\x12\r\n\x05runId\x18\x03 \x01(\t\x12\x10\n\x08\x64ocument\x18\x04 \x01(\t\"#\n\x0fPredictResponse\x12\x10\n\x08response\x18\x01 \x01(\t\":\n\x17PredictorPredictRequest\x12\r\n\x05runId\x18\x01 \x01(\t\x12\x10\n\x08\x64ocument\x18\x02 \x01(\t\",\n\x18PredictorPredictResponse\x12\x10\n\x08response\x18\x01 \x01(\t2W\n\x11PredictionService\x12\x42\n\x07Predict\x12\x1a.prediction.PredictRequest\x1a\x1b.prediction.PredictResponse2j\n\tPredictor\x12]\n\x10PredictorPredict\x12#.prediction.PredictorPredictRequest\x1a$.prediction.PredictorPredictResponseB;\n\x1forg.orca3.miniAutoML.predictionB\x16PredictionServiceProtoP\x01\x62\x06proto3'
 )
 
 
@@ -96,98 +96,6 @@ _PREDICTRESPONSE = _descriptor.Descriptor(
 )
 
 
-_REGISTERPREDICTORREQUEST = _descriptor.Descriptor(
-  name='RegisterPredictorRequest',
-  full_name='prediction.RegisterPredictorRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='algorithm', full_name='prediction.RegisterPredictorRequest.algorithm', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='host', full_name='prediction.RegisterPredictorRequest.host', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='port', full_name='prediction.RegisterPredictorRequest.port', index=2,
-      number=3, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='backend', full_name='prediction.RegisterPredictorRequest.backend', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=128,
-  serialized_end=218,
-)
-
-
-_REGISTERPREDICTORRESPONSE = _descriptor.Descriptor(
-  name='RegisterPredictorResponse',
-  full_name='prediction.RegisterPredictorResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='algorithm', full_name='prediction.RegisterPredictorResponse.algorithm', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='success', full_name='prediction.RegisterPredictorResponse.success', index=1,
-      number=2, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=220,
-  serialized_end=283,
-)
-
-
 _PREDICTORPREDICTREQUEST = _descriptor.Descriptor(
   name='PredictorPredictRequest',
   full_name='prediction.PredictorPredictRequest',
@@ -222,8 +130,8 @@ _PREDICTORPREDICTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=285,
-  serialized_end=343,
+  serialized_start=128,
+  serialized_end=186,
 )
 
 
@@ -254,14 +162,12 @@ _PREDICTORPREDICTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=345,
-  serialized_end=389,
+  serialized_start=188,
+  serialized_end=232,
 )
 
 DESCRIPTOR.message_types_by_name['PredictRequest'] = _PREDICTREQUEST
 DESCRIPTOR.message_types_by_name['PredictResponse'] = _PREDICTRESPONSE
-DESCRIPTOR.message_types_by_name['RegisterPredictorRequest'] = _REGISTERPREDICTORREQUEST
-DESCRIPTOR.message_types_by_name['RegisterPredictorResponse'] = _REGISTERPREDICTORRESPONSE
 DESCRIPTOR.message_types_by_name['PredictorPredictRequest'] = _PREDICTORPREDICTREQUEST
 DESCRIPTOR.message_types_by_name['PredictorPredictResponse'] = _PREDICTORPREDICTRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -279,20 +185,6 @@ PredictResponse = _reflection.GeneratedProtocolMessageType('PredictResponse', (_
   # @@protoc_insertion_point(class_scope:prediction.PredictResponse)
   })
 _sym_db.RegisterMessage(PredictResponse)
-
-RegisterPredictorRequest = _reflection.GeneratedProtocolMessageType('RegisterPredictorRequest', (_message.Message,), {
-  'DESCRIPTOR' : _REGISTERPREDICTORREQUEST,
-  '__module__' : 'prediction_service_pb2'
-  # @@protoc_insertion_point(class_scope:prediction.RegisterPredictorRequest)
-  })
-_sym_db.RegisterMessage(RegisterPredictorRequest)
-
-RegisterPredictorResponse = _reflection.GeneratedProtocolMessageType('RegisterPredictorResponse', (_message.Message,), {
-  'DESCRIPTOR' : _REGISTERPREDICTORRESPONSE,
-  '__module__' : 'prediction_service_pb2'
-  # @@protoc_insertion_point(class_scope:prediction.RegisterPredictorResponse)
-  })
-_sym_db.RegisterMessage(RegisterPredictorResponse)
 
 PredictorPredictRequest = _reflection.GeneratedProtocolMessageType('PredictorPredictRequest', (_message.Message,), {
   'DESCRIPTOR' : _PREDICTORPREDICTREQUEST,
@@ -318,8 +210,8 @@ _PREDICTIONSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=392,
-  serialized_end=577,
+  serialized_start=234,
+  serialized_end=321,
   methods=[
   _descriptor.MethodDescriptor(
     name='Predict',
@@ -328,16 +220,6 @@ _PREDICTIONSERVICE = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_PREDICTREQUEST,
     output_type=_PREDICTRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='RegisterPredictor',
-    full_name='prediction.PredictionService.RegisterPredictor',
-    index=1,
-    containing_service=None,
-    input_type=_REGISTERPREDICTORREQUEST,
-    output_type=_REGISTERPREDICTORRESPONSE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),
@@ -354,8 +236,8 @@ _PREDICTOR = _descriptor.ServiceDescriptor(
   index=1,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=579,
-  serialized_end=685,
+  serialized_start=323,
+  serialized_end=429,
   methods=[
   _descriptor.MethodDescriptor(
     name='PredictorPredict',

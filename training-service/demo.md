@@ -67,7 +67,7 @@ This will
 
 Expected output:
 ```
-Started metadata-store docker container and listen on port 5002
+Started metadata-store docker container and listen on port 6002
 ```
 
 Execute: `./scripts/ts-001-start-server-kube.sh`
@@ -77,7 +77,7 @@ This will
 2. Start a training-service server with name `training-service` in docker joining network `orca3`
 
 ```
-Started training-service docker container and listen on port 5003
+Started training-service docker container and listen on port 6003
 ```
 
 ### Submit training job

@@ -149,7 +149,7 @@ public class DockerTracker extends Tracker<DockerTracker.BackendConfig> {
 
         public BackendConfig(Properties properties) {
             super(properties);
-            this.network = properties.getProperty("docker.network");
+            this.network = properties.getProperty("ts.backend.dockerNetwork");
         }
 
     }

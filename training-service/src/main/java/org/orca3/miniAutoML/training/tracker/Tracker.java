@@ -85,11 +85,11 @@ public abstract class Tracker<T extends Tracker.SharedConfig> {
         final String metadataStoreHost;
 
         SharedConfig(Properties props) {
-            this.minioAccessKey = props.getProperty("trainer.minio.accessKey");
-            this.minioSecretKey = props.getProperty("trainer.minio.secretKey");
-            this.minioHost = props.getProperty("trainer.minio.host");
-            this.metadataStoreHost = props.getProperty("trainer.metadataStore.host");
-            this.metadataStoreBucketName = props.getProperty("trainer.minio.metadataStore.bucketName");
+            this.minioAccessKey = props.getProperty("minio.accessKey");
+            this.minioSecretKey = props.getProperty("minio.secretKey");
+            this.minioHost = props.getProperty("ts.trainer.minio.host");
+            this.metadataStoreHost = props.getProperty("ts.trainer.ms.host");
+            this.metadataStoreBucketName = props.getProperty("ms.minio.bucketName");
         }
     }
 }
