@@ -8,7 +8,7 @@ COPY grpc-contract grpc-contract
 COPY metadata-store metadata-store
 COPY training-service training-service
 COPY prediction-service prediction-service
-RUN ./mvnw package -DskipTests -DskipGrpcPython
+RUN ./mvnw package -DskipTests
 
 FROM openjdk:11 AS run
 WORKDIR /app

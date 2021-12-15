@@ -49,5 +49,14 @@
         </dependencies>
     </dependencyManagement>
 
+    <profiles>
+        <profile>
+            <id>python</id>
+            <properties>
+                <skipGrpcPython>false</skipGrpcPython>
+            </properties>
+        </profile>
+    </profiles>
+
 
 </project>
