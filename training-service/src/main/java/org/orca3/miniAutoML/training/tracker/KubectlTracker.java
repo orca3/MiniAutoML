@@ -16,6 +16,7 @@ import org.orca3.miniAutoML.training.models.ExecutedTrainingJob;
 import org.orca3.miniAutoML.training.models.MemoryStore;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -33,21 +34,27 @@ public class KubectlTracker extends Tracker<KubectlTracker.BackendConfig> {
 
     public KubectlTracker(MemoryStore store, Properties props, ManagedChannel dmChannel) throws IOException {
         super(store, dmChannel, LoggerFactory.getLogger(KubectlTracker.class), new BackendConfig(props));
-        ApiClient client = ClientBuilder.kubeconfig(
-                KubeConfig.loadKubeConfig(new FileReader(config.kubeConfigFilePath))).build();
+        ApiClient client;
+        if (config.kubeConfigFilePath == null) {
+            client = ClientBuilder.standard().build();
+        } else {
+            client = ClientBuilder.kubeconfig(
+                    KubeConfig.loadKubeConfig(new FileReader(config.kubeConfigFilePath))).build();
+        }
         Configuration.setDefaultApiClient(client);
         jobIdTracker = new HashMap<>();
         serviceTracker = new LinkedList<>();
     }
 
     public static class BackendConfig extends SharedConfig {
+        @Nullable
         final String kubeConfigFilePath;
         final String kubeNamespace;
 
         public BackendConfig(Properties properties) {
             super(properties);
-            this.kubeConfigFilePath = properties.getProperty("kubectl.configFile");
-            this.kubeNamespace = properties.getProperty("kubectl.namespace");
+            this.kubeConfigFilePath = properties.getProperty("ts.backend.kubectlConfigFile");
+            this.kubeNamespace = properties.getProperty("ts.backend.kubectlNamespace");
         }
 
     }

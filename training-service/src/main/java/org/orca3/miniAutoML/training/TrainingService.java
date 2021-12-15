@@ -73,10 +73,10 @@ public class TrainingService extends TrainingServiceGrpc.TrainingServiceImplBase
         final String backend;
 
         public Config(Properties properties) {
-            this.serverPort = properties.getProperty("server.port");
-            this.dmPort = properties.getProperty("dm.port");
-            this.dmHost = properties.getProperty("dm.host");
-            this.backend = properties.getProperty("backend");
+            this.serverPort = properties.getProperty("ts.server.port");
+            this.dmPort = properties.getProperty("dm.server.port");
+            this.dmHost = properties.getProperty("dm.server.host");
+            this.backend = properties.getProperty("ts.backend");
         }
     }
 
