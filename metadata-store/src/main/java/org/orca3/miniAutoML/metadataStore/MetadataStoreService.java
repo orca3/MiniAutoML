@@ -68,11 +68,11 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
         final String serverPort;
 
         public Config(Properties properties) {
-            this.minioBucketName = properties.getProperty("minio.bucketName");
+            this.minioBucketName = properties.getProperty("ms.minio.bucketName");
             this.minioAccessKey = properties.getProperty("minio.accessKey");
             this.minioSecretKey = properties.getProperty("minio.secretKey");
             this.minioHost = properties.getProperty("minio.host");
-            this.serverPort = properties.getProperty("server.port");
+            this.serverPort = properties.getProperty("ms.server.port");
         }
     }
 

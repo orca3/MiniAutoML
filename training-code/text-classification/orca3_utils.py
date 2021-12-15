@@ -105,7 +105,7 @@ class TrainingConfig:
         self.LR = self.int_or_default(os.getenv('LR'), 5)
         self.BATCH_SIZE = self.int_or_default(os.getenv('BATCH_SIZE'), 64)
         self.FC_SIZE = self.int_or_default(os.getenv('FC_SIZE'), 128)
-        self.METADATA_STORE_SERVER = os.getenv('METADATA_STORE_SERVER') or "127.0.0.1:5002"
+        self.METADATA_STORE_SERVER = os.getenv('METADATA_STORE_SERVER') or "127.0.0.1:6002"
         self.JOB_ID = os.getenv('JOB_ID') or "42"
         self.MINIO_SERVER = os.getenv('MINIO_SERVER') or "127.0.0.1:9000"
         self.MINIO_SERVER_ACCESS_KEY = os.getenv('MINIO_SERVER_ACCESS_KEY') or "foooo"
