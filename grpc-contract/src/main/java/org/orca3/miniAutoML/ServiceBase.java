@@ -25,7 +25,7 @@ public class ServiceBase {
     private static final Logger logger = LoggerFactory.getLogger(ServiceBase.class);
 
     public static Properties getConfigProperties() throws IOException {
-        String configLocation = Optional.ofNullable(System.getenv("APP_CONFIG")).orElse("config/config-jvm.properties");
+        String configLocation = Optional.ofNullable(System.getenv("APP_CONFIG")).orElse("config/config-jvm-docker.properties");
         logger.info(String.format("Reading config from %s on the file system (customizable by modifying environment variable APP_CONFIG)", configLocation));
         Properties props = new Properties();
         props.load(new FileInputStream(configLocation));
