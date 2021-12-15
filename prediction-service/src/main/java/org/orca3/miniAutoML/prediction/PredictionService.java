@@ -144,7 +144,6 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
     static class Config {
         final String msPort;
         final String msHost;
-        final String minioBucketName;
         final String minioAccessKey;
         final String minioSecretKey;
         final String minioHost;
@@ -153,14 +152,13 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
 
 
         public Config(Properties properties) {
-            this.msPort = properties.getProperty("ms.port");
-            this.msHost = properties.getProperty("ms.host");
-            this.minioBucketName = properties.getProperty("minio.bucketName");
+            this.msPort = properties.getProperty("ms.server.port");
+            this.msHost = properties.getProperty("ms.server.host");
             this.minioAccessKey = properties.getProperty("minio.accessKey");
             this.minioSecretKey = properties.getProperty("minio.secretKey");
             this.minioHost = properties.getProperty("minio.host");
-            this.serverPort = properties.getProperty("server.port");
-            this.modelCachePath = properties.getProperty("server.modelCachePath");
+            this.serverPort = properties.getProperty("ps.server.port");
+            this.modelCachePath = properties.getProperty("ps.server.modelCachePath");
         }
     }
 }
