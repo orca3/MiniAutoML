@@ -44,7 +44,9 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
                 .usePlaintext().build();
         PredictorConnectionManager connectionManager = new PredictorConnectionManager();
         PredictionService psService = new PredictionService(msChannel, connectionManager, config);
-        psService.registerPredictor("intent-classification", props);
+        for (String predictor : config.predictors) {
+            psService.registerPredictor(predictor, props);
+        }
         ServiceBase.startService(Integer.parseInt(config.serverPort), psService, () -> {
             // Graceful shutdown
             msChannel.shutdown();
@@ -82,9 +84,8 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
             return;
         }
         try {
-            PredictorPredictResponse r = connectionManager.getClient(algorithm).predictorPredict(PredictorPredictRequest.newBuilder()
-                    .setDocument(request.getDocument()).setRunId(runId).build());
-            responseObserver.onNext(PredictResponse.newBuilder().setResponse(r.getResponse()).build());
+            String r = connectionManager.getClient(algorithm).predict(runId, request.getDocument());
+            responseObserver.onNext(PredictResponse.newBuilder().setResponse(r).build());
             responseObserver.onCompleted();
         } catch (Exception ex) {
             String msg = String.format("Prediction failed for algorithm %s: %s", algorithm, ex.getMessage());
@@ -100,14 +101,15 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
         ManagedChannel channel;
         String host = properties.getProperty(String.format("predictors.%s.host", algorithmName));
         int port = Integer.parseInt(properties.getProperty(String.format("predictors.%s.port", algorithmName)));
+        String predictorType = properties.getProperty(String.format("predictors.%s.techStack", algorithmName));
         logger.info(String.format("Trying to register predictor %s on %s:%d", algorithmName, host, port));
         try {
             channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
             HealthCheckResponse a = HealthGrpc.newBlockingStub(channel).check(HealthCheckRequest.newBuilder().build());
             boolean up = HealthCheckResponse.ServingStatus.SERVING.equals(a.getStatus());
             if (up) {
-                connectionManager.put(algorithmName, host, port);
-                logger.info(String.format("Registered predictor %s on %s:%d", algorithmName, host, port));
+                connectionManager.put(algorithmName, host, port, predictorType);
+                logger.info(String.format("Registered predictor %s of type %s on %s:%d", algorithmName, predictorType, host, port));
             }
         } catch (Exception ex) {
             String msg = String.format("Cannot connect with predictor on %s:%d", host, port);
@@ -124,6 +126,7 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
         final String minioHost;
         final String serverPort;
         final String modelCachePath;
+        final String[] predictors;
 
 
         public Config(Properties properties) {
@@ -134,6 +137,8 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
             this.minioHost = properties.getProperty("minio.host");
             this.serverPort = properties.getProperty("ps.server.port");
             this.modelCachePath = properties.getProperty("ps.server.modelCachePath");
+            this.predictors = properties.getProperty("ps.enabledPredictors").split(",");
+
         }
     }
 }
