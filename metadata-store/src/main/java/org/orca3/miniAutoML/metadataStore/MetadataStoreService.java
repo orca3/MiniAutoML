@@ -6,9 +6,12 @@ import io.grpc.stub.StreamObserver;
 import io.minio.BucketExistsArgs;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
+import io.minio.ListObjectsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import io.minio.Result;
 import io.minio.errors.MinioException;
+import io.minio.messages.Item;
 import org.orca3.miniAutoML.ServiceBase;
 import org.orca3.miniAutoML.dataManagement.FileInfo;
 import org.orca3.miniAutoML.metadataStore.models.ArtifactInfo;
@@ -170,15 +173,23 @@ public class MetadataStoreService extends MetadataStoreServiceGrpc.MetadataStore
         version = Integer.toString(repo.getSeed());
         FileInfo destination = FileInfo.newBuilder().setName(artifactName)
                 .setBucket(config.minioBucketName)
-                .setPath(Paths.get(artifactName, String.format("version-%s", version)).toString())
+                .setPath(artifactName)
                 .build();
+        String artifactBucket = request.getArtifact().getBucket();
+        String artifactFolder = request.getArtifact().getPath();
         try {
-            minioClient.copyObject(CopyObjectArgs.builder()
-                    .bucket(destination.getBucket())
-                    .object(destination.getPath())
-                    .source(CopySource.builder().bucket(request.getArtifact().getBucket())
-                            .object(request.getArtifact().getPath()).build())
-                    .build());
+            Iterable<Result<Item>> artifacts = minioClient.listObjects(ListObjectsArgs.builder()
+                    .bucket(artifactBucket).prefix(String.format("%s/", artifactFolder)).build());
+            for (Result<Item> artifact : artifacts) {
+                String artifactPrefix = artifact.get().objectName();
+                String fileName = Paths.get(artifactPrefix).getFileName().toString();
+                minioClient.copyObject(CopyObjectArgs.builder()
+                        .bucket(config.minioBucketName)
+                        .object(Paths.get(artifactName, fileName).toString())
+                        .source(CopySource.builder().bucket(artifactBucket)
+                                .object(artifactPrefix).build())
+                        .build());
+            }
         } catch (InvalidKeyException | IOException | NoSuchAlgorithmException | MinioException e) {
             throw new RuntimeException(e);
         }
