@@ -1,6 +1,11 @@
 package org.orca3.miniAutoML.prediction;
 
+import org.orca3.miniAutoML.metadataStore.GetArtifactResponse;
+
 public interface PredictorBackend {
-    // TODO: Replace with Torch server protocol (bytes & map)
-    String predict(String runId, String document);
+    void downloadModel(String runId, GetArtifactResponse artifactResponse);
+
+    String predict(GetArtifactResponse artifact, String document);
+
+    void registerModel(GetArtifactResponse artifact);
 }

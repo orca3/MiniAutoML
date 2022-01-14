@@ -80,6 +80,7 @@ class TrainingConfig:
             "{}={}".format("EPOCHS", self.EPOCHS), "{}={}".format("LR", self.LR),
             "{}={}".format("BATCH_SIZE", self.BATCH_SIZE),
             "{}={}".format("FC_SIZE", self.FC_SIZE),
+            "{}={}".format("ALGORITHM_NAME", self.ALGORITHM_NAME),
             "{}={}".format("METADATA_STORE_SERVER", self.METADATA_STORE_SERVER),
             "{}={}".format("MINIO_SERVER", self.MINIO_SERVER),
             "{}={}".format("MINIO_SERVER_ACCESS_KEY", self.MINIO_SERVER_ACCESS_KEY),
@@ -105,6 +106,7 @@ class TrainingConfig:
         self.LR = self.int_or_default(os.getenv('LR'), 5)
         self.BATCH_SIZE = self.int_or_default(os.getenv('BATCH_SIZE'), 64)
         self.FC_SIZE = self.int_or_default(os.getenv('FC_SIZE'), 128)
+        self.ALGORITHM_NAME = os.getenv('ALGORITHM_NAME') or "intent-classification"
         self.METADATA_STORE_SERVER = os.getenv('METADATA_STORE_SERVER') or "127.0.0.1:6002"
         self.JOB_ID = os.getenv('JOB_ID') or "42"
         self.MINIO_SERVER = os.getenv('MINIO_SERVER') or "127.0.0.1:9000"
