@@ -1,6 +1,8 @@
 # MiniAutoML
 
-This repository contains source code examples for `<<bookname>>`.
+![cover page](cover.png)
+
+This repository contains source code examples for `Engineering Deep Learning Systems`.
 
 ## System Requirement
 The installation of system requirements are not included in the `scripts` folder. Please make sure those requirements are met before executing scripts in the `scripts` folder.

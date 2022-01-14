@@ -1,5 +1,5 @@
 # Training Service (TS)
-Training service is a sample Java (GRPC) webservice for demonstrating the design principles introduced in the chapter 5 of book - `<<bookname>>`.
+Training service is a sample Java (GRPC) webservice for demonstrating the design principles introduced in the chapter 5 of book - `Engineering Deep Learning Systems`.
 This service is written in minimalism (for example persisting data in memory instead of a database) so the code is simple to read, and the local setup is easy.
 There are multiple external dependencies required for this service to run
 - **Minio**, which we used to mimic cloud blob storage, such as `AWS S3` or `Azure blob`. 
