@@ -1,6 +1,7 @@
 package org.orca3.miniAutoML.prediction;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import io.grpc.ManagedChannel;
 import io.minio.DownloadObjectArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
@@ -12,24 +13,31 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.util.Set;
 
-public class ModelManager {
+public class CustomGrpcPredictorBackend implements PredictorBackend {
+    private final PredictorGrpc.PredictorBlockingStub stub;
     private final String modelCachePath;
     private final MinioClient minioClient;
-    private final Map<String, String> algorithmCache;
+    private final Set<String> downloadedModels;
 
-    public ModelManager(String modelCachePath, MinioClient minioClient) {
+    public CustomGrpcPredictorBackend(ManagedChannel channel, String modelCachePath, MinioClient minioClient) {
+        stub = PredictorGrpc.newBlockingStub(channel);
         this.modelCachePath = modelCachePath;
         this.minioClient = minioClient;
-        this.algorithmCache = Maps.newHashMap();
+        this.downloadedModels = Sets.newHashSet();
     }
 
-    public boolean contains(String runId) {
-        return algorithmCache.containsKey(runId);
+    @Override
+    public void registerModel(GetArtifactResponse artifact) {
+        return;
     }
 
-    public void set(String runId, GetArtifactResponse artifactResponse) {
+    @Override
+    public void downloadModel(String runId, GetArtifactResponse artifactResponse) {
+        if (downloadedModels.contains(runId)) {
+            return;
+        }
         final String bucket = artifactResponse.getArtifact().getBucket();
         try {
             Path tempRoot = Paths.get(modelCachePath, runId);
@@ -51,10 +59,13 @@ public class ModelManager {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        algorithmCache.put(runId, artifactResponse.getAlgorithm());
+        registerModel(artifactResponse);
+        downloadedModels.add(runId);
     }
 
-    public String getAlgorithm(String runId) {
-        return algorithmCache.get(runId);
+    @Override
+    public String predict(GetArtifactResponse artifact, String document) {
+        return stub.predictorPredict(PredictorPredictRequest.newBuilder()
+                .setDocument(document).setRunId(artifact.getRunId()).build()).getResponse();
     }
 }

@@ -147,7 +147,7 @@ class PredictorServicer(prediction_service_pb2_grpc.PredictorServicer):
         try:
             self.model_manager.load_model(model_id=request.runId)
             class_name = self.model_manager.predict(request.runId, request.document)
-            return prediction_service_pb2.PredictorPredictResponse(response=json.dumps({'res': class_name}))
+            return prediction_service_pb2.PredictorPredictResponse(response=json.dumps({'result': class_name}))
         except ModelLoadingError as ex:
             context.abort(ex.status_code, ex.message)
 

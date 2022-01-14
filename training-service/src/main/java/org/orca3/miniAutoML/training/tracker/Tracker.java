@@ -55,6 +55,7 @@ public abstract class Tracker<T extends Tracker.SharedConfig> {
     protected Map<String, String> containerEnvVars(int jobId, TrainingJobMetadata metadata, VersionedSnapshot versionedSnapshot) {
         Map<String, String> envs = new HashMap<>();
         envs.put("JOB_ID", Integer.toString(jobId));
+        envs.put("ALGORITHM_NAME", metadata.getAlgorithm());
         envs.put("METADATA_STORE_SERVER", config.metadataStoreHost);
         envs.put("TRAINING_DATASET_ID", metadata.getDatasetId());
         envs.put("TRAINING_DATASET_VERSION_HASH", metadata.getTrainDataVersionHash());

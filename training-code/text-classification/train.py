@@ -56,8 +56,8 @@ class MapStyleDataset(torch.utils.data.Dataset):
 # Launch training with two process, first value is RANK, second is WORLD_SIZE
 # train.py 0 2
 # train.py 1 2
-algorithm_name = "intent-classification"
 config = TrainingConfig()
+algorithm_name = config.ALGORITHM_NAME
 print("Training parameters")
 print(str(config))
 

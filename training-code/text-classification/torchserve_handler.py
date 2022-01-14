@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class ModelHandler(BaseHandler):
     """
-    A custom model handler implementation for serving intent classification prediction 
+    A custom model handler implementation for serving intent classification prediction
     in torch serving server.
     """
 
@@ -37,7 +37,7 @@ class ModelHandler(BaseHandler):
 
     def __init__(self):
         self.context = None
-        self.model = None 
+        self.model = None
         self.initialized = False
         self.fcsize = 128
         self.manifest = None
@@ -56,7 +56,7 @@ class ModelHandler(BaseHandler):
         model_path = os.path.join(model_dir, "model.pth")
         vacab_path = os.path.join(model_dir, "vocab.pth")
         manifest_path = os.path.join(model_dir, "manifest.json")
-        
+
         # load vocabulary
         self.vocab = torch.load(vacab_path)
 
@@ -89,7 +89,7 @@ class ModelHandler(BaseHandler):
             preprocessed_data = data[0].get("body")
 
         text_pipeline = lambda x: self.vocab(self.tokenizer(x))
-        
+
         user_input = " ".join(str(preprocessed_data))
         processed_text = torch.tensor(text_pipeline(user_input), dtype=torch.int64)
         offsets = [0, processed_text.size(0)]
@@ -119,7 +119,7 @@ class ModelHandler(BaseHandler):
         logger.info("return {}".format(res_index))
         classes = self.manifest['classes']
         postprocess_output = classes[str(res_index)]
-        return [{"predict_res":postprocess_output}]
+        return [{"result":postprocess_output}]
 
     def handle(self, data, context):
         """

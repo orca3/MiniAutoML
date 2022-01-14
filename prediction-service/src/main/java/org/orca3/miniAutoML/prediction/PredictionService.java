@@ -3,9 +3,6 @@ package org.orca3.miniAutoML.prediction;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
-import io.grpc.health.v1.HealthCheckRequest;
-import io.grpc.health.v1.HealthCheckResponse;
-import io.grpc.health.v1.HealthGrpc;
 import io.grpc.stub.StreamObserver;
 import io.minio.MinioClient;
 import org.orca3.miniAutoML.ServiceBase;
@@ -22,18 +19,12 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
     private static final Logger logger = LoggerFactory.getLogger(PredictionService.class);
     private final Config config;
     private final MetadataStoreServiceGrpc.MetadataStoreServiceBlockingStub msClient;
-    private final ModelManager modelManager;
-    private final PredictorConnectionManager connectionManager;
+    private final PredictorConnectionManager predictorManager;
 
-    public PredictionService(ManagedChannel msChannel, PredictorConnectionManager connectionManager, Config config) {
-        MinioClient minioClient = MinioClient.builder()
-                .endpoint(config.minioHost)
-                .credentials(config.minioAccessKey, config.minioSecretKey)
-                .build();
+    public PredictionService(ManagedChannel msChannel, PredictorConnectionManager predictorManager, Config config) {
         this.config = config;
         this.msClient = MetadataStoreServiceGrpc.newBlockingStub(msChannel);
-        this.modelManager = new ModelManager(config.modelCachePath, minioClient);
-        this.connectionManager = connectionManager;
+        this.predictorManager = predictorManager;
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -42,9 +33,15 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
         Config config = new Config(props);
         ManagedChannel msChannel = ManagedChannelBuilder.forAddress(config.msHost, Integer.parseInt(config.msPort))
                 .usePlaintext().build();
-        PredictorConnectionManager connectionManager = new PredictorConnectionManager();
+        MinioClient minioClient = MinioClient.builder()
+                .endpoint(config.minioHost)
+                .credentials(config.minioAccessKey, config.minioSecretKey)
+                .build();
+        PredictorConnectionManager connectionManager = new PredictorConnectionManager(config.modelCachePath, minioClient);
+        for (String predictor : config.predictors) {
+            connectionManager.registerPredictor(predictor, props);
+        }
         PredictionService psService = new PredictionService(msChannel, connectionManager, config);
-        psService.registerPredictor("intent-classification", props);
         ServiceBase.startService(Integer.parseInt(config.serverPort), psService, () -> {
             // Graceful shutdown
             msChannel.shutdown();
@@ -55,65 +52,45 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
 
     @Override
     public void predict(PredictRequest request, StreamObserver<PredictResponse> responseObserver) {
-        String runId;
-        String algorithm;
-        runId = request.getRunId();
-        if (modelManager.contains(runId)) {
-            algorithm = modelManager.getAlgorithm(runId);
+        String runId = request.getRunId();
+        GetArtifactResponse artifactInfo;
+
+        if (predictorManager.containsArtifact(runId)) {
+            artifactInfo = predictorManager.getArtifact(runId);
         } else {
             try {
-                GetArtifactResponse artifactResponse = msClient.getArtifact(GetArtifactRequest.newBuilder()
+                artifactInfo = msClient.getArtifact(GetArtifactRequest.newBuilder()
                         .setRunId(runId).build());
-                modelManager.set(runId, artifactResponse);
-                algorithm = artifactResponse.getAlgorithm();
             } catch (Exception ex) {
                 String msg = String.format("Cannot locate model artifact for runId %s.", runId);
                 logger.error(msg, ex);
-                responseObserver.onError(Status.NOT_FOUND
-                        .withDescription(msg)
-                        .asException());
+                responseObserver.onError(Status.NOT_FOUND.withDescription(msg).asException());
                 return;
             }
         }
-        if (!connectionManager.contains(algorithm)) {
-            responseObserver.onError(Status.FAILED_PRECONDITION
-                    .withDescription(String.format("Algorithm %s doesn't have supporting predictor.", algorithm))
-                    .asException());
+
+        PredictorBackend predictor;
+        if (predictorManager.containsPredictor(artifactInfo.getAlgorithm())) {
+            predictor = predictorManager.getPredictor(artifactInfo.getAlgorithm());
+        } else {
+            String msg = String.format("Algorithm %s doesn't have supporting predictor.", artifactInfo.getAlgorithm());
+            logger.error(msg);
+            responseObserver.onError(Status.FAILED_PRECONDITION.withDescription(msg).asException());
             return;
         }
         try {
-            PredictorPredictResponse r = connectionManager.getClient(algorithm).predictorPredict(PredictorPredictRequest.newBuilder()
-                    .setDocument(request.getDocument()).setRunId(runId).build());
-            responseObserver.onNext(PredictResponse.newBuilder().setResponse(r.getResponse()).build());
+            predictor.downloadModel(runId, artifactInfo);
+            String r = predictor.predict(artifactInfo, request.getDocument());
+            responseObserver.onNext(PredictResponse.newBuilder().setResponse(r).build());
             responseObserver.onCompleted();
         } catch (Exception ex) {
-            String msg = String.format("Prediction failed for algorithm %s: %s", algorithm, ex.getMessage());
+            String msg = String.format("Prediction failed for algorithm %s: %s", artifactInfo.getAlgorithm(), ex.getMessage());
             logger.error(msg, ex);
             responseObserver.onError(Status.UNKNOWN
                     .withDescription(msg)
                     .asException());
         }
 
-    }
-
-    public void registerPredictor(String algorithmName, Properties properties) {
-        ManagedChannel channel;
-        String host = properties.getProperty(String.format("predictors.%s.host", algorithmName));
-        int port = Integer.parseInt(properties.getProperty(String.format("predictors.%s.port", algorithmName)));
-        logger.info(String.format("Trying to register predictor %s on %s:%d", algorithmName, host, port));
-        try {
-            channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-            HealthCheckResponse a = HealthGrpc.newBlockingStub(channel).check(HealthCheckRequest.newBuilder().build());
-            boolean up = HealthCheckResponse.ServingStatus.SERVING.equals(a.getStatus());
-            if (up) {
-                connectionManager.put(algorithmName, host, port);
-                logger.info(String.format("Registered predictor %s on %s:%d", algorithmName, host, port));
-            }
-        } catch (Exception ex) {
-            String msg = String.format("Cannot connect with predictor on %s:%d", host, port);
-            logger.warn(msg, ex);
-            throw new RuntimeException(ex);
-        }
     }
 
     static class Config {
@@ -124,6 +101,7 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
         final String minioHost;
         final String serverPort;
         final String modelCachePath;
+        final String[] predictors;
 
 
         public Config(Properties properties) {
@@ -134,6 +112,8 @@ public class PredictionService extends PredictionServiceGrpc.PredictionServiceIm
             this.minioHost = properties.getProperty("minio.host");
             this.serverPort = properties.getProperty("ps.server.port");
             this.modelCachePath = properties.getProperty("ps.server.modelCachePath");
+            this.predictors = properties.getProperty("ps.enabledPredictors").split(",");
+
         }
     }
 }

@@ -5,6 +5,8 @@ echo "gitsha=\"$(git rev-parse --short HEAD)\"" > "$(dirname "$0")/../training-c
 
 docker build \
 -t localhost:${REGISTRY_PORT}/orca3/intent-classification \
+-t localhost:${REGISTRY_PORT}/orca3/intent-classification-torch \
 -t orca3/intent-classification \
+-t orca3/intent-classification-torch \
 -f "$(dirname "$0")/../training-code/text-classification/Dockerfile" \
 "$(dirname "$0")/../training-code/text-classification"
