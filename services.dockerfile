@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+# on local, try docker build -t orca3/services:latest -f services.dockerfile .
 FROM openjdk:11 AS builder
 WORKDIR /app
 COPY .mvn/ .mvn
