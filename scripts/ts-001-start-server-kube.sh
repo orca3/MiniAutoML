@@ -11,6 +11,7 @@ fi
 
 echo "Pushing intent-classification image to docker local registry so it can be accessed by kubernete cluster"
 docker push localhost:${REGISTRY_PORT}/orca3/intent-classification
+docker push localhost:${REGISTRY_PORT}/orca3/intent-classification-torch
 
 if [ ! "$(docker ps -a | grep training-service)" ]; then
   # Todo: replace when we published our container
