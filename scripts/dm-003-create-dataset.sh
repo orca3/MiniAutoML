@@ -4,7 +4,7 @@ mc alias -q set myminio http://127.0.0.1:"${MINIO_PORT}" "${MINIO_ROOT_USER}" "$
 
 echo
 echo "Upload raw data to cloud object storage to get a data url. For demo purpose, we upload data to 'mini-automl-dm' bucket in the local MinIO server, data url to reference the data is 'upload/001.csv'"
-mc -q cp data-management/src/test/resources/datasets/demo-part1.csv myminio/mini-automl-dm/upload/001.csv
+mc -q cp data-management/src/test/resources/datasets/demo-part1.csv myminio/"${MINIO_DM_BUCKET}"/upload/001.csv
 echo
 echo "Creating intent dataset"
 grpcurl -plaintext \
