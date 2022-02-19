@@ -219,7 +219,7 @@ public class KubectlTracker extends Tracker<KubectlTracker.BackendConfig> {
     }
 
     protected String algorithmToImage(String algorithm) {
-        return String.format("roboxue/orca3-%s", algorithm);
+        return String.format("orca3/%s", algorithm);
     }
 
     protected List<V1EnvVar> envVarsToList(Map<String, String> envs) {

@@ -10,7 +10,7 @@ if [ ! "$(docker ps -a | grep intent-classification-predictor)" ]; then
     --rm -d \
     -p "${ICP_PORT}":51001 \
     -v "${MODEL_CACHE_DIR}":/models \
-    roboxue/orca-intent-classification-predictor:latest
+    orca3/intent-classification-predictor:latest
   echo "Started intent-classification-predictor docker container and listen on port ${ICP_PORT}"
 else
   echo "intent-classification-predictor docker container is already running"

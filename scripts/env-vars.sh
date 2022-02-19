@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export IMAGE_NAME=roboxue/orca3-services:latest
+export IMAGE_NAME=orca3/services:latest
 export MINIO_ROOT_USER=foooo
 export MINIO_ROOT_PASSWORD=barbarbar
 export MINIO_DM_BUCKET=mini-automl-dm
