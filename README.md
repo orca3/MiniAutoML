@@ -2,7 +2,9 @@
 
 ![cover page](cover.png)
 
-This repository contains source code examples for `Engineering Deep Learning Systems`.
+This repository contains source code examples for `Engineering Deep Learning Platforms`. [Purchase link](http://mng.bz/GGgN).
+
+> We are in Manning Early Access Program (MEAP) now! 50% off with code `mlwang2` till March 3rd
 
 ## System Requirement
 The installation of system requirements are not included in the `scripts` folder. Please make sure those requirements are met before executing scripts in the `scripts` folder.
