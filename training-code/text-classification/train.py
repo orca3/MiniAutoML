@@ -334,7 +334,8 @@ if config.RANK == 0:
         "ModelName": config.MODEL_NAME,
         "CodeVersion": config.MODEL_VERSION,
         "ModelVersion": config.MODEL_SERVING_VERSION,
-        "classes": labels
+        "classes": labels,
+        "fc_size": config.FC_SIZE,
     }
 
     with open(model_manifest_path, 'w') as fp:

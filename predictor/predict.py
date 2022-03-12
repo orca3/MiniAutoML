@@ -94,10 +94,11 @@ class ModelManager:
         with open(manifest_path, 'r') as f:
             manifest = json.loads(f.read())
         classes = manifest['classes']
+        fc_size = manifest['fc_size'] or self.config.FC_SIZE
 
         # initialize model and load model weights
         num_class, vocab_size, emsize = len(classes), len(vocab), 64
-        model = TextClassificationModel(vocab_size, emsize, self.config.FC_SIZE, num_class).to(self.device)
+        model = TextClassificationModel(vocab_size, emsize, fc_size, num_class).to(self.device)
         model.load_state_dict(torch.load(model_path))
         model.eval()
 
