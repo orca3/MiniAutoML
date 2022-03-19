@@ -46,7 +46,7 @@ Total: 0 B, Transferred: 281.90 KiB, Speed: 10.63 MiB/s
 
 Creating intent dataset
 {
-  "datasetId": "1",
+  "dataset_id": "1",
   "name": "dataset-1",
   "dataset_type": "TEXT_INTENT",
   "last_updated_at": "2021-07-14T06:23:20.814986Z",
@@ -92,7 +92,7 @@ Total: 0 B, Transferred: 161.40 KiB, Speed: 12.72 MiB/s
 Adding new commit to dataset 1
 ...
 {
-  "datasetId": "1",
+  "dataset_id": "1",
   "name": "dataset-1",
   "dataset_type": "TEXT_INTENT",
   "last_updated_at": "2021-07-14T06:23:20.814986Z",

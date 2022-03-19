@@ -56,7 +56,7 @@ message DatasetPointer {
 }
 
 message DatasetSummary {
-  string datasetId = 1;
+  string dataset_id = 1;
   string name = 2;
   string description = 3;
   DatasetType dataset_type = 4;
