@@ -28,12 +28,12 @@ function start_training() {
       \"dataset_id\":\"$1\",
       \"name\":\"test1\",
       \"train_data_version_hash\":$2,
-      \"output_model_name\":\"first-iteration-model\",
+      \"output_model_name\":\"twitter-model\",
       \"parameters\": {
-        \"LR\":\"50\",
+        \"LR\":\"4\",
         \"EPOCHS\":\"15\",
         \"BATCH_SIZE\":\"64\",
-        \"FC_SIZE\":\"1024\"
+        \"FC_SIZE\":\"128\"
       }
     }
   }" \
@@ -52,7 +52,7 @@ function check_job_status() {
 }
 
 job_status="unknown"
-until [ $job_status == "\"failure\"" ] || [ $job_status == "\"succeed\"" ];
+until [ "$job_status" == "\"failure\"" ] || [ "$job_status" == "\"succeed\"" ];
 do
   echo "job $job_id is currently in $job_status status, check back in 5 seconds"
   sleep 5

@@ -1,5 +1,6 @@
 # used in demo
 model_cache/
+*.csv
 # will be updated by build scripts automatically
 training-code/text-classification/version.py
 

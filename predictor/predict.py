@@ -25,7 +25,8 @@ from grpc_health.v1 import health_pb2_grpc, health
 from torch import nn
 from torchtext.data.utils import get_tokenizer
 
-import prediction_service_pb2_grpc, prediction_service_pb2
+import prediction_service_pb2
+import prediction_service_pb2_grpc
 from utils import PredictorConfig
 
 
@@ -37,7 +38,8 @@ class TextClassificationModel(nn.Module):
         super(TextClassificationModel, self).__init__()
         self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=True)
         self.fc1 = nn.Linear(embed_dim, fc_size)
-        self.fc2 = nn.Linear(fc_size, num_class)
+        self.fc2 = nn.Linear(fc_size, fc_size)
+        self.fc3 = nn.Linear(fc_size, num_class)
         self.init_weights()
 
     def init_weights(self):
@@ -47,10 +49,12 @@ class TextClassificationModel(nn.Module):
         self.fc1.bias.data.zero_()
         self.fc2.weight.data.uniform_(-initrange, initrange)
         self.fc2.bias.data.zero_()
+        self.fc3.weight.data.uniform_(-initrange, initrange)
+        self.fc3.bias.data.zero_()
 
     def forward(self, text, offsets):
         embedded = self.embedding(text, offsets)
-        return self.fc2(self.fc1(embedded))
+        return self.fc3(self.fc2(self.fc1(embedded)))
 
 
 ######################################################################

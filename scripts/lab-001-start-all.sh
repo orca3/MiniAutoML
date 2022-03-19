@@ -9,7 +9,12 @@ else
 fi
 
 if ! docker ps -a | grep -q minio ; then
-  docker run --name minio --network orca3 -d -p "${MINIO_PORT}":9000 -e MINIO_ROOT_USER -e MINIO_ROOT_PASSWORD minio/minio server /data
+  docker run --name minio \
+    --network orca3 \
+    -d \
+    -p "${MINIO_PORT}":9000 \
+    -e MINIO_ROOT_USER -e MINIO_ROOT_PASSWORD \
+    minio/minio server /data
   echo "Started minio docker container and listen on port 9000"
 else
   echo "Minio docker container is already running"
