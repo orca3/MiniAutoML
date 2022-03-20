@@ -87,6 +87,13 @@ else
   echo "prediction-service docker container is already running"
 fi
 
+if ! docker image ls | grep -q orca3/intent-classification ; then 
+  docker pull orca3/intent-classification:latest
+  echo "pull intent-classification training image"
+else
+  echo "intent-classification image already exists"
+fi
+
 if ! docker ps -a | grep -q training-service ; then
   docker run --name training-service \
     --network orca3 \
