@@ -20,7 +20,8 @@ class ModelHandler(BaseHandler):
             super(ModelHandler.TextClassificationModel, self).__init__()
             self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=True)
             self.fc1 = nn.Linear(embed_dim, fc_size)
-            self.fc2 = nn.Linear(fc_size, num_class)
+            self.fc2 = nn.Linear(fc_size, fc_size)
+            self.fc3 = nn.Linear(fc_size, num_class)
             self.init_weights()
 
         def init_weights(self):
@@ -30,10 +31,12 @@ class ModelHandler(BaseHandler):
             self.fc1.bias.data.zero_()
             self.fc2.weight.data.uniform_(-initrange, initrange)
             self.fc2.bias.data.zero_()
+            self.fc3.weight.data.uniform_(-initrange, initrange)
+            self.fc3.bias.data.zero_()
 
         def forward(self, text, offsets):
             embedded = self.embedding(text, offsets)
-            return self.fc2(self.fc1(embedded))
+            return self.fc3(self.fc2(self.fc1(embedded)))
 
     def __init__(self):
         self.context = None
