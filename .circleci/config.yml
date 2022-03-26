@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  build:
+  build-and-push:
     docker:
       - image: cimg/base:2021.04
         auth:
