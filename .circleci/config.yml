@@ -1,20 +1,13 @@
 version: 2.1
 jobs:
   build-and-push:
-    docker:
-      - image: cimg/base:2021.04
-        auth:
-          username: orca3
-          password: $DOCKERHUB_PASSWORD
+    machine: true
     steps:
       - checkout
-
-      - setup_remote_docker:
-          version: 19.03.13
-          docker_layer_caching: true
+      - run: |
+         echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
 
       - run: |
-          echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
           ./scripts/build-images-locally.sh
           docker push orca3/services:latest
           docker push orca3/intent-classification-predictor:latest
