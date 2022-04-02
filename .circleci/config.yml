@@ -8,12 +8,14 @@ jobs:
          echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
 
       - run: |
-          ./scripts/build-images-locally.sh
-          docker push orca3/services:latest
-          docker push orca3/intent-classification-predictor:latest
-          docker push orca3/intent-classification:latest
-          docker push orca3/intent-classification-torch:latest
-          
+          if [ "${CIRCLE_BRANCH}" == "main" ]; then
+            ./scripts/build-images-locally.sh
+            docker push orca3/services:latest
+            docker push orca3/intent-classification-predictor:latest
+            docker push orca3/intent-classification:latest
+            docker push orca3/intent-classification-torch:latest
+          fi
+
 workflows:
   build:
     jobs:
