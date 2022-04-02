@@ -3,7 +3,7 @@ FROM pytorch/pytorch:1.9.0-cuda10.2-cudnn7-runtime
 RUN pip3 install grpcio protobuf grpcio-health-checking
 
 RUN mkdir /opt/intent-predictor
-COPY *.py /opt/intent-predictor
+COPY *.py /opt/intent-predictor/
 WORKDIR /opt/intent-predictor
 
 # Add folder for the logs.

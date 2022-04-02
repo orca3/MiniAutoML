@@ -17,8 +17,8 @@ echo ""
 
 echo "Building orca3/intent-classification & orca3/intent-classification-torch"
 docker build \
--t orca3/intent-classification \
--t orca3/intent-classification-torch \
+-t orca3/intent-classification:latest \
+-t orca3/intent-classification-torch:latest \
 -f "$(dirname "$0")/../training-code/text-classification/Dockerfile" \
 "$(dirname "$0")/../training-code/text-classification"
 echo ""
