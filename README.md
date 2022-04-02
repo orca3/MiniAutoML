@@ -13,6 +13,10 @@ The installation of system requirements are not included in the `scripts` folder
 - **Java JDK 11+**: 
   - Use `java --version` command to confirm your Java version.
   - Apache maven is not required to run the examples. We've bundled [Maven wrapper](https://github.com/takari/maven-wrapper) `mvnw` so that all the build commands we used in this repo depends only on `mvnw`.
+- **Python3 & miniconda**
+  - There are many ways to install python, if you don't have python yet, we recommend using [miniconda](https://docs.conda.io/en/latest/miniconda.html) to
+    manage your python environments
+  - in our python section we uses `conda` to setup python environments
 - **Docker**: docker community edition can be downloaded from https://docs.docker.com/get-docker/. 
   - Use `docker version` command to verify both the client and the server are available/running.
 - **Kubernetes**: docker community edition provides a standalone node kubernetes installation. You can enable it by following [official doc](https://docs.docker.com/desktop/kubernetes).
@@ -37,6 +41,7 @@ In the root folder you'll find a Maven project description file `pom.xml`, which
 - Dockerfile (`services.dockerfile`) builds all these microservices, producing ONE image that is capable of starting multiple services. Providing `<<module-name>>.jar` to the argument section of the `docker run` command can start the corresponding microservice. You can see example `docker run` command in [scripts/dm-002-start-server.sh](scripts/dm-002-start-server.sh).
 
 ## Next step
-1. Look at the service definitions in [grpc-contract](grpc-contract)
-2. Play with [data-management](data-management)
-3. Play with [training-service](training-service)
+1. Checkout our [lab](lab.md) section
+2. Look at the service definitions in [grpc-contract](grpc-contract)
+3. Play with [data-management](data-management)
+4. Play with [training-service](training-service)

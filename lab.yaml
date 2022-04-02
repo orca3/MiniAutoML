@@ -1,0 +1,6 @@
+name: orca3-lab
+channels:
+  - conda-forge
+  - huggingface
+dependencies:
+  - datasets
