@@ -1,0 +1,24 @@
+version: 2.1
+jobs:
+  build-and-push:
+    machine: true
+    steps:
+      - checkout
+      - run: |
+         echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+
+      - run: |
+          if [ "${CIRCLE_BRANCH}" == "main" ]; then
+            ./scripts/build-images-locally.sh
+            docker push orca3/services:latest
+            docker push orca3/intent-classification-predictor:latest
+            docker push orca3/intent-classification:latest
+            docker push orca3/intent-classification-torch:latest
+          fi
+
+workflows:
+  build:
+    jobs:
+      - build-and-push:
+          context:
+            - orca3
