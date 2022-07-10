@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/env-vars.sh"
 
+docker pull orca3/intent-classification
+
 if ! docker network ls | grep -q orca3 ; then
   docker network create orca3
   echo "Created docker network orca3"

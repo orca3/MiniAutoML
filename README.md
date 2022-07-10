@@ -2,11 +2,29 @@
 
 ![cover page](cover.png)
 
-This repository contains source code examples for `Engineering Deep Learning Platforms`. [Purchase link](http://mng.bz/GGgN).
+This repository contains source code examples for `Engineering Deep Learning Systems`. [Purchase link](http://mng.bz/GGgN). 
 
-> We are in Manning Early Access Program (MEAP) now! 50% off with code `mlwang2` till March 3rd
+To demonstrate the design principles introduced in the book, we built this mini system (5 miro-services) with JAVA (web API) and Python (model training code). The system can run on Mac or Linux if you have docker and Kubernetes (optional) installed, and it addresses the core requirements of a machine learning system: dataset management, model training and model serving.  
 
-## System Requirement
+Learning a deep learning system could be intimidating, the complexity of web services setup, intricate business logic and variety of libraries and framework installations prevent us from getting to the core piece of a deep learning system. 
+
+To enable you to access the core implementation of the system easily, we did several things to keep this demo system simple.
+1. use gRPC to build the restful api to avoid the boilerplate code of JAVA web api.
+2. offer [shell scripts](/scripts/) to run the system and interact with the services. 
+3. code is simple and short, each service of the system is built less than a few thousand lines of code. We only keep the bare minimum code that are good enough to demonstrate the design principles introduced in the book.  
+
+## System Overview
+Our mini deep learning system consists of four services and one storage system, they are:
+
+- **[Dataset management service](https://github.com/orca3/MiniAutoML/tree/main/data-management)**, designed for storing and fetching dataset. 
+- **[Model training service](https://github.com/orca3/MiniAutoML/tree/main/training-service)**, designed for running model training code.
+- **[Metadata store service](https://github.com/orca3/MiniAutoML/tree/main/metadata-store)**, designed for storing model metadata, such as model name, model version and model algorithm.
+- **[Prediction service](https://github.com/orca3/MiniAutoML/tree/main/prediction-service)**, designed to execute models to process customer’s prediction requests.
+- **MinIO storage**, an object storage similar to AWS S3 but can run on your local computer.
+
+In the book [Engineering Deep Learning Systems](http://mng.bz/GGgN), each of these serivces gets their own chapter. To play with the system locally, please install the [system requirements](https://github.com/orca3/MiniAutoML#system-requirement) and then follow the instructions in the [lab](https://github.com/orca3/MiniAutoML#lab) section.
+
+## System Requirements
 The installation of system requirements are not included in the `scripts` folder. Please make sure those requirements are met before executing scripts in the `scripts` folder.
 
 - **Operating system**: MacOs or Linux or WSL (Windows Subsystem for Linux).
@@ -26,6 +44,9 @@ The installation of system requirements are not included in the `scripts` folder
   - For mac, do `brew install grpcurl`
   - For linux, follow the project documentation to download the right binary
   - Use `grpcurl --version` command to verify it has been successfully installed.
+- **JQ**: to simplify the JSON data parsing in shell script, our example scripts use this [JQ](https://stedolan.github.io/jq/) library when parse the return JSON object from our API calls.
+  - For mac, do `brew install jq`
+  - For linux, follow the instruction in [Download jq](https://stedolan.github.io/jq/download/)
 
 ## Module list
 
@@ -35,6 +56,90 @@ In the root folder you'll find a Maven project description file `pom.xml`, which
 - `training-code` contains deep learning model training code for text classification, written in Python. [training-code/text-classification/Readme.md](training-code/text-classification/) talks about how to setup the Python environment.
 - `scripts` contains demo bash scripts used in the `<<lab chapter>>` as well as individual module's readme file. We expect those scripts to be executed using repository root as the working directory.
 - Dockerfile (`services.dockerfile`) builds all these microservices, producing ONE image that is capable of starting multiple services. Providing `<<module-name>>.jar` to the argument section of the `docker run` command can start the corresponding microservice. You can see example `docker run` command in [scripts/dm-002-start-server.sh](scripts/dm-002-start-server.sh).
+
+## Lab
+
+After installing the [system requirements](https://github.com/orca3/MiniAutoML#system-requirement): docker, Minio, grpcurl and JQ, you can use our lab scripts to setup the sample deep learning system locally and start to play with it, such building a NLP model. By exeucting these scripts one by one, you will see a complete deep learning cycle, from data collection to model training and model serving. 
+
+***Please run the lab scripts from the root folder***, a side note for running our lab scripts successfully is to execute them from the root folder where you download this project.
+
+The lab scripts are placed at the [scripts](/scripts/) folder. They start with the word "_lab_". See below explaination for each script.
+
+- [scripts/lab-001-start-all.sh](scripts/lab-001-start-all.sh) pulls all the services' docker images, runs the containers and starts the system.
+- [scripts/lab-002-upload-data.sh](scripts/lab-002-upload-data.sh) prepares some training data and uploads them to the dataset management service to build a dataset (a text dataset for intent classification). After execution, you will see the script print out a JSON object (see below example). This JSON object represents a dataset in the dataset management service, please pay attention to the `dataset_id` attribute, which will be used in model training. 
+  ```
+  {
+    "dataset_id": "1",
+    "name": "tweet_emotion",
+    "dataset_type": "TEXT_INTENT",
+    "last_updated_at": "2022-07-09T01:23:16.192376Z",
+    "commits": [
+      {
+        "dataset_id": "1",
+        "commit_id": "1",
+        "created_at": "2022-07-09T01:23:16.968476Z",
+        "commit_message": "Initial commit",
+        "path": "dataset/1/commit/1",
+        "statistics": {
+          "numExamples": "2963",
+          "numLabels": "3"
+        }
+      }
+    ]
+  }
+  ```
+- [scripts/lab-003-first-training.sh](scripts/lab-003-first-training.sh) kicks off a model training job with the dataset built by `lab-002-upload-data.sh`. This script will keep waiting until the training completes, it will then send out a prediction request to the prediction service, asking for model inference by using the newly built model.
+
+  `lab-003-first-training.sh` script requires one input parameter - dataset_id, which you can get from the result of `lab-002-upload-data.sh`.
+  ```
+  ./scripts/lab-003-first-training.sh {dataset_id}
+  ```
+  for example: 
+  ```
+  $./scripts/lab-003-first-training.sh 1
+  ```
+  When model training completes, the script will print out a JSON object (see example below), which represents the model training job that produces the model. Please pay attention to the `run_id` attribute, we use the training run id to represent the model the training job produces. In our system, _model id_ = _run id_.  
+  ```
+  {
+    "run_info": {
+      "start_time": "2022-07-09T01:26:32.924614",
+      "end_time": "2022-07-09T01:26:36.238346",
+      "success": true,
+      "message": "test accuracy    0.561",
+      "run_id": "2",
+      "run_name": "training job 2",
+      "tracing": {
+        "dataset_id": "1",
+        "version_hash": "hashAg==",
+        "code_version": "231c0d2"
+      },
+      "epochs": { 
+        ... 
+      }
+    }
+  }
+  ```
+- [scripts/lab-004-model-serving.sh](scripts/lab-004-model-serving.sh) sends a prediction request to the prediction service with a specified model id.
+
+  `lab-004-model-serving.sh` script requires two input parameters - model id and document. You can get `model id` from the result of `lab-003-first-training.sh` - the `run_id` attribute, and you can type arbitrary text string for the `document` parameter.
+
+  ```
+  ./scripts/lab-004-model-serving.s {run_id} {document}
+  ```
+  for example: 
+  ```
+  $./scripts/lab-004-model-serving.sh 2 "hello world"
+
+  model_id is 1
+  document is hello world
+  {
+    "response": "{\"result\": \"joy\"}"
+  }
+  ```
+
+- [scripts/lab-999-tear-down.sh](scripts/lab-999-tear-down.sh) stops and remove all the services (docker containers)
+
+- [scripts/lab-005-second-training.sh](scripts/lab-005-second-training.sh) is very similar to `lab-003-first-training.sh`, this is a bonus scenario for updating an existing dataset and retain a model. This script is the answer to a quiz of the chapter two - **Ch 2, A Hello World Deep Learning System**.
 
 ## Next step
 1. Look at the service definitions in [grpc-contract](grpc-contract)
