@@ -63,7 +63,7 @@ After installing the [system requirements](https://github.com/orca3/MiniAutoML#s
 
 ***Please run the lab scripts from the root folder***, a side note for running our lab scripts successfully is to execute them from the root folder where you download this project.
 
-The lab scripts are placed at the [scripts](/scripts/) folder. They start with the word "_lab_". See below explaination for each script.
+The lab scripts are placed at the [scripts](/scripts/) folder. They start with the word "_lab_". Please execute them in order. See below explaination for each script.
 
 - [scripts/lab-001-start-all.sh](scripts/lab-001-start-all.sh) pulls all the services' docker images, runs the containers and starts the system.
 - [scripts/lab-002-upload-data.sh](scripts/lab-002-upload-data.sh) prepares some training data and uploads them to the dataset management service to build a dataset (a text dataset for intent classification). After execution, you will see the script print out a JSON object (see below example). This JSON object represents a dataset in the dataset management service, please pay attention to the `dataset_id` attribute, which will be used in model training. 
