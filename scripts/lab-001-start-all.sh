@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/env-vars.sh"
 
-docker pull orca3/intent-classification
-
 if ! docker network ls | grep -q orca3 ; then
   docker network create orca3
   echo "Created docker network orca3"
@@ -89,7 +87,7 @@ else
   echo "prediction-service docker container is already running"
 fi
 
-if ! docker image ls | grep -q orca3/intent-classification ; then
+if ! docker image ls | grep -vq predictor | grep -q "orca3/intent-classification" ; then
   docker pull orca3/intent-classification:latest
   echo "pull intent-classification training image"
 else

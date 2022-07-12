@@ -1,6 +1,8 @@
 ## Function Demo
 > All the following scripts are expected to be executed from the repository root directory
 
+> Please make sure all the [system requirements](https://github.com/orca3/MiniAutoML#system-requirements) are installed before running this demo.
+
 The following guide will go through a typical cycle of `create dataset` -> `add more commits to the dataset` -> `retrieve the entire dataset or a subset of it` -> `fetch the repackaged dataset for training`
 
 
@@ -336,4 +338,7 @@ mc alias -q set myminio http://127.0.0.1:"${MINIO_PORT}" "${MINIO_ROOT_USER}" "$
 ```
 
 ## Clean up
-Execute `./scripts/tear-down.sh`
+>If you are going to run the training service lab (chapter 5 and 6), please keep the containers running, they will provide the dataset required for the [training lab](https://github.com/orca3/MiniAutoML/blob/main/training-service/demo.md).
+
+Execute `./scripts/lab-999-tear-down.sh`
+
