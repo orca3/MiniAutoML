@@ -89,7 +89,7 @@ else
   echo "prediction-service docker container is already running"
 fi
 
-if ! docker image ls | grep -q orca3/intent-classification ; then 
+if ! docker image ls | grep -q orca3/intent-classification ; then
   docker pull orca3/intent-classification:latest
   echo "pull intent-classification training image"
 else
@@ -108,5 +108,3 @@ if ! docker ps -a | grep -q training-service ; then
 else
   echo "training-service docker container is already running"
 fi
-
-conda install -c huggingface -c conda-forge datasets

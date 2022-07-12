@@ -124,7 +124,7 @@ The lab scripts are placed at the [scripts](/scripts/) folder. They start with t
   `lab-004-model-serving.sh` script requires two input parameters - model id and document. You can get `model id` from the result of `lab-003-first-training.sh` - the `run_id` attribute, and you can type arbitrary text string for the `document` parameter.
 
   ```
-  ./scripts/lab-004-model-serving.s {run_id} {document}
+  ./scripts/lab-004-model-serving.sh {run_id} {document}
   ```
   for example: 
   ```
