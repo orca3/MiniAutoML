@@ -1,7 +1,8 @@
 # docker build -t orca3/intent-classification-predictor:latest -f predictor/Dockerfile predictor
 FROM pytorch/pytorch:1.9.0-cuda10.2-cudnn7-runtime
 
-RUN pip3 install minio protobuf grpcio torch-model-archiver
+RUN pip3 install minio protobuf~=3.20.0 grpcio torch-model-archiver
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
 RUN mkdir /opt/intent-classification
 COPY *.py /opt/intent-classification/

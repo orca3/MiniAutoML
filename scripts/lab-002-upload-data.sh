@@ -3,6 +3,7 @@ source "$(dirname "$0")/env-vars.sh"
 
 mc alias -q set myminio http://127.0.0.1:"${MINIO_PORT}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
 
+conda install -c huggingface -c conda-forge datasets~=1.18.0
 python3 "$(dirname "$0")/prepare_data.py"
 
 

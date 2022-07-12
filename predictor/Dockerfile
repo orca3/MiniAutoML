@@ -1,6 +1,7 @@
 FROM pytorch/pytorch:1.9.0-cuda10.2-cudnn7-runtime
 
-RUN pip3 install grpcio protobuf grpcio-health-checking
+RUN pip3 install grpcio protobuf~=3.20.0 grpcio-health-checking
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
 RUN mkdir /opt/intent-predictor
 COPY *.py /opt/intent-predictor/
