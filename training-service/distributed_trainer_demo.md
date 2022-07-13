@@ -28,23 +28,8 @@ Started training-service docker container and listen on port 6003
 
 ### Submit training job
 > Assuming the datasetId from [data-management demo](../data-management/demo.md) is 1. 
-> If this is not the case please update [ts-002-start-run.sh](../scripts/ts-002-start-run.sh)
 
-Execute: `./scripts/ts-002-start-run.sh`
-
-This will
-1. Invoke `Train` endpoint to start an `intent-classification` training on dataset `1` version `hashDg==`,
-with parameter `LR=4;EPOCHS=15;BATCH_SIE=64;FC_SIZE=128;`
-2. Reply is the jobId that we can use to track the status later
-
-Expected output:
-```
-{
-  "job_id": 1
-}
-```
-
-Execute: ` ./scripts/ts-004-start-parallel-run.sh`
+Execute: ` ./scripts/ts-004-start-parallel-run.sh 1`, replace 1 with other dataset id if needed.
 
 This will
 1. Invoke `Train` endpoint to start an `intent-classification` training on dataset `1` version `hashDg==`,
@@ -149,4 +134,4 @@ job-2-1635150590973-test-parallel-worker-2   1/1     Running   0          6s
 ```
 
 ## Clean up
-Execute `./scripts/tear-down.sh`
+Execute `./scripts/lab-999-tear-down.sh`
