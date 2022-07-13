@@ -1,64 +1,9 @@
-## Function Demo
+## Distributed Trainer Training Demo
 > All the following scripts are expected to be executed from the repository root directory
  
 Please go over the data-management [demo](../data-management/demo.md) first. We need the datasetId from the previous demo here. Assuming it is dataset 1.
 
 ### Setup
-Execute: `./scripts/ts-000-build-trainer.sh`
-
-This will
-1. Launch a local docker registry container on port 3000. 
-Without this our kubernetes backend cannot pull text classification trainer image.
-2. Build the trainer image `orca3/intent-classification:latest` from python code in [training-code](../training-code)
-3. "Push" the trainer image to our local registry as `localshot:3000/orca3/intent-classification`
-4. `localhost:3000/orca3/intent-classification` is the actual image name we used in kubernetes to launch our trainer pod
-
-Expected output:
-```
-8ba739593e0bda889c50fd8f2a080d92f175070efa521934e260bee84df6b8b1
-Started local-docker-registry docker container and listen on port 3000
-[+] Building 3.4s (14/14) FINISHED
- => [internal] load build definition from Dockerfile                                                                      0.0s
- => => transferring dockerfile: 574B                                                                                      0.0s
- => [internal] load .dockerignore                                                                                         0.0s
- => => transferring context: 2B                                                                                           0.0s
- => [internal] load metadata for docker.io/pytorch/pytorch:1.9.0-cuda10.2-cudnn7-runtime                                  2.0s
- => [auth] pytorch/pytorch:pull token for registry-1.docker.io                                                            0.0s
- => [1/8] FROM docker.io/pytorch/pytorch:1.9.0-cuda10.2-cudnn7-runtime@sha256:5dc11a9036bcb5b7950f4f8a43974057559278fa4b  0.0s
- => [internal] load build context                                                                                         0.0s
- => => transferring context: 161.72kB                                                                                     0.0s
- => CACHED [2/8] RUN pip3 install minio protobuf grpcio                                                                   0.0s
- => CACHED [3/8] RUN mkdir /opt/intent-classification                                                                     0.0s
- => [4/8] COPY *.py /opt/intent-classification/                                                                           0.0s
- => [5/8] WORKDIR /opt/intent-classification                                                                              0.0s
- => [6/8] RUN mkdir /model                                                                                                0.3s
- => [7/8] RUN mkdir /logs                                                                                                 0.3s
- => [8/8] RUN chgrp -R 0 /opt/intent-classification   && chmod -R g+rwX /opt/intent-classification   && chgrp -R 0 /mode  0.3s
- => exporting to image                                                                                                    0.1s
- => => exporting layers                                                                                                   0.1s
- => => writing image sha256:f22797d695bb83474c589113d444ed1fec978339f31a98432366c051adf69c93                              0.0s
- => => naming to localhost:3000/orca3/intent-classification                                                               0.0s
- => => naming to docker.io/orca3/intent-classification                                                                    0.0s
-
-Use 'docker scan' to run Snyk tests against images to find vulnerabilities and learn how to fix them
-Using default tag: latest
-The push refers to repository [localhost:3000/orca3/intent-classification]
-5f106a47c789: Pushed
-5924beb5f5af: Pushed
-2d8328bc51d7: Pushed
-5f70bf18a086: Pushed
-7cd21bf4cc43: Pushed
-d44ff5fa395a: Pushed
-875029d95deb: Pushed
-0e8f8d4f0dae: Pushed
-36ddb277a164: Pushed
-4bd1c3d7150d: Pushed
-5f08512fd434: Pushed
-c7bb31fc0e08: Pushed
-50858308da3d: Pushed
-latest: digest: sha256:3e4c57aef08c4f67d91fab584bb83bfb0c7db8dd33e3f3b7b662134fb0c08da1 size: 3032
-```
-
 Execute: `./scripts/ms-002-start-server.sh`
 
 This will
@@ -69,6 +14,7 @@ Expected output:
 ```
 Started metadata-store docker container and listen on port 6002
 ```
+
 
 Execute: `./scripts/ts-001-start-server-kube.sh`
 

@@ -11,7 +11,9 @@ By reading these code, you will learn how the training service design concept co
 
 ## Function demo
 
-See [demo.md](demo.md)
+See [single trainer demo](single_trainer_demo.md)
+
+See [distributed trainer demo](distributed_trainer_demo.md)
 
 --------
 
