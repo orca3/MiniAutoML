@@ -128,6 +128,6 @@ Expected output, based on the timing, it can be one of the following:
 ```
 
 ## Clean up
-> If you like to run the [distributed training service lab (chapter 6)](distributed_trainer_demo.md), please do not clear the resources and keep the containers running, they will provide the dataset required for the distributed training lab.
+> If you like to run the [distributed training service lab (chapter 6)](distributed_trainer_demo.md), please do not execute the tear-down script and keep the containers running, they will provide the dataset required for the distributed training lab.
 
 Execute `./scripts/lab-999-tear-down.sh`
