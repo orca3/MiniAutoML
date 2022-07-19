@@ -338,7 +338,7 @@ mc alias -q set myminio http://127.0.0.1:"${MINIO_PORT}" "${MINIO_ROOT_USER}" "$
 ```
 
 ## Clean up
->If you are going to run the training service lab (chapter 5 and 6), please keep the containers running, they will provide the dataset required for the [training lab](https://github.com/orca3/MiniAutoML/blob/main/training-service/demo.md).
+>If you are going to run the training service lab (chapter 5 and 6), please don't execute the tear-down script and keep the containers running, they will provide the dataset required for the [training lab](https://github.com/orca3/MiniAutoML/blob/main/training-service/demo.md).
 
 Execute `./scripts/lab-999-tear-down.sh`
 
