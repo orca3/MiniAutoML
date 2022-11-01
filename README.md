@@ -27,10 +27,15 @@ In the book [Engineering Deep Learning Systems](http://mng.bz/GGgN), each of the
 ## System Requirements
 The installation of system requirements are not included in the `scripts` folder. Please make sure those requirements are met before executing scripts in the `scripts` folder.
 
-- **Operating system**: MacOs or Linux or WSL (Windows Subsystem for Linux).
+- **Operating system**: Recent versions of macOS, Linux or WSL (Windows Subsystem for Linux). Pre-built Docker containers have been tested to work on Apple M1 hardware without modifications.
 - **Java JDK 11+**: 
   - Use `java --version` command to confirm your Java version.
   - Apache maven is not required to run the examples. We've bundled [Maven wrapper](https://github.com/takari/maven-wrapper) `mvnw` so that all the build commands we used in this repo depends only on `mvnw`.
+- **Anaconda**:
+  - **IMPORTANT**: If you are running on Apple M1, make sure to download and install a version that
+    supports it to avoid running into errors.
+  - Create and activate a clean Conda environment before running the lab. Failing to do so may
+    result in long initial setup time and failures.
 - **Docker**: docker community edition can be downloaded from https://docs.docker.com/get-docker/. 
   - Use `docker version` command to verify both the client and the server are available/running.
 - **Kubernetes**: docker community edition provides a standalone node kubernetes installation. You can enable it by following [official doc](https://docs.docker.com/desktop/kubernetes).
@@ -60,6 +65,12 @@ In the root folder you'll find a Maven project description file `pom.xml`, which
 ## Lab
 
 After installing the [system requirements](https://github.com/orca3/MiniAutoML#system-requirement): docker, Minio, grpcurl and JQ, you can use our lab scripts to setup the sample deep learning system locally and start to play with it, such building a NLP model. By exeucting these scripts one by one, you will see a complete deep learning cycle, from data collection to model training and model serving. 
+
+It is strongly recommended to create and activate a brand new Conda environment before running any lab scripts to avoid long setup times and possible failures. You can do so by running
+```shell
+conda create --name miniautoml-lab
+conda activate miniautoml-lab
+```
 
 ***Please run the lab scripts from the root folder***, a side note for running our lab scripts successfully is to execute them from the root folder where you download this project.
 
