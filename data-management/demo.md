@@ -381,7 +381,10 @@ mc cp myminio/mini-automl-dm/versionedDatasets/1/hashDg==/examples.csv examples.
 
 ## Step 9: Clean up
 
-> If you are going to run the training service lab (Chapter 3 and 4), skip the tear down step. The dataset created in this lab is required by the [training lab](https://github.com/orca3/MiniAutoML/blob/main/training-service/demo.md).
+> If you are going to run the training service lab (Chapter 3 and 4), skip the tear down step.
+> The dataset created in this lab is required by both the
+> [single trainer training demo](https://github.com/orca3/MiniAutoML/blob/main/training-service/single_trainer_demo.md) and the
+> [distributed trainer training demo](https://github.com/orca3/MiniAutoML/blob/main/training-service/distributed_trainer_demo.md).
 
 Run the following:
 ```shell
