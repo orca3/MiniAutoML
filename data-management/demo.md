@@ -1,47 +1,65 @@
-## Function Demo
-> All the following scripts are expected to be executed from the repository root directory
+# Data Management Function Demo
 
-> Please make sure all the [system requirements](https://github.com/orca3/MiniAutoML#system-requirements) are installed before running this demo.
+> Please run all scripts from the repository's root directory.
 
-The following guide will go through a typical cycle of `create dataset` -> `add more commits to the dataset` -> `retrieve the entire dataset or a subset of it` -> `fetch the repackaged dataset for training`
+> Please make sure all [system requirements](https://github.com/orca3/MiniAutoML#system-requirements) are met before running this demo.
 
+The following guide will go through a typical cycle of
+1. Create dataset
+2. Add more commits to a dataset
+3. Retrieve the entire dataset and a subset of it
+4. Fetch the repackaged dataset for training
 
-### Setup
-Execute: `./scripts/dm-001-start-minio.sh`
+## Step 1: Starting MinIO
 
-This will:
-1. Create a docker network `orca3` if needed
-2. Start a minio server with name `minio` in docker joining network `orca3` and bind to port 9000. Minio server is now accessible at `localhost:9000` from your machine, or `minio:9000` from other containers connected to docker network `orca3`
-3. Minio server uses credentials stored in `./scripts/env-vars.sh`
-
-Expected output:
+Run the following:
+```shell
+./scripts/dm-001-start-minio.sh
 ```
+
+The script will:
+1. Create a Docker network `orca3` if needed.
+2. Start a MinIO server container named `minio` in network `orca3`, and bind it to port `9000`.
+   MinIO server will be accessible at `localhost:9000` from your machine, or `minio:9000` from other containers within the same Docker network `orca3`.
+3. MinIO server uses credentials stored in `./scripts/env-vars.sh`
+
+You should see the following when you run the script:
+```shell
 Created docker network orca3
 Started minio docker container and listen on port 9000
 ```
 
-Execute: `./scripts/dm-002-start-server.sh`
+## Step 2: Starting Data Management Server
 
-This will:
-1. Build a docker image using `services.dockerfile` in the root directory
-2. Start a data-management server with name `data-management` in docker joining network `orca3` and bind to port 6000. Data management server is now accessible at `localhost:6000` from your machine, or `data-management:51001` from other containers connected to docker network `orca3`.
-
-Expected output:
+Run the following:
+```shell
+./scripts/dm-002-start-server.sh
 ```
+
+The script will:
+1. Launch the Docker image `orca3/services:latest`. If this image does not exist on your machine, Docker will attempt pulling it from the Docker Hub.
+2. Start a Data Management server container named `data-management` in network `orca3`, and bind to port `6000`.
+   Data management server will be accessible at `localhost:6000` from your machine, or `data-management:51001` from other containers within the same Docker network `orca3`.
+
+You should see the following when you run the script:
+```shell
 Started data-management docker container and listen on port 6000
 ```
 
-### Create intent dataset
-Execute: `./scripts/dm-003-create-dataset.sh`
+## Step 3: Creating an intent dataset
 
-This will:
-1. Upload our sample data `data-management/src/test/resources/datasets/demo-part1.csv` into minio server
-2. Invoke `CreateDataset` endpoint using predefined payload
-3. Got a datasetId in the reply. In this case, `1`
-
-Expected output:
-> note the date / datasetId can be slightly different from the actual result you are seeing
+Run the following:
+```shell
+./scripts/dm-003-create-dataset.sh
 ```
+
+The script will:
+1. Upload sample data from `data-management/src/test/resources/datasets/demo-part1.csv` to the MinIO server.
+2. Invoke the `CreateDataset` API method of the Data Management Server to create a dataset with the sample data that was uploaded to the MinIO server. 
+3. Extract the `datasetId` from the API method's response. In our example, the value is `1`.
+
+You should see the following when you run the script:
+```shell
 Upload raw data to cloud object storage to get a data url. For demo purpose, we upload data to 'mini-automl-dm' bucket in the local MinIO server, data url to reference the data is 'upload/001.csv'
 `data-management/src/test/resources/datasets/test.csv` -> `myminio/mini-automl-dm/upload/001.csv`
 Total: 0 B, Transferred: 281.90 KiB, Speed: 10.63 MiB/s
@@ -74,17 +92,26 @@ Creating intent dataset
 }
 ```
 
-### Add more commits to dataset
-Execute: `./scripts/dm-004-add-commits.sh 1`.
-> Please update `1` to the datasetId you received in the previous command.
+**IMPORTANT:** You may get a different `datasetId` if you have created other datasets before.
+In that case, you will need to use that value for subsequent steps where `datasetId` is required.
 
-This will:
-1. Upload our sample data `data-management/src/test/resources/datasets/demo-part2.csv` and `data-management/src/test/resources/datasets/demo-part3.csv` into minio server
-2. Invoke `UpdateDataset` endpoint to update the dataset with provided datasetId `1`
+## Step 4: Add a new commit to the dataset
 
-Expected output:
-> note the date / datasetId can be slightly different from the actual result you are seeing
+Run the following:
+```shell
+./scripts/dm-004-add-commits.sh 1
 ```
+
+> Update `1` to the `datasetId` that was returned from the previous Step 3.
+
+The script will:
+1. Upload the following sample data to the MinIO server:
+   * `data-management/src/test/resources/datasets/demo-part2.csv`
+   * `data-management/src/test/resources/datasets/demo-part3.csv`
+2. Invoke the `UpdateDataset` API method of the Data Management Server to update the dataset created in Step 3.
+
+You should see the following when you run the script:
+```shell
 Uploading new data file
 `data-management/src/test/resources/datasets/demo-part2.csv` -> `myminio/mini-automl-dm/upload/002.csv`
 Total: 0 B, Transferred: 398.27 KiB, Speed: 20.82 MiB/s
@@ -154,17 +181,23 @@ Adding new commit to dataset 1
 }
 ```
 
-### Request the content of the entire dataset
-Execute: `./scripts/dm-005-prepare-dataset.sh 1`
-> Please update `1` to the datasetId you used in the previous command.
+## Step 5: Retrieve the content of the entire dataset
 
-This will:
-1. Invoke `PrepareTrainingDataset` endpoint to submit a data repackaging task
-2. This task will merge all 3 commits in dataset 1 into one package when finished
-3. You get a `version_hash` in the reply, with which you can track the repackaging status in later steps. In this example, the version hash is`hashDg==`
-
-Expected output:
+Run the following:
+```shell
+./scripts/dm-005-prepare-dataset.sh 1
 ```
+> Update `1` to the `datasetId` that was returned from Step 3.
+
+The script will:
+1. Invoke the `PrepareTrainingDataset` API method of the Data Management Server to submit a data preparation task.
+2. This task will merge all 3 commits in the dataset to a versioned snapshot.
+3. A `version_hash` will be returned as part of the API method response.
+   It can be used to track the data preparation status in subsequent steps.
+   In this example, the returned value of version hash is `hashDg==`.
+
+You should see the following when you run the script:
+```shell
 Prepare a version of dataset 1 that contains all commits
 {
   "dataset_id": "1",
@@ -226,20 +259,25 @@ Prepare a version of dataset 1 that contains all commits
     }
   ]
 }
-
 ``` 
 
-### Request a filtered version of the dataset
-Execute: `./scripts/dm-006-prepare-partial-dataset.sh 1 "aaa"`
-> Please update `1` to the datasetId you used in the previous command.
+## Step 6: Retrieve a filtered dataset
 
-This will:
-1. Invoke `PrepareTrainingDataset` endpoint to submit a data repacking task, which also includes a filter `category=aaa`
-2. This task will merge the 2 matching commits in dataset 1 into one package when finished
-3. You get a `version_hash` in the reply, with which you can track the repackaging status in later steps. In this example, the version_hash is `hashBg==`
-
-Expected output:
+Run the following:
+```shell
+./scripts/dm-006-prepare-partial-dataset.sh 1 "aaa"
 ```
+> Update `1` to the `datasetId` that was returned from Step 3.
+
+The script will:
+1. Invoke the `PrepareTrainingDataset` API method of the Data Management Server to submit a data preparation task, with a filter parameter `category=aaa`.
+2. This task will merge the 2 matching commits in the dataset to a versioned snapshot.
+3. A `version_hash` will be returned as part of the API method response.
+   It can be used to track the data preparation status in subsequent steps.
+   In this example, the returned value of `version_hash` is `hashBg==`.
+
+You should see the following when you run the script:
+```shell
 Prepare a version of dataset 1 that contains only training data with tag category:aaa
 {
   "dataset_id": "1",
@@ -286,16 +324,20 @@ Prepare a version of dataset 1 that contains only training data with tag categor
 }
 ```
 
-### Check the data preparation task status
-Execute `./scripts/dm-007-fetch-dataset-version.sh 1 hashDg==` to check the task status.
-> Note you can try the other version hash `hashBg==` as well
+### Step 7: Check the status of the data preparation task
 
-This will:
-1. Invoke `FetchTrainingDataset` endpoint to check the status
-2. You'll get the state of the repackaged data as well as the location on minio where the repackaged data lives
-
-Expected output:
+Run the following:
+```shell
+./scripts/dm-007-fetch-dataset-version.sh 1 hashDg==
 ```
+> You can try the other version hash `hashBg==` as well.
+
+The script will:
+1. Invoke the `FetchTrainingDataset` API method of the Data Management Server to check the status of the data preparation task specified by `version_hash`.
+2. You will get the status of the data preparation task, as well as the location of the dataset snapshot on MinIO.
+
+You should see the following when you run the script:
+```shell
 Fetching dataset 1 with version hashDg==
 {
   "dataset_id": "1",
@@ -325,20 +367,23 @@ Fetching dataset 1 with version hashDg==
 }
 ```
 
-### Inspect the repackaged file content
-Execute `mc ls myminio/mini-automl-dm/versionedDatasets/1/hashDg==/` to look at the files, or use `mc cp myminio/mini-automl-dm/versionedDatasets/1/hashDg==/examples.csv examples.csv` to download the file to current working directly
+### Step 8: Inspect the content of the dataset snapshot
 
-This will:
-1. Copy the output of the data preparation task from the `mini-automl-dm` bucket in `myminio` connection (set up already in previous commends)
-
-If for some reason `myminio` alias has not been set up yet, you can manually set it up using
-```
-source ./scripts/env-vars.sh
-mc alias -q set myminio http://127.0.0.1:"${MINIO_PORT}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+To list all files of the dataset snapshot, run:
+```shell
+mc ls myminio/mini-automl-dm/versionedDatasets/1/hashDg==/
 ```
 
-## Clean up
->If you are going to run the training service lab (chapter 5 and 6), please don't execute the tear-down script and keep the containers running, they will provide the dataset required for the [training lab](https://github.com/orca3/MiniAutoML/blob/main/training-service/demo.md).
+To download a file from the dataset snapshot to the current working directory, run:
+```shell
+mc cp myminio/mini-automl-dm/versionedDatasets/1/hashDg==/examples.csv examples.csv
+```
 
-Execute `./scripts/lab-999-tear-down.sh`
+## Step 9: Clean up
 
+> If you are going to run the training service lab (Chapter 3 and 4), skip the tear down step. The dataset created in this lab is required by the [training lab](https://github.com/orca3/MiniAutoML/blob/main/training-service/demo.md).
+
+Run the following:
+```shell
+./scripts/lab-999-tear-down.sh
+```
