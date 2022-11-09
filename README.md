@@ -2,16 +2,15 @@
 
 ![cover page](cover.png)
 
-This repository contains source code examples for `Engineering Deep Learning Systems`. [Purchase link](http://mng.bz/GGgN). 
+This repository contains source code examples for `Engineering Deep Learning Systems`. [Purchase a copy here](http://mng.bz/GGgN). 
 
-To demonstrate the design principles introduced in the book, we built this mini system (5 miro-services) with JAVA (web API) and Python (model training code). The system can run on Mac or Linux if you have docker and Kubernetes (optional) installed, and it addresses the core requirements of a machine learning system: dataset management, model training and model serving.  
+To demonstrate design principles introduced in the book, we built this mini system (5 micro-services) with Java (web API) and Python (model training code). The system can run on Mac or Linux if you have Docker and Kubernetes (optional) installed, and it addresses the core requirements of a machine learning system: dataset management, model training and model serving.  
 
-Learning a deep learning system could be intimidating, the complexity of web services setup, intricate business logic and variety of libraries and framework installations prevent us from getting to the core piece of a deep learning system. 
-
-To enable you to access the core implementation of the system easily, we did several things to keep this demo system simple.
-1. use gRPC to build the restful api to avoid the boilerplate code of JAVA web api.
-2. offer [shell scripts](/scripts/) to run the system and interact with the services. 
-3. code is simple and short, each service of the system is built less than a few thousand lines of code. We only keep the bare minimum code that are good enough to demonstrate the design principles introduced in the book.  
+Learning a deep learning system could be intimidating. The complexity of web services setup, intricacies of business logic, and variety of libraries and framework installations prevent us from getting to the core piece of a deep learning system. 
+To enable you to easily access the core implementation of the system, we did several things to keep this demo system simple:
+1. Use gRPC to build the web API to avoid boilerplate code.
+2. Offer [shell scripts](/scripts/) to run the system and interact with services. 
+3. Code is simple and short. Each service of the system is built with less than a few thousand lines of code. We only keep the bare minimum code that is sufficient to demonstrate the design principles.  
 
 ## System Overview
 Our mini deep learning system consists of four services and one storage system, they are:
@@ -28,16 +27,17 @@ In the book [Engineering Deep Learning Systems](http://mng.bz/GGgN), each of the
 The installation of system requirements are not included in the `scripts` folder. Please make sure those requirements are met before executing scripts in the `scripts` folder.
 
 - **Operating system**: Recent versions of macOS, Linux or WSL (Windows Subsystem for Linux). Pre-built Docker containers have been tested to work on Apple M1 hardware without modifications.
-- **Java JDK 11+**: 
+- **JDK 11+**: 
   - Use `java --version` command to confirm your Java version.
-  - Apache maven is not required to run the examples. We've bundled [Maven wrapper](https://github.com/takari/maven-wrapper) `mvnw` so that all the build commands we used in this repo depends only on `mvnw`.
+  - Apache Maven is not required to run the examples. We've bundled [Maven wrapper](https://github.com/takari/maven-wrapper) `mvnw` so that all the build commands we used in this repo depends only on `mvnw`.
 - **Anaconda**:
   - **IMPORTANT**: If you are running on Apple M1, make sure to download and install a version that
     supports it to avoid running into errors.
   - Create and activate a clean Conda environment before running the lab. Failing to do so may
     result in long initial setup time and failures.
-- **Docker**: docker community edition can be downloaded from https://docs.docker.com/get-docker/. 
+- **Docker**: Docker Desktop can be downloaded from https://docs.docker.com/get-docker/. 
   - Use `docker version` command to verify both the client and the server are available/running.
+  - The lab has been verified to work on Docker Desktop version >4.13.0, on both Intel and Apple chips.
 - **Kubernetes**: docker community edition provides a standalone node kubernetes installation. You can enable it by following [official doc](https://docs.docker.com/desktop/kubernetes).
   - Use `kubectl version` command to verify both the client and the server are available/running.
 - **Minio**: this is a storage system that we used in our examples to provide a shared file system for all our microservices. **Only the client is needed** (we will take care of starting/stopping server later in examples).

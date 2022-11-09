@@ -10,7 +10,7 @@ The following guide will go through a typical cycle of
 3. Retrieve the entire dataset and a subset of it
 4. Fetch the repackaged dataset for training
 
-## Step 1: Starting MinIO
+## Step 1: Start the MinIO Server
 
 Run the following:
 ```shell
@@ -29,24 +29,27 @@ Created docker network orca3
 Started minio docker container and listen on port 9000
 ```
 
-## Step 2: Starting Data Management Server
+## Step 2: Start the Data Management Server
 
 Run the following:
 ```shell
 ./scripts/dm-002-start-server.sh
 ```
 
-The script will:
-1. Launch the Docker image `orca3/services:latest`. If this image does not exist on your machine, Docker will attempt pulling it from the Docker Hub.
-2. Start a Data Management server container named `data-management` in network `orca3`, and bind to port `6000`.
-   Data management server will be accessible at `localhost:6000` from your machine, or `data-management:51001` from other containers within the same Docker network `orca3`.
+The script will start the Data Management server container using the image `orca3/services:latest`.
+
+If this image does not exist on your machine, Docker will attempt pulling it from the Docker Hub.
+
+The script will name the container `data-management`, launch it in network `orca3`, and bind it to port `6000`.
+
+The server will be accessible at `localhost:6000` from your machine, or `data-management:51001` from other containers within the same network `orca3`.
 
 You should see the following when you run the script:
 ```shell
 Started data-management docker container and listen on port 6000
 ```
 
-## Step 3: Creating an intent dataset
+## Step 3: Create an intent dataset
 
 Run the following:
 ```shell

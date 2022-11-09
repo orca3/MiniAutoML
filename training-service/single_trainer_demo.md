@@ -1,59 +1,91 @@
-## Single Trainer Training Demo
-> All the following scripts are expected to be executed from the repository root directory
+# Single Trainer Training Demo
 
-> Instructions for running the lab examples for **chapter 5: Model Training Service**
+> Please run all scripts from the repository's root directory.
 
-Please go over the data-management [demo](../data-management/demo.md) first. We need the datasetId from the previous demo here. Assuming it is dataset 1.
+Please go over the [Data Management Function Demo](../data-management/demo.md) first.
+This demo depends on the dataset created in that demo.
+Take note of the value of `datasetId` in that demo.
+In the following instructions, we will assume `datasetId` is `1`.
+We will also need both the MinIO server and the Data Management server running from that demo.
 
-### Setup
-Execute: `./scripts/ms-002-start-server.sh`
+## Step 1: Start the Metadata Store Server and the Training Server
 
-This will
-1. Build a docker image using `services.dockerfile` in the root directory.
-2. Start a metadata-store server with name `metadata-store` in docker joining network `orca3`
-
-Expected output:
+Run the following to start the Metadata Store server:
+```shell
+./scripts/ms-002-start-server.sh
 ```
+
+The script will start the Metadata Store server container using the image `orca3/services:latest`.
+
+If this image does not exist on your machine, Docker will attempt pulling it from the Docker Hub.
+
+The script will name the container `metadata-store`, launch it in network `orca3`, and bind it to port `6002`.
+
+The server will be accessible at `localhost:6002` from your machine, or `metadata-store:51001` from other containers within the same network `orca3`.
+
+
+You should see the following when you run the script:
+```shell
 Started metadata-store docker container and listen on port 6002
 ```
 
-
-Execute: `./scripts/ts-001-start-server.sh`
-
-This will
-1. Build a docker image using `services.dockerfile` in the root directory.
-2. Start a training-service server with name `training-service` in docker joining network `orca3`
-
+Next, run the following:
+```shell
+./scripts/ts-001-start-server.sh
 ```
+
+The script will start the Training Service server container using the image `orca3/services:latest`.
+
+The script will name the container `training-service`, launch it in network `orca3`, and bind it to port `6003`.
+
+The server will be accessible at `localhost:6002` from your machine, or `training-service:51001` from other containers within the same network `orca3`.
+
+You should see the following when you run the script:
+```shell
 Started training-service docker container and listen on port 6003
 ```
 
-### Submit training job
-> Assuming the datasetId from [data-management demo](../data-management/demo.md) is 1. 
-> If this is not the case please update [ts-002-start-run.sh](../scripts/ts-002-start-run.sh)
+## Step 2: Submit a training job
 
-Execute: `./scripts/ts-002-start-run.sh 1`, replace 1 with other dataset id if needed.
+> The following instructions assume a value of `1` for `datasetId`. 
+> Make sure the value is the one that you received from the [Data Management Function Demo](../data-management/demo.md).
 
-This will
-1. Invoke `Train` endpoint to start an `intent-classification` training on dataset (id=`1` version `hashDg==`),
-with parameter `LR=4;EPOCHS=15;BATCH_SIE=64;FC_SIZE=128;`
-2. Reply is the jobId that we can use to track the status later
+> **If you are running on Apple Silicon**, you may need to perform
+> ```shell
+> docker pull orca3/intent-classification
+> ```
+> before submitting a training job.
 
-Expected output:
+Run the following (replace `1` with your `datasetId` if needed):
+```shell
+./scripts/ts-002-start-run.sh 1
 ```
+
+The script will:
+1. Invoke the `Train` API method of the Training Server to start an `intent-classification` training job on the dataset with `datasetId=1`,
+   using training parameter `LR=4;EPOCHS=15;BATCH_SIE=64;FC_SIZE=128;`.
+2. The API method will respond with `jobId`, which we can use to track the training status.
+
+You should see the following when you run the script:
+```shell
 {
   "job_id": 1
 }
 ```
 
-### Train job status
-Execute: `./scripts/ts-003-check-run.sh 1`. Replace `1` with another value if your job_id is different.
+## Step 3: Inspect the training job's status
 
-This will
-1. Invoke `GetTrainingStatus` endpoint to query the execution status
-
-Expected output, based on the timing, it can be one of the following:
+Run the following (replace `1` if you have a different `job_id` from the step above):
+```shell
+./scripts/ts-003-check-run.sh 1
 ```
+
+This script will invoke the `GetTrainingStatus` API method of the Training Server to query the training job's status.
+
+As the job progresses, you may see it in different statuses. Here are some examples.
+
+### Job is in the queue
+```shell
 {
   "job_id": 1,
   "message": "Queueing, there are 0 training jobs waiting before this.",
@@ -71,7 +103,10 @@ Expected output, based on the timing, it can be one of the following:
     "output_model_name": "my-intent-classification-model"
   }
 }
+```
 
+### Job is being launched
+```shell
 {
   "status": "launch",
   "job_id": 1,
@@ -89,7 +124,10 @@ Expected output, based on the timing, it can be one of the following:
     "output_model_name": "my-intent-classification-model"
   }
 }
+```
 
+### Job is running
+```shell
 {
   "status": "running",
   "job_id": 1,
@@ -107,7 +145,10 @@ Expected output, based on the timing, it can be one of the following:
     "output_model_name": "my-intent-classification-model"
   }
 }
+```
 
+### Job completed successfully
+```shell
 {
   "status": "succeed",
   "job_id": 1,
@@ -127,7 +168,40 @@ Expected output, based on the timing, it can be one of the following:
 }
 ```
 
-## Clean up
-> If you like to run the [distributed training service lab (chapter 6)](distributed_trainer_demo.md), please do not execute the tear-down script and keep the containers running, they will provide the dataset required for the distributed training lab.
+### Job failed due to missing image
+If you run into an error like
+```shell
+{
+  "status": "failure",
+  "job_id": 1,
+  "message": "Status 404: {\"message\":\"No such image: orca3/intent-classification:latest\"}\n",
+  "metadata": {
+    "algorithm": "intent-classification",
+    "dataset_id": "1",
+    "name": "test1",
+    "train_data_version_hash": "hashDg==",
+    "parameters": {
+      "BATCH_SIZE": "64",
+      "EPOCHS": "15",
+      "FC_SIZE": "128",
+      "LR": "4"
+    },
+    "output_model_name": "my-intent-classification-model"
+  }
+}
+```
+run
+```shell
+docker pull orca3/intent-classification:latest
+```
+and retry from Step 2.
 
-Execute `./scripts/lab-999-tear-down.sh`
+## Clean up
+
+> If you would like to run the [distributed training service lab (Chapter 4)](distributed_trainer_demo.md), skip this step and keep containers running.
+> They will provide the required dataset.
+
+Run the following:
+```shell
+./scripts/lab-999-tear-down.sh
+```
