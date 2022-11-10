@@ -38,7 +38,7 @@ The script will start the Training Service server container using the image `orc
 
 The script will name the container `training-service`, launch it in network `orca3`, and bind it to port `6003`.
 
-The server will be accessible at `localhost:6002` from your machine, or `training-service:51001` from other containers within the same network `orca3`.
+The server will be accessible at `localhost:6003` from your machine, or `training-service:51001` from other containers within the same network `orca3`.
 
 You should see the following when you run the script:
 ```shell

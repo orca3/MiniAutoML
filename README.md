@@ -38,7 +38,7 @@ The installation of system requirements are not included in the `scripts` folder
 - **Docker**: Docker Desktop can be downloaded from https://docs.docker.com/get-docker/. 
   - Use `docker version` command to verify both the client and the server are available/running.
   - The lab has been verified to work on Docker Desktop version >4.13.0, on both Intel and Apple chips.
-- **Kubernetes**: docker community edition provides a standalone node kubernetes installation. You can enable it by following [official doc](https://docs.docker.com/desktop/kubernetes).
+- **Kubernetes**: Docker Desktop provides a standalone node Kubernetes installation. You can enable it by following [the official doc](https://docs.docker.com/desktop/kubernetes).
   - Use `kubectl version` command to verify both the client and the server are available/running.
 - **Minio**: this is a storage system that we used in our examples to provide a shared file system for all our microservices. **Only the client is needed** (we will take care of starting/stopping server later in examples).
 [The official doc](https://docs.min.io/docs/minio-client-quickstart-guide.html) talks about several ways to install it. We need the binary version (so that `mc` command is available).
@@ -53,7 +53,7 @@ The installation of system requirements are not included in the `scripts` folder
   - For mac, do `brew install jq`
   - For linux, follow the instruction in [Download jq](https://stedolan.github.io/jq/download/)
 
-## Module list
+## Module List
 
 In the root folder you'll find a Maven project description file `pom.xml`, which describes a multi-module Java project. 
 - `grpc-contract` module contains shared microservices grpc definitions as well as code generation automations.
@@ -152,7 +152,7 @@ The lab scripts are placed at the [scripts](/scripts/) folder. They start with t
 
 - [scripts/lab-005-second-training.sh](scripts/lab-005-second-training.sh) is very similar to `lab-003-first-training.sh`, this is a bonus scenario for updating an existing dataset and retain a model. This script is the answer to a quiz of the chapter two - **Ch 2, A Hello World Deep Learning System**.
 
-## Next step
+## Next Steps
 1. Look at the service definitions in [grpc-contract](grpc-contract)
 2. Play with [data-management](data-management)
 3. Play with [training-service](training-service)
