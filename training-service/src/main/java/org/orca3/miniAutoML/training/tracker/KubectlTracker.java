@@ -102,7 +102,6 @@ public class KubectlTracker extends Tracker<KubectlTracker.BackendConfig> {
                     new V1Container()
                             .name("traincode")
                             .image(algorithmToImage(metadata.getAlgorithm()))
-                            .imagePullPolicy("Never")
                             .ports(List.of(new V1ContainerPort().containerPort(masterPort)))
                             .env(envVarsToList(envs))
             );
