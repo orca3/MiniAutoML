@@ -1,33 +1,16 @@
-## Setup self-built predictor container
+# Run TorchServe Locally with a Sample Intent Model
 
-``` Build image and run predict container
-cd predictor
-docker build -t orca3/intent-predictor -f Dockerfile .
+The following instructions assume that your current working directory is in the
+`predictor` subfolder. Please make sure Docker is running before proceeding.
 
-docker run  --rm -d  -v {models_folder}:/models -p 9090:5000 orca3/intent-predictor
-```
-Example to run intent-predictor locally.
-```
-docker build -t orca3/intent-predictor -f Dockerfile .
-mkdir -p /tmp/model_store/predictor
-cp -r sample_models/* /tmp/model_store/predictor
-docker run  --rm -d  -v /tmp/model_store/predictor:/models -p 9090:5000 orca3/intent-predictor
-```
-Send intent prediction request to the intent predictor.
-``` Test query predictor container. predictions/{model_id}
-// model_id = 1
-curl --location --request GET 'http://127.0.0.1:9090/predictions/1' \
---header 'Content-Type: text/plain' \
---data-raw 'make a 10 minute timer'
-```
-
-## Run torch serving with intent model locally.
-```
-// create model store directory for torch serving and copy models
+## Step 1: Copy the sample intent model to a directory for TorchServe
+```shell
 mkdir -p /tmp/model_store/torchserving
 cp sample_models/1/intent*.mar /tmp/model_store/torchserving
+```
 
-// run the torch serving container
+## Step 2: Run the TorchServe container
+```shell
 docker pull pytorch/torchserve:0.4.2-cpu
 docker run --rm --shm-size=1g \
         --ulimit memlock=-1 \
@@ -37,21 +20,24 @@ docker run --rm --shm-size=1g \
         -p8082:8082 \
         -p7070:7070 \
         -p7071:7071 \
-        --mount type=bind,source=/tmp/model_store/torchserving,target=/tmp/models pytorch/torchserve:0.4.2-cpu torchserve --model-store=/tmp/models 
+        --mount type=bind,source=/tmp/model_store/torchserving,target=/tmp/models pytorch/torchserve:0.4.2-cpu torchserve --model-store=/tmp/models
+``` 
 
-// register model (intent_80bf0da) through torchserving management api
-curl -X POST  "http://localhost:8081/models?url=intent_80bf0da.mar&initial_workers=1&model_name=intent"
+## Step 3: Register model with TorchServe management API 
+```shell
+curl -X POST "http://localhost:8081/models?url=intent_80bf0da.mar&initial_workers=1&model_name=intent"
 ```
 
-Query intent model in torch serving with default version.
-```
+## Step 4: Request predictions from the default version of the intent model
+```shell
 curl --location --request GET 'http://localhost:8080/predictions/intent' \
 --header 'Content-Type: text/plain' \
 --data-raw 'make a 10 minute timer'
 ```
 
-Query intent model in torch serving with specified version, this version is created at training time.
-```
+## Step 5: Request predictions from a specific version of the intent model
+This version is created at training time.
+```shell
 curl --location --request GET 'http://localhost:8080/predictions/intent/1.0' \
 --header 'Content-Type: text/plain' \
 --data-raw 'make a 10 minute timer'
