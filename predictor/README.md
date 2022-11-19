@@ -27,12 +27,24 @@ docker run --rm --shm-size=1g \
 ```shell
 curl -X POST "http://localhost:8081/models?url=intent_80bf0da.mar&initial_workers=1&model_name=intent"
 ```
+The response should look like
+```shell
+{
+  "status": "Model \"intent\" Version: 1.0 registered with 1 initial workers"
+}
+```
 
 ## Step 4: Request predictions from the default version of the intent model
 ```shell
 curl --location --request GET 'http://localhost:8080/predictions/intent' \
 --header 'Content-Type: text/plain' \
 --data-raw 'make a 10 minute timer'
+```
+The response should look like
+```shell
+{
+  "predict_res": "timer"
+}
 ```
 
 ## Step 5: Request predictions from a specific version of the intent model
@@ -41,4 +53,10 @@ This version is created at training time.
 curl --location --request GET 'http://localhost:8080/predictions/intent/1.0' \
 --header 'Content-Type: text/plain' \
 --data-raw 'make a 10 minute timer'
+```
+The response should look like
+```shell
+{
+  "predict_res": "timer"
+}
 ```
