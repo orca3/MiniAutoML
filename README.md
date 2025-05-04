@@ -15,13 +15,13 @@ To enable you to easily access the core implementation of the system, we did sev
 ## System Overview
 Our mini deep learning system consists of four services and one storage system, they are:
 
-- **[Dataset management service](https://github.com/orca3/MiniAutoML/tree/main/data-management)**, designed for storing and fetching dataset. 
+- **[Dataset management service](https://github.com/orca3/MiniAutoML/tree/main/data-management)**, designed for storing and fetching datasets. 
 - **[Model training service](https://github.com/orca3/MiniAutoML/tree/main/training-service)**, designed for running model training code.
 - **[Metadata store service](https://github.com/orca3/MiniAutoML/tree/main/metadata-store)**, designed for storing model metadata, such as model name, model version and model algorithm.
 - **[Prediction service](https://github.com/orca3/MiniAutoML/tree/main/prediction-service)**, designed to execute models to process customer’s prediction requests.
 - **MinIO storage**, an object storage similar to AWS S3 but can run on your local computer.
 
-In the book [Engineering Deep Learning Systems](http://mng.bz/GGgN), each of these serivces gets their own chapter. To play with the system locally, please install the [system requirements](https://github.com/orca3/MiniAutoML#system-requirement) and then follow the instructions in the [lab](https://github.com/orca3/MiniAutoML#lab) section.
+In the book [Engineering Deep Learning Systems](http://mng.bz/GGgN), each of these services gets their own chapter. To play with the system locally, please install the [system requirements](https://github.com/orca3/MiniAutoML#system-requirement) and then follow the instructions in the [lab](https://github.com/orca3/MiniAutoML#lab) section.
 
 ## System Requirements
 The installation of system requirements are not included in the `scripts` folder. Please make sure those requirements are met before executing scripts in the `scripts` folder.
@@ -64,7 +64,7 @@ In the root folder you'll find a Maven project description file `pom.xml`, which
 
 ## Lab
 
-After installing the [system requirements](https://github.com/orca3/MiniAutoML#system-requirement): docker, Minio, grpcurl and JQ, you can use our lab scripts to setup the sample deep learning system locally and start to play with it, such building a NLP model. By exeucting these scripts one by one, you will see a complete deep learning cycle, from data collection to model training and model serving. 
+After installing the [system requirements](https://github.com/orca3/MiniAutoML#system-requirement): docker, Minio, grpcurl and JQ, you can use our lab scripts to setup the sample deep learning system locally and start to play with it, such building a NLP model. By executing these scripts one by one, you will see a complete deep learning cycle, from data collection to model training and model serving. 
 
 It is strongly recommended to create and activate a brand new Conda environment before running any lab scripts to avoid long setup times and possible failures. You can do so by running
 ```shell
